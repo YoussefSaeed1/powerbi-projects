@@ -1,6 +1,6 @@
 # Power BI Projects
 
-Dashboards by **[Youssef Saeed](https://youssefsaeed1.github.io/portfolio/)**. Each one starts from a business question and ends with findings someone can act on.
+Dashboards by **[Youssef Saeed](https://youssefsaeed-portfolio.vercel.app/)**. Each one starts from a business question and ends with findings someone can act on.
 
 | | Project | Business question | Tools |
 |---|---|---|---|
@@ -14,4 +14,4 @@ Dashboards by **[Youssef Saeed](https://youssefsaeed1.github.io/portfolio/)**. E
 
 ## Connect
 
-[Portfolio](https://youssefsaeed1.github.io/portfolio/) · [LinkedIn](https://www.linkedin.com/in/youssef-saeed1/) · [Email](mailto:youssefsaeed206@gmail.com)
+[Portfolio](https://youssefsaeed-portfolio.vercel.app/) · [LinkedIn](https://www.linkedin.com/in/youssef-saeed1/) · [Email](mailto:youssefsaeed206@gmail.com)

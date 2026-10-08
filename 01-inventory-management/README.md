@@ -40,4 +40,4 @@ Four report pages: Executive Overview, Inventory Operations, Supplier & Warehous
 
 ---
 
-[← All projects](../README.md) · [Portfolio](https://youssefsaeed1.github.io/portfolio/)
+[← All projects](../README.md) · [Portfolio](https://youssefsaeed-portfolio.vercel.app/)
