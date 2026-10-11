@@ -1,0 +1,111 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/3.3.0/schema.json",
+  "themeCollection": {
+    "baseTheme": {
+      "name": "CY24SU10",
+      "reportVersionAtImport": {
+        "visual": "1.8.97",
+        "report": "2.0.97",
+        "page": "1.3.97"
+      },
+      "type": "SharedResources"
+    },
+    "customTheme": {
+      "name": "InventoryManagementTheme.json",
+      "reportVersionAtImport": {
+        "visual": "1.8.97",
+        "report": "2.0.97",
+        "page": "1.3.97"
+      },
+      "type": "RegisteredResources"
+    }
+  },
+  "objects": {
+    "outspacePane": [
+      {
+        "properties": {
+          "expanded": {
+            "expr": {
+              "Literal": {
+                "Value": "true"
+              }
+            }
+          },
+          "visible": {
+            "expr": {
+              "Literal": {
+                "Value": "true"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "publicCustomVisuals": [
+    "htmlContent443BE3AD55E043BF878BED274D3A6865",
+    "deneb7E15AEF80B9E4D4F8E12924291ECE89A"
+  ],
+  "resourcePackages": [
+    {
+      "name": "SharedResources",
+      "type": "SharedResources",
+      "items": [
+        {
+          "name": "CY24SU10",
+          "path": "BaseThemes/CY24SU10.json",
+          "type": "BaseTheme"
+        }
+      ]
+    },
+    {
+      "name": "RegisteredResources",
+      "type": "RegisteredResources",
+      "items": [
+        {
+          "name": "bg_dataquality1080171642113.png",
+          "path": "bg_dataquality1080171642113.png",
+          "type": "Image"
+        },
+        {
+          "name": "bg_details3278558543091288.png",
+          "path": "bg_details3278558543091288.png",
+          "type": "Image"
+        },
+        {
+          "name": "bg_home23745213504692475.png",
+          "path": "bg_home23745213504692475.png",
+          "type": "Image"
+        },
+        {
+          "name": "bg_operations778848975989446.png",
+          "path": "bg_operations778848975989446.png",
+          "type": "Image"
+        },
+        {
+          "name": "bg_overview679403309312132.png",
+          "path": "bg_overview679403309312132.png",
+          "type": "Image"
+        },
+        {
+          "name": "bg_suppliers08532352697484469.png",
+          "path": "bg_suppliers08532352697484469.png",
+          "type": "Image"
+        },
+        {
+          "name": "InventoryManagementTheme.json",
+          "path": "InventoryManagementTheme.json",
+          "type": "CustomTheme"
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "useStylableVisualContainerHeader": true,
+    "exportDataMode": "AllowSummarized",
+    "defaultFilterActionIsDataFilter": true,
+    "defaultDrillFilterOtherVisuals": true,
+    "allowChangeFilterTypes": true,
+    "useEnhancedTooltips": true
+  }
+}

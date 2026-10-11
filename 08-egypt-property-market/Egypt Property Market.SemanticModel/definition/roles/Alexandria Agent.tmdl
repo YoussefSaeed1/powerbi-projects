@@ -1,0 +1,7 @@
+/// Example row-level security role for a city team.
+role 'Alexandria Agent'
+	modelPermission: read
+
+	tablePermission Dim_Location = Dim_Location[City] = "Alexandria"
+
+	annotation PBI_Id = 1c75e01cb48f5d2d94905c73863c7ba0

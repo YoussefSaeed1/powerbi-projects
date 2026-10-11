@@ -1,0 +1,682 @@
+table _Measures
+	lineageTag: 724ee24c-fed8-59fa-a71b-b5df70a78e6b
+
+	/// Delivery target agreed with supply chain.
+	measure 'Target On-Time Delivery' = 0.90
+		formatString: 0%
+		displayFolder: Targets
+		lineageTag: 9654353d-3f33-5c0e-a42d-465a88da4551
+
+	/// Target days from requisition to goods receipt.
+	measure 'Target Procure Cycle Days' = 25
+		formatString: 0
+		displayFolder: Targets
+		lineageTag: 2cb1fc49-dd5c-5014-a6d5-44a970de3507
+
+	measure 'Target Spend Under Contract' = 0.80
+		formatString: 0%
+		displayFolder: Targets
+		lineageTag: 91c824c7-1ac8-5ac6-97f3-d82336a8344c
+
+	measure 'Target Maverick Spend' = 0.05
+		formatString: 0%
+		displayFolder: Targets
+		lineageTag: e9c2822b-7ce8-5e77-83b7-fde4e94a2e50
+
+	measure 'Target Late Payments' = 0.05
+		formatString: 0%
+		displayFolder: Targets
+		lineageTag: 36004aef-ecf1-594a-9f43-245b4bd59b63
+
+	/// Year in focus: the year picked in the slicer, or the latest year in the data.
+	measure 'Selected Year' =
+			VAR _maxYear = YEAR ( CALCULATE ( MAX ( Fact_PO[PO_Date] ), REMOVEFILTERS () ) )
+			RETURN
+			    IF ( ISFILTERED ( Dim_Date[Year] ), MAX ( Dim_Date[Year] ), _maxYear )
+		formatString: 0
+		displayFolder: Helpers
+		lineageTag: 8a411b18-42ca-5d67-9c8d-14d745c17c82
+
+	measure 'Data As Of' = CALCULATE ( MAX ( Fact_PO[PO_Date] ), REMOVEFILTERS () )
+		formatString: dd-mmm-yyyy
+		displayFolder: Helpers
+		lineageTag: 28917ced-dd8a-54c6-85d5-290010acc8ef
+
+	measure 'Last Refresh' = "Data refreshed " & FORMAT ( MAX ( _Refresh[RefreshedAt] ), "dd mmm yyyy" )
+		displayFolder: Helpers
+		lineageTag: 66b2bf8a-cfa4-5677-90c8-3d1d73a93eaf
+
+	measure 'Year Label' = "FY" & [Selected Year] & " vs FY" & ( [Selected Year] - 1 )
+		displayFolder: Helpers
+		lineageTag: 659cd3d7-62be-5c4e-9ca5-585890644330
+
+	/// Total value of purchase orders.
+	measure Spend = SUM ( Fact_PO[PO_Value_USD] )
+		formatString: $#,0
+		displayFolder: Spend
+		lineageTag: 69f3e109-32ed-545f-8b49-52d5758c6d98
+
+	measure 'Spend CY' = VAR _y = [Selected Year] RETURN CALCULATE ( [Spend], Dim_Date[Year] = _y )
+		formatString: $#,0
+		displayFolder: Spend
+		lineageTag: 769c0c9f-1ac5-5fd8-86c1-4007f5cb1cc2
+
+	measure 'Spend LY' = VAR _y = [Selected Year] RETURN CALCULATE ( [Spend], Dim_Date[Year] = _y - 1 )
+		formatString: $#,0
+		displayFolder: Spend
+		lineageTag: a175b75a-b953-5c9a-a4f1-63d6daa9f9d4
+
+	measure 'Spend YoY %' = DIVIDE ( [Spend CY] - [Spend LY], [Spend LY] )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Spend
+		lineageTag: f7364bb7-b63c-56cc-a42e-e6a5ce3f07f8
+
+	measure 'PO Count' = COUNTROWS ( Fact_PO )
+		formatString: #,0
+		displayFolder: Spend
+		lineageTag: 1efad3c2-42de-59c2-b129-e89304964679
+
+	measure 'PO Count CY' = VAR _y = [Selected Year] RETURN CALCULATE ( [PO Count], Dim_Date[Year] = _y )
+		formatString: #,0
+		displayFolder: Spend
+		lineageTag: aece5485-a47f-56bc-bb25-0aa7a605806d
+
+	measure 'PO Count LY' = VAR _y = [Selected Year] RETURN CALCULATE ( [PO Count], Dim_Date[Year] = _y - 1 )
+		formatString: #,0
+		displayFolder: Spend
+		lineageTag: 43207686-0ae1-5d27-8889-d2b66c6f500a
+
+	measure 'PO Count YoY %' = DIVIDE ( [PO Count CY] - [PO Count LY], [PO Count LY] )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Spend
+		lineageTag: 80b153d4-9e20-53cd-aa58-92884889fb4d
+
+	measure 'Spend CY $M' = DIVIDE ( [Spend CY], 1000000 )
+		formatString: $#,0.0
+		displayFolder: Spend
+		lineageTag: 2edbcdf6-f46d-5687-b8ba-4190a7e50d97
+
+	measure 'Spend LY $M' = DIVIDE ( [Spend LY], 1000000 )
+		formatString: $#,0.0
+		displayFolder: Spend
+		lineageTag: a5504b73-f7ba-544b-9d93-e804879d36c4
+
+	/// Average days from requisition to purchase order.
+	measure 'Avg Days PR to PO' = VAR _y = [Selected Year] RETURN CALCULATE ( AVERAGE ( Fact_PO[Days PR to PO] ), Dim_Date[Year] = _y )
+		formatString: 0.0
+		displayFolder: Cycle Time
+		lineageTag: a272c6b4-fac9-56d0-b716-ac1b05b6fe58
+
+	/// Average supplier lead time: PO to goods receipt.
+	measure 'Avg Days PO to Receipt' = VAR _y = [Selected Year] RETURN CALCULATE ( AVERAGE ( Fact_PO[Days PO to Receipt] ), Dim_Date[Year] = _y )
+		formatString: 0.0
+		displayFolder: Cycle Time
+		lineageTag: 10a9b739-1226-517e-bded-3378b7a9f9cf
+
+	measure 'Avg Days Receipt to Invoice' = VAR _y = [Selected Year] RETURN CALCULATE ( AVERAGE ( Fact_PO[Days Receipt to Invoice] ), Dim_Date[Year] = _y )
+		formatString: 0.0
+		displayFolder: Cycle Time
+		lineageTag: 1cd72e05-4e53-5b2a-9c42-67f311ef4e0b
+
+	measure 'Avg Days Invoice to Payment' = VAR _y = [Selected Year] RETURN CALCULATE ( AVERAGE ( Fact_PO[Days Invoice to Payment] ), Dim_Date[Year] = _y )
+		formatString: 0.0
+		displayFolder: Cycle Time
+		lineageTag: c61268f5-09a0-5eb5-a8ce-e93763834f01
+
+	/// Average days from requisition to goods receipt (procure part of P2P).
+	measure 'Avg Procure Cycle' = VAR _y = [Selected Year] RETURN CALCULATE ( AVERAGE ( Fact_PO[Days PR to Receipt] ), Dim_Date[Year] = _y )
+		formatString: 0.0
+		displayFolder: Cycle Time
+		lineageTag: 9f0af110-7cc4-5c05-b18c-0e61a16873f6
+
+	measure 'Avg Procure Cycle LY' = VAR _y = [Selected Year] RETURN CALCULATE ( AVERAGE ( Fact_PO[Days PR to Receipt] ), Dim_Date[Year] = _y - 1 )
+		formatString: 0.0
+		displayFolder: Cycle Time
+		lineageTag: 7fcdaa3d-4b70-542a-a1a7-c68ad664fc68
+
+	/// Share of POs already received. Months below 98% are still open.
+	measure 'Receipt Completeness %' = VAR _y = [Selected Year] RETURN CALCULATE ( DIVIDE ( COUNT ( Fact_PO[GRN_Date] ), COUNTROWS ( Fact_PO ) ), Dim_Date[Year] = _y )
+		formatString: 0.0%
+		displayFolder: Cycle Time
+		lineageTag: da07976b-2c5f-52bf-82e0-ceb7f904575b
+
+	/// Average procure cycle for months where almost every PO has been received; open months would show only the fast receipts.
+	measure 'Avg Procure Cycle (Closed Months)' = IF ( [Receipt Completeness %] < 0.98, BLANK (), [Avg Procure Cycle] )
+		formatString: 0.0
+		displayFolder: Cycle Time
+		lineageTag: aa7b1f7a-1521-5159-b1d4-e9b04e3efa63
+
+	measure 'Avg Days PO to Receipt LY' = VAR _y = [Selected Year] RETURN CALCULATE ( AVERAGE ( Fact_PO[Days PO to Receipt] ), Dim_Date[Year] = _y - 1 )
+		formatString: 0.0
+		displayFolder: Cycle Time
+		lineageTag: 30080d26-0729-52be-81aa-7e4457d93e07
+
+	/// Average days of the stage on the row (used with Dim_Stage).
+	measure 'Stage Days' =
+			SWITCH (
+			    SELECTEDVALUE ( Dim_Stage[Stage Order] ),
+			    1, [Avg Days PR to PO],
+			    2, [Avg Days PO to Receipt],
+			    3, [Avg Days Receipt to Invoice],
+			    4, [Avg Days Invoice to Payment]
+			)
+		formatString: 0.0
+		displayFolder: Cycle Time
+		lineageTag: 9bf6c6e3-7444-54c3-9871-2aeb10426a4b
+
+	/// Highlights the slowest procure stage; the payment stage follows supplier terms so it is not flagged.
+	measure 'Stage Color' =
+			VAR _procure = MAXX ( FILTER ( ALL ( Dim_Stage ), Dim_Stage[Stage Order] <= 2 ), [Stage Days] )
+			RETURN
+			    IF ( SELECTEDVALUE ( Dim_Stage[Stage Order] ) <= 2 && [Stage Days] = _procure, "#E8A33D", "#2E7D8C" )
+		displayFolder: Formatting
+		lineageTag: 9b429683-c31f-5dc9-bd9a-c00997c2e833
+
+	measure 'Procure Cycle Color' = IF ( [Avg Procure Cycle] > [Target Procure Cycle Days] * 1.15, "#D2584E", IF ( [Avg Procure Cycle] > [Target Procure Cycle Days], "#E8A33D", "#2E7D8C" ) )
+		displayFolder: Formatting
+		lineageTag: f6ce536f-7a3f-5145-acf4-b3defca9a81f
+
+	/// Share of received POs that arrived on or before the promised date.
+	measure 'On-Time Delivery %' = VAR _y = [Selected Year] RETURN CALCULATE ( DIVIDE ( SUM ( Fact_PO[On Time] ), COUNT ( Fact_PO[On Time] ) ), Dim_Date[Year] = _y )
+		formatString: 0.0%
+		displayFolder: Suppliers
+		lineageTag: 9a3594e9-a7f5-51a5-b0c8-9824fd3a027c
+
+	measure 'On-Time Delivery % LY' = VAR _y = [Selected Year] RETURN CALCULATE ( DIVIDE ( SUM ( Fact_PO[On Time] ), COUNT ( Fact_PO[On Time] ) ), Dim_Date[Year] = _y - 1 )
+		formatString: 0.0%
+		displayFolder: Suppliers
+		lineageTag: 6c48738f-5071-5f5b-9415-852db457e9ea
+
+	/// Accepted quantity as a share of ordered quantity.
+	measure 'Quality Acceptance %' = VAR _y = [Selected Year] RETURN CALCULATE ( DIVIDE ( SUM ( Fact_PO[Qty_Accepted] ), SUM ( Fact_PO[Qty_Ordered] ) ), Dim_Date[Year] = _y )
+		formatString: 0.0%
+		displayFolder: Suppliers
+		lineageTag: 7b136291-2f98-503f-a2f9-b7706742b27f
+
+	measure 'Active Suppliers' = VAR _y = [Selected Year] RETURN CALCULATE ( DISTINCTCOUNT ( Fact_PO[SupplierID] ), Dim_Date[Year] = _y )
+		formatString: #,0
+		displayFolder: Suppliers
+		lineageTag: 93e443cf-d62d-53f3-aa92-72234e9eace3
+
+	measure 'Active Suppliers LY' = VAR _y = [Selected Year] RETURN CALCULATE ( DISTINCTCOUNT ( Fact_PO[SupplierID] ), Dim_Date[Year] = _y - 1 )
+		formatString: #,0
+		displayFolder: Suppliers
+		lineageTag: 1aab4cdf-2f21-5d06-b1f9-2c429901f4af
+
+	measure 'Supplier Spend Rank' =
+			IF (
+			    HASONEVALUE ( Dim_Supplier[SupplierName] ),
+			    RANKX ( ALL ( Dim_Supplier[SupplierName] ), [Spend CY], , DESC, DENSE )
+			)
+		formatString: 0
+		displayFolder: Suppliers
+		lineageTag: 526f1565-59ea-5a5a-b16e-9d52876395c6
+
+	/// Share of spend placed with the ten largest suppliers (concentration risk).
+	measure 'Top 10 Supplier Share' =
+			VAR _top = TOPN ( 10, ALL ( Dim_Supplier[SupplierName] ), [Spend CY], DESC )
+			RETURN
+			    DIVIDE ( CALCULATE ( [Spend CY], _top ), CALCULATE ( [Spend CY], ALL ( Dim_Supplier ) ) )
+		formatString: 0.0%
+		displayFolder: Suppliers
+		lineageTag: 0df0d4a3-3fe7-5279-8b81-ec4e12a6acec
+
+	measure 'Spend CY (Top 25 Suppliers)' = IF ( [Supplier Spend Rank] <= 25, [Spend CY] )
+		formatString: $#,0
+		displayFolder: Suppliers
+		lineageTag: 1de41c42-3e12-5c87-a49b-4e522e79e187
+
+	/// 0–100 score: 50% on-time delivery, 30% quality acceptance, 20% contract coverage.
+	measure 'Supplier Score' =
+			VAR _otd = [On-Time Delivery %]
+			VAR _qa = [Quality Acceptance %]
+			VAR _contract = IF ( SELECTEDVALUE ( Dim_Supplier[Has_Contract] ), 1, 0 )
+			RETURN
+			    IF ( NOT ISBLANK ( _otd ), ROUND ( 100 * ( 0.5 * _otd + 0.3 * _qa + 0.2 * _contract ), 0 ) )
+		formatString: 0
+		displayFolder: Suppliers
+		lineageTag: 3c404eea-0834-5030-9797-dbeebd833b04
+
+	measure 'Supplier Status' = VAR _s = [Supplier Score] RETURN IF ( ISBLANK ( _s ), BLANK (), IF ( _s >= 85, "Strong", IF ( _s >= 75, "Watch", "At risk" ) ) )
+		displayFolder: Suppliers
+		lineageTag: ba195f07-a990-521e-a854-4f0208ea208d
+
+	measure 'Supplier Status Pill' =
+			VAR _t = [Supplier Status]
+			VAR _bg = SWITCH ( _t, "Strong", "#3C8D5A", "Watch", "#E8A33D", "#D2584E" )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='74' height='20' viewBox='0 0 74 20'>"
+			        & "<rect x='1' y='2' width='72' height='16' rx='8' fill='" & _bg & "'/>"
+			        & "<text x='37' y='14' text-anchor='middle' font-family='Segoe UI,sans-serif' font-size='10' font-weight='600' fill='#FFFFFF'>" & _t & "</text></svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( _t ),
+			        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( _svg, "%", "%25" ), "#", "%23" ) )
+		displayFolder: Formatting
+		lineageTag: 2b2b6a70-a2eb-5aee-b275-ff2f8abd66ae
+		dataCategory: ImageUrl
+
+	measure 'Contract Label' = IF ( SELECTEDVALUE ( Dim_Supplier[Has_Contract] ), "Yes", "No" )
+		displayFolder: Suppliers
+		lineageTag: d45e86ef-715f-5bcd-b627-67dd0b4c4f1f
+
+	/// Share of spend placed under an active contract.
+	measure 'Spend Under Contract %' = VAR _y = [Selected Year] RETURN CALCULATE ( DIVIDE ( CALCULATE ( [Spend], Fact_PO[Under_Contract] = TRUE () ), [Spend] ), Dim_Date[Year] = _y )
+		formatString: 0.0%
+		displayFolder: Compliance
+		lineageTag: ddfb4985-51f4-52d3-9b0c-6e0458ca5272
+
+	measure 'Spend Under Contract % LY' = VAR _y = [Selected Year] RETURN CALCULATE ( DIVIDE ( CALCULATE ( [Spend], Fact_PO[Under_Contract] = TRUE () ), [Spend] ), Dim_Date[Year] = _y - 1 )
+		formatString: 0.0%
+		displayFolder: Compliance
+		lineageTag: bfae9b55-900e-55f9-8b7e-44bb45b93047
+
+	/// Spend with no approved requisition, or with a PO raised after the invoice.
+	measure 'Maverick Spend' = VAR _y = [Selected Year] RETURN CALCULATE ( CALCULATE ( [Spend], Fact_PO[Maverick] = 1 ), Dim_Date[Year] = _y )
+		formatString: $#,0
+		displayFolder: Compliance
+		lineageTag: 3b38ca0c-afee-576b-be93-2941e4478fa4
+
+	measure 'Maverick Spend %' = DIVIDE ( [Maverick Spend], [Spend CY] )
+		formatString: 0.0%
+		displayFolder: Compliance
+		lineageTag: a8fe574b-19ce-5a10-a5b4-fb250ea53893
+
+	measure 'Maverick Spend % LY' = VAR _y = [Selected Year] RETURN CALCULATE ( DIVIDE ( CALCULATE ( [Spend], Fact_PO[Maverick] = 1 ), [Spend] ), Dim_Date[Year] = _y - 1 )
+		formatString: 0.0%
+		displayFolder: Compliance
+		lineageTag: 6f6fd2d8-e808-5f6f-a793-e5fd831060f1
+
+	measure 'Maverick Spend $K' = DIVIDE ( [Maverick Spend], 1000 )
+		formatString: $#,0
+		displayFolder: Compliance
+		lineageTag: 3e22d22f-54a2-567b-accd-53633ff11bb7
+
+	measure 'POs After Invoice' = VAR _y = [Selected Year] RETURN CALCULATE ( CALCULATE ( COUNTROWS ( Fact_PO ), Fact_PO[PO_After_Invoice] = TRUE () ), Dim_Date[Year] = _y )
+		formatString: #,0
+		displayFolder: Compliance
+		lineageTag: d4637a3b-33ad-5003-8ab9-99edacc54a52
+
+	measure 'POs After Invoice LY' = VAR _y = [Selected Year] RETURN CALCULATE ( CALCULATE ( COUNTROWS ( Fact_PO ), Fact_PO[PO_After_Invoice] = TRUE () ), Dim_Date[Year] = _y - 1 )
+		formatString: #,0
+		displayFolder: Compliance
+		lineageTag: 6fc68978-9e57-5aa0-8b1d-416f0c13e813
+
+	measure Invoices = VAR _y = [Selected Year] RETURN CALCULATE ( CALCULATE ( COUNTROWS ( Fact_PO ), NOT ISBLANK ( Fact_PO[Invoice_Date] ) ), Dim_Date[Year] = _y )
+		formatString: #,0
+		displayFolder: Payments
+		lineageTag: 58a85e0a-00c2-55aa-abdf-a63df0d08d46
+
+	/// Invoices that matched PO and receipt on price and quantity without manual fixing.
+	measure 'First-Pass Match %' = VAR _y = [Selected Year] RETURN CALCULATE ( DIVIDE ( CALCULATE ( COUNTROWS ( Fact_PO ), Fact_PO[Match_Status] = "Matched first time" ), CALCULATE ( COUNTROWS ( Fact_PO ), NOT ISBLANK ( Fact_PO[Invoice_Date] ) ) ), Dim_Date[Year] = _y )
+		formatString: 0.0%
+		displayFolder: Payments
+		lineageTag: 93415a89-ca73-533c-ae40-3549fe5dcaed
+
+	measure 'First-Pass Match % LY' = VAR _y = [Selected Year] RETURN CALCULATE ( DIVIDE ( CALCULATE ( COUNTROWS ( Fact_PO ), Fact_PO[Match_Status] = "Matched first time" ), CALCULATE ( COUNTROWS ( Fact_PO ), NOT ISBLANK ( Fact_PO[Invoice_Date] ) ) ), Dim_Date[Year] = _y - 1 )
+		formatString: 0.0%
+		displayFolder: Payments
+		lineageTag: 83a51c24-511e-5883-9767-d0a1c4e61834
+
+	measure 'Invoices (Match View)' = IF ( SELECTEDVALUE ( Fact_PO[Match_Status] ) = "Not invoiced yet", BLANK (), [Invoices] )
+		formatString: #,0
+		displayFolder: Payments
+		lineageTag: 4a602d21-d7bb-51f0-a398-143346a9c92d
+
+	/// Invoices paid after the supplier's payment terms, plus unpaid invoices already past their due date.
+	measure 'Late Payment %' = VAR _y = [Selected Year] RETURN CALCULATE ( DIVIDE ( SUM ( Fact_PO[Paid Late] ), COUNT ( Fact_PO[Paid Late] ) ), Dim_Date[Year] = _y )
+		formatString: 0.0%
+		displayFolder: Payments
+		lineageTag: de50e7b6-65cb-5f2c-ad5f-08ad65003549
+
+	measure 'Late Payment % LY' = VAR _y = [Selected Year] RETURN CALCULATE ( DIVIDE ( SUM ( Fact_PO[Paid Late] ), COUNT ( Fact_PO[Paid Late] ) ), Dim_Date[Year] = _y - 1 )
+		formatString: 0.0%
+		displayFolder: Payments
+		lineageTag: 8389d4c2-e160-5e29-9e34-367282a8573f
+
+	/// Share of POs whose invoice due date has passed by the data cut-off. Months below 95% are still open.
+	measure 'Payment Maturity %' = VAR _y = [Selected Year] RETURN CALCULATE ( DIVIDE ( SUM ( Fact_PO[Due Reached] ), COUNTROWS ( Fact_PO ) ), Dim_Date[Year] = _y )
+		formatString: 0.0%
+		displayFolder: Payments
+		lineageTag: 9a2d8059-0002-5593-8da9-e7cfc95d33c1
+
+	/// Late Payment % for months where almost every invoice has reached its due date; recent months are hidden so they don't look better than they are.
+	measure 'Late Payment % (Closed Months)' = IF ( [Payment Maturity %] < 0.95, BLANK (), [Late Payment %] )
+		formatString: 0.0%
+		displayFolder: Payments
+		lineageTag: e2f6fd25-41bf-5fef-9330-63c6f4e21741
+
+	/// Unpaid invoice value at the data cut-off, split by invoice age.
+	measure 'Open Invoice Value' =
+			VAR _asof = [Data As Of]
+			VAR _lo = SELECTEDVALUE ( Dim_AgeBucket[From Days], 0 )
+			VAR _hi = SELECTEDVALUE ( Dim_AgeBucket[To Days], 9999 )
+			RETURN
+			    CALCULATE (
+			        SUM ( Fact_PO[PO_Value_USD] ),
+			        REMOVEFILTERS ( Dim_Date ),
+			        FILTER (
+			            ALL ( Fact_PO[Invoice_Date], Fact_PO[Payment_Date] ),
+			            NOT ISBLANK ( Fact_PO[Invoice_Date] ) && ISBLANK ( Fact_PO[Payment_Date] )
+			                && DATEDIFF ( Fact_PO[Invoice_Date], _asof, DAY ) >= _lo
+			                && DATEDIFF ( Fact_PO[Invoice_Date], _asof, DAY ) <= _hi
+			        )
+			    )
+		formatString: $#,0
+		displayFolder: Payments
+		lineageTag: 84b2d354-e247-5432-962f-be4ae63dabcd
+
+	/// Documents reaching each step of the process in the year in focus.
+	measure 'Funnel Count' =
+			VAR _y = [Selected Year]
+			VAR _pr = CALCULATE ( COUNTROWS ( Fact_PR ), Dim_Date[Year] = _y, TREATAS ( VALUES ( Dim_Material[Category] ), Fact_PR[Category] ) )
+			VAR _prOk = CALCULATE ( COUNTROWS ( Fact_PR ), Dim_Date[Year] = _y, Fact_PR[Status] = "Converted to PO", TREATAS ( VALUES ( Dim_Material[Category] ), Fact_PR[Category] ) )
+			VAR _po = [PO Count CY]
+			VAR _grn = CALCULATE ( COUNTROWS ( Fact_PO ), Dim_Date[Year] = _y, NOT ISBLANK ( Fact_PO[GRN_Date] ) )
+			VAR _inv = [Invoices]
+			VAR _match = CALCULATE ( COUNTROWS ( Fact_PO ), Dim_Date[Year] = _y, Fact_PO[Match_Status] = "Matched first time" )
+			VAR _paid = CALCULATE ( COUNTROWS ( Fact_PO ), Dim_Date[Year] = _y, NOT ISBLANK ( Fact_PO[Payment_Date] ) )
+			RETURN
+			    SWITCH ( SELECTEDVALUE ( Dim_Funnel[Step Order] ), 1, _pr, 2, _prOk, 3, _po, 4, _grn, 5, _inv, 6, _match, 7, _paid )
+		formatString: #,0
+		displayFolder: Cycle Time
+		lineageTag: 4736a9ff-ee1d-59fe-b44e-9e303f14f3df
+
+	measure 'Funnel Color' = IF ( SELECTEDVALUE ( Dim_Funnel[Step Order] ) = 6, "#E8A33D", "#2E7D8C" )
+		displayFolder: Formatting
+		lineageTag: 63bdb4b9-04f0-546c-860a-b0e1331a6f44
+
+	measure 'Buyer Status' =
+			VAR _d = [Avg Days PR to PO]
+			RETURN
+			    IF ( ISBLANK ( _d ), BLANK (), IF ( _d > 12, "Slow", IF ( _d > 9.5, "Watch", "OK" ) ) )
+		displayFolder: Cycle Time
+		lineageTag: 15c721cf-a466-5f92-bc0c-9b267c314b2a
+
+	measure 'Buyer Status Pill' =
+			VAR _t = [Buyer Status]
+			VAR _bg = SWITCH ( _t, "OK", "#3C8D5A", "Watch", "#E8A33D", "#D2584E" )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='60' height='20' viewBox='0 0 60 20'>"
+			        & "<rect x='1' y='2' width='58' height='16' rx='8' fill='" & _bg & "'/>"
+			        & "<text x='30' y='14' text-anchor='middle' font-family='Segoe UI,sans-serif' font-size='10' font-weight='600' fill='#FFFFFF'>" & _t & "</text></svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( _t ),
+			        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( _svg, "%", "%25" ), "#", "%23" ) )
+		displayFolder: Formatting
+		lineageTag: 3e209989-43d6-5b74-b45a-2483688777b6
+		dataCategory: ImageUrl
+
+	measure 'Late Payment Target Line' = IF ( NOT ISBLANK ( [Late Payment % (Closed Months)] ), [Target Late Payments] )
+		formatString: 0%
+		displayFolder: Targets
+		lineageTag: 0bcb4683-dcf0-50d0-8572-d77ab907c65c
+
+	measure 'Procure Cycle Target Line' = IF ( NOT ISBLANK ( [Avg Procure Cycle (Closed Months)] ), [Target Procure Cycle Days] )
+		formatString: 0
+		displayFolder: Targets
+		lineageTag: d7a3ccc7-1b95-5676-85f6-b31c778a2430
+
+	measure 'Dept Maverick Color' = IF ( [Maverick Spend] >= 0.25 * CALCULATE ( [Maverick Spend], ALL ( Dim_Department ) ), "#D2584E", "#2E7D8C" )
+		displayFolder: Formatting
+		lineageTag: 136b5e4c-0c9d-5e29-bfe8-377bdb29b649
+
+	measure 'Age Color' = IF ( SELECTEDVALUE ( Dim_AgeBucket[Age Order] ) >= 3, "#D2584E", IF ( SELECTEDVALUE ( Dim_AgeBucket[Age Order] ) = 2, "#E8A33D", "#2E7D8C" ) )
+		displayFolder: Formatting
+		lineageTag: ded6d135-98e2-5512-be77-9666ae709e45
+
+	/// Result of each data quality rule.
+	measure 'DQ Value' =
+			VAR _o = SELECTEDVALUE ( Dim_DQ[Check Order] )
+			RETURN
+			    SWITCH (
+			        _o,
+			        1, FORMAT ( 0 + COUNTROWS ( ALL ( Fact_PO ) ), "#,0" ),
+			        2, FORMAT ( 0 + COUNTROWS ( ALL ( Fact_PO ) ) - DISTINCTCOUNT ( Fact_PO[PO_ID] ), "#,0" ),
+			        3, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_PO ), ISBLANK ( RELATED ( Dim_Supplier[SupplierName] ) ) ) ), "#,0" ),
+			        4, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_PO ), ISBLANK ( RELATED ( Dim_Plant[PlantName] ) ) ) ), "#,0" ),
+			        5, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_PO ), Fact_PO[PO_Value_USD] <= 0 ) ), "#,0" ),
+			        6, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_PO ), NOT ISBLANK ( Fact_PO[GRN_Date] ) && Fact_PO[GRN_Date] < Fact_PO[PO_Date] ) ), "#,0" ),
+			        7, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_PO ), NOT ISBLANK ( Fact_PO[Payment_Date] ) && Fact_PO[Payment_Date] < Fact_PO[Invoice_Date] ) ), "#,0" ),
+			        8, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_PO ), ISBLANK ( Fact_PO[GRN_Date] ) ) ), "#,0" ),
+			        9, FORMAT ( [Data As Of], "dd mmm yyyy" )
+			    )
+		displayFolder: Data Quality
+		lineageTag: 8c8ef6ef-5eea-5b96-997b-96275eba06ea
+
+	measure 'DQ Status' =
+			VAR _o = SELECTEDVALUE ( Dim_DQ[Check Order] )
+			VAR _v = [DQ Value]
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        ISBLANK ( _o ), BLANK (),
+			        _o IN { 1, 8, 9 }, "Info",
+			        _v = "0", "Pass",
+			        "Fail"
+			    )
+		displayFolder: Data Quality
+		lineageTag: d200f53f-5635-5ae6-b9c3-f0812650aa25
+
+	measure 'DQ Status Pill' =
+			VAR _t = [DQ Status]
+			VAR _bg = SWITCH ( _t, "Pass", "#3C8D5A", "Info", "#9CC4CC", "#D2584E" )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='56' height='20' viewBox='0 0 56 20'>"
+			        & "<rect x='1' y='2' width='54' height='16' rx='8' fill='" & _bg & "'/>"
+			        & "<text x='28' y='14' text-anchor='middle' font-family='Segoe UI,sans-serif' font-size='10' font-weight='600' fill='#FFFFFF'>" & _t & "</text></svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( _t ),
+			        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( _svg, "%", "%25" ), "#", "%23" ) )
+		displayFolder: Formatting
+		lineageTag: e50e9f57-2213-52c7-9888-9adb3b5c9ee8
+		dataCategory: ImageUrl
+
+	measure 'DQ Failed Checks' = COUNTROWS ( FILTER ( ALL ( Dim_DQ ), [DQ Status] = "Fail" ) )
+		formatString: 0
+		displayFolder: Data Quality
+		lineageTag: 5f9f6e6e-18dd-54fb-bcfd-c8aa1a7f1eb7
+
+	/// HTML for the KPI cards on the Overview page (HTML Content visual).
+	measure 'KPI Overview' =
+			VAR _a0 = ( "#0F4C5C" )
+			VAR _n0 = ( "#66757D" )
+			VAR _a1 = ( "#0F4C5C" )
+			VAR _n1 = ( "#66757D" )
+			VAR _a2 = ( [Procure Cycle Color] )
+			VAR _n2 = ( [Cycle Note Color] )
+			VAR _a3 = ( IF ( [On-Time Delivery %] >= [Target On-Time Delivery], "#3C8D5A", "#E8A33D" ) )
+			VAR _n3 = ( "#66757D" )
+			VAR _a4 = ( "#0F4C5C" )
+			VAR _n4 = ( IF ( [Spend Under Contract %] >= [Spend Under Contract % LY], "#3C8D5A", "#D2584E" ) )
+			VAR _a5 = ( IF ( [Maverick Spend %] > [Target Maverick Spend], "#D2584E", "#3C8D5A" ) )
+			VAR _n5 = ( "#66757D" )
+			RETURN
+			    "<div style='display:flex;gap:12px;height:78px;box-sizing:border-box;overflow:hidden;padding-bottom:2px;font-family:Segoe UI,sans-serif'>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(15,76,92,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a0 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#66757D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Total spend</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#1C2B33'>" & ( FORMAT ( DIVIDE ( [Spend CY], 1000000 ), "$#,0.0" ) & "M" ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n0 & "'>" & ( [Spend YoY Note] ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(15,76,92,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a1 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#66757D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Purchase orders</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#1C2B33'>" & ( FORMAT ( [PO Count CY], "#,0" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n1 & "'>" & ( [PO YoY Note] ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(15,76,92,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a2 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#66757D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Procure cycle (PR → receipt)</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#1C2B33'>" & ( FORMAT ( [Avg Procure Cycle], "0.0" ) & " d" ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n2 & "'>" & ( [Cycle Note] ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(15,76,92,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a3 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#66757D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>On-time delivery</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#1C2B33'>" & ( FORMAT ( [On-Time Delivery %], "0.0%" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n3 & "'>" & ( "target " & FORMAT ( [Target On-Time Delivery], "0%" ) ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(15,76,92,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a4 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#66757D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Spend under contract</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#1C2B33'>" & ( FORMAT ( [Spend Under Contract %], "0.0%" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n4 & "'>" & ( [Contract Note] ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(15,76,92,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a5 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#66757D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Maverick spend</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#1C2B33'>" & ( FORMAT ( [Maverick Spend %], "0.0%" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n5 & "'>" & ( FORMAT ( DIVIDE ( [Maverick Spend], 1000000 ), "$#,0.0" ) & "M" & " without an approved PR" ) & "</div></div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 767e7e35-6cd7-560b-8f51-0b49ef3908a0
+
+	measure 'Spend YoY Note' = VAR _c = [Spend CY] VAR _l = [Spend LY] VAR _d = DIVIDE ( _c - _l, _l ) RETURN IF ( ISBLANK ( _l ), "no prior year", IF ( _d >= 0, "▲ ", "▼ " ) & FORMAT ( ABS ( _d ), "0.0%" ) & " vs LY" )
+		displayFolder: KPI Text
+		lineageTag: a1341f88-6706-54a7-b0f0-fa571df0ea7e
+
+	measure 'PO YoY Note' = VAR _c = [PO Count CY] VAR _l = [PO Count LY] VAR _d = DIVIDE ( _c - _l, _l ) RETURN IF ( ISBLANK ( _l ), "no prior year", IF ( _d >= 0, "▲ ", "▼ " ) & FORMAT ( ABS ( _d ), "0.0%" ) & " vs LY" )
+		displayFolder: KPI Text
+		lineageTag: 2b884ec3-4d9a-5ee7-86ab-8a6c582a8ad0
+
+	measure 'Cycle Note' = VAR _d = [Avg Procure Cycle] - [Avg Procure Cycle LY] RETURN IF ( ISBLANK ( [Avg Procure Cycle LY] ), "no prior year", IF ( _d <= 0, "▼ ", "▲ " ) & FORMAT ( ABS ( _d ), "0.0" ) & " days vs LY" )
+		displayFolder: KPI Text
+		lineageTag: 6335d23e-8994-544d-bbbf-bfff1c3b66d3
+
+	measure 'Cycle Note Color' = IF ( [Avg Procure Cycle] <= [Avg Procure Cycle LY], "#3C8D5A", "#D2584E" )
+		displayFolder: Formatting
+		lineageTag: 6f7aeeac-13fd-58db-a2ae-2dca2ebc781f
+
+	measure 'Contract Note' = VAR _d = ( [Spend Under Contract %] - [Spend Under Contract % LY] ) * 100 RETURN IF ( ISBLANK ( [Spend Under Contract % LY] ), "no prior year", IF ( _d >= 0, "▲ ", "▼ " ) & FORMAT ( ABS ( _d ), "0.0" ) & " pts vs LY" )
+		displayFolder: KPI Text
+		lineageTag: e058dd5a-58e9-538b-8f38-d0c1ebcd878f
+
+	/// Narrative insights computed from the data in the current filter context.
+	measure 'Insight Overview' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#0F4C5C;color:#E2EEF0;border-radius:10px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>What the data says</div>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "The slowest procure stage is " & "<b style='color:#F4B95A'>" & [Slowest Stage Name] & "</b>" & " at " & "<b style='color:#F4B95A'>" & FORMAT ( [Slowest Stage Days], "0.0" ) & "</b>" & " days on average, against a procure-cycle target of " & FORMAT ( [Target Procure Cycle Days], "0" ) & " days." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b style='color:#F4B95A'>" & FORMAT ( DIVIDE ( [Maverick Spend], 1000000 ), "$#,0.0" ) & "M" & "</b>" & " of spend (" & FORMAT ( [Maverick Spend %], "0.0%" ) & ") went out without an approved requisition. " & "<b style='color:#F4B95A'>" & [Top Maverick Dept] & "</b>" & " accounts for " & FORMAT ( [Top Maverick Dept Share], "0%" ) & " of it." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "Spend under contract is " & "<b style='color:#F4B95A'>" & FORMAT ( [Spend Under Contract %], "0.0%" ) & "</b>" & " against the " & FORMAT ( [Target Spend Under Contract], "0%" ) & " target. The largest supplier without a contract is " & "<b style='color:#F4B95A'>" & [Top Off-Contract Supplier] & "</b>" & " with " & "<b style='color:#F4B95A'>" & FORMAT ( DIVIDE ( [Top Off-Contract Supplier Spend], 1000000 ), "$#,0.00" ) & "M" & "</b>" & "." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: d91f72d2-91ce-5aa4-b191-7296fdc9f838
+
+	measure 'Slowest Stage Days' = MAXX ( FILTER ( ALL ( Dim_Stage ), Dim_Stage[Stage Order] <= 2 ), [Stage Days] )
+		formatString: 0.0
+		displayFolder: Insights
+		lineageTag: 5f12a906-5d00-5677-a877-dbe3ec71a87e
+
+	measure 'Slowest Stage Name' =
+			VAR _max = [Slowest Stage Days]
+			RETURN
+			    MAXX ( FILTER ( ALL ( Dim_Stage ), Dim_Stage[Stage Order] <= 2 && [Stage Days] = _max ), Dim_Stage[Stage] )
+		displayFolder: Insights
+		lineageTag: b147f0a4-644a-5a67-a62d-94b17517e46d
+
+	measure 'Top Maverick Dept' =
+			VAR _t = TOPN ( 1, ADDCOLUMNS ( VALUES ( Dim_Department[DepartmentName] ), "@m", [Maverick Spend] ), [@m], DESC )
+			RETURN
+			    MAXX ( _t, Dim_Department[DepartmentName] )
+		displayFolder: Insights
+		lineageTag: 30ff9109-ea11-5119-9897-519e615e91a1
+
+	measure 'Top Maverick Dept Share' =
+			VAR _t = TOPN ( 1, ADDCOLUMNS ( VALUES ( Dim_Department[DepartmentName] ), "@m", [Maverick Spend] ), [@m], DESC )
+			RETURN
+			    DIVIDE ( MAXX ( _t, [@m] ), [Maverick Spend] )
+		formatString: 0%
+		displayFolder: Insights
+		lineageTag: bf576f67-7d25-57b1-9e5b-6a9a4e2ba4ea
+
+	measure 'Top Off-Contract Supplier' =
+			VAR _t = TOPN ( 1, ADDCOLUMNS ( VALUES ( Dim_Supplier[SupplierName] ), "@s", CALCULATE ( [Spend CY], Fact_PO[Under_Contract] = FALSE () ) ), [@s], DESC )
+			RETURN
+			    MAXX ( _t, Dim_Supplier[SupplierName] )
+		displayFolder: Insights
+		lineageTag: 81501c95-b86e-5eaf-949f-2a2106b0b121
+
+	measure 'Top Off-Contract Supplier Spend' =
+			VAR _t = TOPN ( 1, ADDCOLUMNS ( VALUES ( Dim_Supplier[SupplierName] ), "@s", CALCULATE ( [Spend CY], Fact_PO[Under_Contract] = FALSE () ) ), [@s], DESC )
+			RETURN
+			    MAXX ( _t, [@s] )
+		formatString: $#,0
+		displayFolder: Insights
+		lineageTag: 1632f091-0a49-5d9e-a937-bd8cebfe5577
+
+	measure 'KPI Cycle' =
+			VAR _a0 = ( "#0F4C5C" )
+			VAR _n0 = ( "#66757D" )
+			VAR _a1 = ( "#0F4C5C" )
+			VAR _n1 = ( IF ( [Avg Days PO to Receipt] <= [Avg Days PO to Receipt LY], "#3C8D5A", "#D2584E" ) )
+			VAR _a2 = ( [Procure Cycle Color] )
+			VAR _n2 = ( "#66757D" )
+			VAR _a3 = ( "#0F4C5C" )
+			VAR _n3 = ( "#66757D" )
+			RETURN
+			    "<div style='display:flex;gap:12px;height:78px;box-sizing:border-box;overflow:hidden;padding-bottom:2px;font-family:Segoe UI,sans-serif'>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(15,76,92,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a0 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#66757D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>PR → PO</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#1C2B33'>" & ( FORMAT ( [Avg Days PR to PO], "0.0" ) & " d" ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n0 & "'>" & ( "buyer processing time" ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(15,76,92,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a1 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#66757D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>PO → goods received</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#1C2B33'>" & ( FORMAT ( [Avg Days PO to Receipt], "0.0" ) & " d" ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n1 & "'>" & ( [Lead Time Note] ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(15,76,92,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a2 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#66757D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Procure cycle (PR → receipt)</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#1C2B33'>" & ( FORMAT ( [Avg Procure Cycle], "0.0" ) & " d" ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n2 & "'>" & ( "target " & FORMAT ( [Target Procure Cycle Days], "0" ) & " days" ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(15,76,92,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a3 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#66757D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Invoice → payment</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#1C2B33'>" & ( FORMAT ( [Avg Days Invoice to Payment], "0.0" ) & " d" ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n3 & "'>" & ( "follows supplier terms (30–60 d)" ) & "</div></div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: b99e65b2-4eeb-559a-92c2-c84451d9faf2
+
+	measure 'Lead Time Note' = VAR _d = [Avg Days PO to Receipt] - [Avg Days PO to Receipt LY] RETURN IF ( ISBLANK ( [Avg Days PO to Receipt LY] ), "no prior year", IF ( _d <= 0, "▼ ", "▲ " ) & FORMAT ( ABS ( _d ), "0.0" ) & " days vs LY" )
+		displayFolder: KPI Text
+		lineageTag: 1d5a701e-2eba-5d9c-afb2-e7ad62de8c40
+
+	measure 'KPI Suppliers' =
+			VAR _a0 = ( "#0F4C5C" )
+			VAR _n0 = ( "#66757D" )
+			VAR _a1 = ( IF ( [Top 10 Supplier Share] > 0.4, "#E8A33D", "#0F4C5C" ) )
+			VAR _n1 = ( "#66757D" )
+			VAR _a2 = ( IF ( [On-Time Delivery %] >= [Target On-Time Delivery], "#3C8D5A", "#E8A33D" ) )
+			VAR _n2 = ( IF ( [On-Time Delivery %] >= [On-Time Delivery % LY], "#3C8D5A", "#D2584E" ) )
+			VAR _a3 = ( "#0F4C5C" )
+			VAR _n3 = ( "#66757D" )
+			VAR _a4 = ( "#0F4C5C" )
+			VAR _n4 = ( IF ( [Avg Days PO to Receipt] <= [Avg Days PO to Receipt LY], "#3C8D5A", "#D2584E" ) )
+			RETURN
+			    "<div style='display:flex;gap:12px;height:78px;box-sizing:border-box;overflow:hidden;padding-bottom:2px;font-family:Segoe UI,sans-serif'>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(15,76,92,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a0 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#66757D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Active suppliers</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#1C2B33'>" & ( FORMAT ( [Active Suppliers], "#,0" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n0 & "'>" & ( VAR _d = [Active Suppliers] - [Active Suppliers LY] RETURN IF ( _d >= 0, "▲ ", "▼ " ) & FORMAT ( ABS ( _d ), "0" ) & " vs LY" ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(15,76,92,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a1 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#66757D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Top 10 share of spend</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#1C2B33'>" & ( FORMAT ( [Top 10 Supplier Share], "0.0%" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n1 & "'>" & ( "concentration risk" ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(15,76,92,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a2 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#66757D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>On-time delivery</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#1C2B33'>" & ( FORMAT ( [On-Time Delivery %], "0.0%" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n2 & "'>" & ( [OTD Note] ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(15,76,92,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a3 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#66757D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Quality acceptance</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#1C2B33'>" & ( FORMAT ( [Quality Acceptance %], "0.0%" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n3 & "'>" & ( "accepted vs ordered quantity" ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(15,76,92,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a4 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#66757D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Supplier lead time</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#1C2B33'>" & ( FORMAT ( [Avg Days PO to Receipt], "0.0" ) & " d" ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n4 & "'>" & ( [Lead Time Note] ) & "</div></div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 440cebe7-c5ac-57f9-996c-f951520d52b1
+
+	measure 'OTD Note' = VAR _d = ( [On-Time Delivery %] - [On-Time Delivery % LY] ) * 100 RETURN IF ( ISBLANK ( [On-Time Delivery % LY] ), "no prior year", IF ( _d >= 0, "▲ ", "▼ " ) & FORMAT ( ABS ( _d ), "0.0" ) & " pts vs LY" )
+		displayFolder: KPI Text
+		lineageTag: 4bca9c92-5b5f-501a-aa7a-e759eda2a061
+
+	measure 'KPI Compliance' =
+			VAR _a0 = ( IF ( [Maverick Spend %] > [Target Maverick Spend], "#D2584E", "#3C8D5A" ) )
+			VAR _n0 = ( "#66757D" )
+			VAR _a1 = ( "#0F4C5C" )
+			VAR _n1 = ( IF ( [POs After Invoice] <= [POs After Invoice LY], "#3C8D5A", "#D2584E" ) )
+			VAR _a2 = ( "#0F4C5C" )
+			VAR _n2 = ( IF ( [First-Pass Match %] >= [First-Pass Match % LY], "#3C8D5A", "#D2584E" ) )
+			VAR _a3 = ( IF ( [Late Payment %] > [Target Late Payments], "#E8A33D", "#3C8D5A" ) )
+			VAR _n3 = ( "#66757D" )
+			RETURN
+			    "<div style='display:flex;gap:12px;height:78px;box-sizing:border-box;overflow:hidden;padding-bottom:2px;font-family:Segoe UI,sans-serif'>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(15,76,92,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a0 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#66757D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Maverick spend</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#1C2B33'>" & ( FORMAT ( DIVIDE ( [Maverick Spend], 1000000 ), "$#,0.0" ) & "M" ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n0 & "'>" & ( FORMAT ( [Maverick Spend %], "0.0%" ) & " of spend" ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(15,76,92,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a1 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#66757D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>POs raised after the invoice</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#1C2B33'>" & ( FORMAT ( [POs After Invoice], "#,0" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n1 & "'>" & ( VAR _d = [POs After Invoice] - [POs After Invoice LY] RETURN IF ( _d <= 0, "▼ ", "▲ " ) & FORMAT ( ABS ( _d ), "0" ) & " vs LY" ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(15,76,92,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a2 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#66757D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>First-pass 3-way match</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#1C2B33'>" & ( FORMAT ( [First-Pass Match %], "0.0%" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n2 & "'>" & ( VAR _d = ( [First-Pass Match %] - [First-Pass Match % LY] ) * 100 RETURN IF ( ISBLANK ( [First-Pass Match % LY] ), "no prior year", IF ( _d >= 0, "▲ ", "▼ " ) & FORMAT ( ABS ( _d ), "0.0" ) & " pts vs LY" ) ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(15,76,92,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a3 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#66757D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Late payments</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#1C2B33'>" & ( FORMAT ( [Late Payment %], "0.0%" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n3 & "'>" & ( "target " & FORMAT ( [Target Late Payments], "0%" ) ) & "</div></div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 594bbb7c-3832-5fd9-8dd2-c506e6c44332
+
+	measure 'Insight Compliance' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#0F4C5C;color:#E2EEF0;border-radius:10px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>What the data says</div>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b style='color:#F4B95A'>" & [Top Maverick Dept] & "</b>" & " is the department with the most spend outside the process: " & "<b style='color:#F4B95A'>" & FORMAT ( DIVIDE ( MAXX ( TOPN ( 1, ADDCOLUMNS ( VALUES ( Dim_Department[DepartmentName] ), "@m", [Maverick Spend] ), [@m], DESC ), [@m] ), 1000 ), "$#,0" ) & "K" & "</b>" & ", or " & FORMAT ( [Top Maverick Dept Share], "0%" ) & " of all maverick spend." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "Invoices that fail the first 3-way match are paid late more often: late payments run at " & "<b style='color:#F4B95A'>" & FORMAT ( [Late Payment %], "0.0%" ) & "</b>" & " overall." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: 32ce93b6-0675-5718-a6b6-f3331ca3a583
+
+	measure 'DQ Summary' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#0F4C5C;color:#E2EEF0;border-radius:10px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>How this report is governed</div>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Data quality:</b> " & IF ( [DQ Failed Checks] = 0, "all checks pass on the last refresh.", FORMAT ( [DQ Failed Checks], "0" ) & " check(s) failed on the last refresh." ) ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Security:</b> the Plant Manager role limits each manager to their own plant (row-level security on Dim_Plant). Leadership sees every plant." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Definitions:</b> every KPI is a documented measure with a description in the model, grouped in display folders." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Freshness:</b> " & [Last Refresh] & ". Latest PO in the data: " & FORMAT ( [Data As Of], "dd mmm yyyy" ) & "." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: 2c1125b3-669f-51f0-9236-7e05301119d4
+
+	column Placeholder
+		dataType: string
+		isHidden
+		lineageTag: 9df33aa6-f4f6-5c17-8635-6c15a643e424
+		summarizeBy: none
+		sourceColumn: Placeholder
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Measures = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Placeholder = text], {})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

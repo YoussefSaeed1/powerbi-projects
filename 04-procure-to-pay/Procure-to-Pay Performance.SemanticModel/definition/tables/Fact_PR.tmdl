@@ -1,0 +1,85 @@
+/// Purchase requisitions, including the ones that never became a PO.
+table Fact_PR
+	lineageTag: 33dba4b4-d7c9-5a1a-b6ea-d578deb52ce4
+
+	column PR_ID
+		dataType: string
+		lineageTag: 95c5d4c4-c68d-5f6b-8849-67b1849b8bfb
+		summarizeBy: none
+		sourceColumn: PR_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column PR_Date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 7ac8d587-2f94-5b74-a268-d364d7856269
+		summarizeBy: none
+		sourceColumn: PR_Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Approved_Date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 9691c06e-7500-5ef4-abb6-278e60a30514
+		summarizeBy: none
+		sourceColumn: Approved_Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Status
+		dataType: string
+		lineageTag: 1b5b36f9-c353-53b1-87c5-7b7e396ae92f
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column DepartmentID
+		dataType: string
+		isHidden
+		lineageTag: 98b1da28-12e6-598c-a616-d360c1d77f4f
+		summarizeBy: none
+		sourceColumn: DepartmentID
+
+		annotation SummarizationSetBy = Automatic
+
+	column PlantID
+		dataType: string
+		isHidden
+		lineageTag: e46cb701-93fa-57a7-b5d1-972d92b74d66
+		summarizeBy: none
+		sourceColumn: PlantID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Category
+		dataType: string
+		isHidden
+		lineageTag: 4b210f12-aa9e-59d8-8442-dbdfe8804e84
+		summarizeBy: none
+		sourceColumn: Category
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_PR = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="Requisitions",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Selected = Table.SelectColumns(Promoted, {"PR_ID", "PR_Date", "Approved_Date", "Status", "DepartmentID", "PlantID", "Category"}),
+				    NonBlank = Table.SelectRows(Selected, each [PR_ID] <> null and [PR_ID] <> ""),
+				    Typed = Table.TransformColumnTypes(NonBlank, {{"PR_ID", type text}, {"PR_Date", type date}, {"Approved_Date", type date}, {"Status", type text}, {"DepartmentID", type text}, {"PlantID", type text}, {"Category", type text}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

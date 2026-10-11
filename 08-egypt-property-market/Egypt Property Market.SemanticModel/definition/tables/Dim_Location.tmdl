@@ -1,0 +1,33 @@
+/// Districts and their city.
+table Dim_Location
+	lineageTag: efc84773-c23b-5fdc-bdb4-4b3cb7cff4f4
+
+	column District
+		dataType: string
+		isKey
+		lineageTag: 1a2de79d-63eb-5e0d-acb9-94d3c7352b05
+		summarizeBy: none
+		sourceColumn: District
+
+		annotation SummarizationSetBy = Automatic
+
+	column City
+		dataType: string
+		lineageTag: b680c069-e5b6-5dd6-9efd-feaedc9ecd41
+		summarizeBy: none
+		sourceColumn: City
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Location = m
+		mode: import
+		source =
+				let
+				    Source = Listings_Raw,
+				    Loc = Table.Distinct(Table.SelectColumns(Source, {"District", "City"}))
+				in
+				    Loc
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

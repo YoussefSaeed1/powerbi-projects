@@ -1,0 +1,32 @@
+table 'Trend Metric'
+	lineageTag: 84a71293-8a21-51bc-a24e-31f6b7692940
+
+	column Metric
+		dataType: string
+		lineageTag: ebeb2fd7-dc9a-5f2a-b7df-202eb6c57a45
+		summarizeBy: none
+		sourceColumn: Metric
+		sortByColumn: 'Metric Sort'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Metric Sort'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 0acf87ac-697d-5ddb-a4e6-602eec48e2a9
+		summarizeBy: none
+		sourceColumn: Metric Sort
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Trend Metric' = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Metric" = text, #"Metric Sort" = Int64.Type], {{"Revenue", 1}, {"Inventory", 2}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

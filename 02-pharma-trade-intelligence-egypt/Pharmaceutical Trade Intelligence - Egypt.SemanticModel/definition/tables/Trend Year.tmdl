@@ -1,0 +1,24 @@
+/// Disconnected list of years for the long-term chart, so the year slicer highlights a year instead of hiding the others.
+table 'Trend Year'
+	lineageTag: 146f255d-2282-5660-88b7-1892036cb12d
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 7507cd61-30d9-5130-a0ce-6aaef715c855
+		summarizeBy: none
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Trend Year' = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Year" = Int64.Type], {{2018}, {2019}, {2020}, {2021}, {2022}, {2023}, {2024}, {2025}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

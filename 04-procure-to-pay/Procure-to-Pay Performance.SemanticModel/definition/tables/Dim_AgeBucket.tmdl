@@ -1,0 +1,50 @@
+table Dim_AgeBucket
+	lineageTag: 23cb3a57-359d-5f98-86c2-1e75ca5ef8a4
+
+	column Age
+		dataType: string
+		lineageTag: 36b9641d-a2bd-5f39-8c9b-1dfa4921525e
+		summarizeBy: none
+		sourceColumn: Age
+		sortByColumn: 'Age Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Age Order'
+		dataType: int64
+		isHidden
+		lineageTag: 244082a7-73d3-5c06-a72c-299b43fbe5e1
+		summarizeBy: none
+		sourceColumn: Age Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'From Days'
+		dataType: int64
+		isHidden
+		lineageTag: b51aee46-d704-5021-a9e4-ad0fe2efb636
+		summarizeBy: none
+		sourceColumn: From Days
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'To Days'
+		dataType: int64
+		isHidden
+		lineageTag: f9d83d76-901f-563b-af22-0fdbed18d997
+		summarizeBy: none
+		sourceColumn: To Days
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_AgeBucket = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Age" = text, #"Age Order" = Int64.Type, #"From Days" = Int64.Type, #"To Days" = Int64.Type], {{"0–30 days", 1, 0, 30}, {"31–60 days", 2, 31, 60}, {"61–90 days", 3, 61, 90}, {"90+ days", 4, 91, 9999}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

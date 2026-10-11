@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "Procure-to-Pay Performance"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "01928045-2e98-5a8c-b10d-d38280e7111d"
+  }
+}

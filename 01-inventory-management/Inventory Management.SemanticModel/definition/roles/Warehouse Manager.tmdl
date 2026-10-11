@@ -1,0 +1,7 @@
+/// Dynamic row-level security: each manager sees only the warehouses mapped to their sign-in in Security_WarehouseAccess. The filter flows Warehouses → Products → facts.
+role 'Warehouse Manager'
+	modelPermission: read
+
+	tablePermission Warehouses = Warehouses[WarehouseID] IN CALCULATETABLE ( VALUES ( Security_WarehouseAccess[WarehouseID] ), Security_WarehouseAccess[UserEmail] = USERPRINCIPALNAME () )
+
+	annotation PBI_Id = 3116328a41a359d7ae7256020ddce272

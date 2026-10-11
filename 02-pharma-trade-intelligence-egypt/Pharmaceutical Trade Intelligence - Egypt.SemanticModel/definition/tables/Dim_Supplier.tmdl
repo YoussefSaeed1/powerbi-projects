@@ -1,0 +1,53 @@
+/// Exporting (supplier) countries.
+table Dim_Supplier
+	lineageTag: 5e92ec81-11a4-51db-be51-d44555383343
+
+	column ReporterCode
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		lineageTag: 7c18efe1-f1eb-513d-9907-d4fda3d4ad73
+		summarizeBy: none
+		sourceColumn: ReporterCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column ISO
+		dataType: string
+		lineageTag: 6d62d32d-3801-5d5d-9479-b524af25ce41
+		summarizeBy: none
+		sourceColumn: ISO
+
+		annotation SummarizationSetBy = Automatic
+
+	column Country
+		dataType: string
+		lineageTag: a09de371-54ed-58e4-a20d-d516489b8d73
+		summarizeBy: none
+		sourceColumn: Country
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		lineageTag: e7e41d5d-d966-55b6-a701-53aef280fd43
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Supplier = m
+		mode: import
+		source =
+				let
+				    Source = Trade_Raw,
+				    Kept = Table.Distinct(Table.SelectColumns(Source, {"reporterCode", "reporterISO", "reporterDesc"})),
+				    Renamed = Table.RenameColumns(Kept, {{"reporterCode", "ReporterCode"}, {"reporterISO", "ISO"}, {"reporterDesc", "Country"}}),
+				    AddRegion = Table.AddColumn(Renamed, "Region", each if List.Contains({"ARE", "SAU", "TUR"}, [ISO]) then "Middle East" else if List.Contains({"CHN", "IND", "PAK", "HKG", "SGP", "VNM"}, [ISO]) then "Asia" else if List.Contains({"USA", "CAN", "BRA"}, [ISO]) then "Americas" else if [ISO] = "AUS" then "Oceania" else "Europe", type text)
+				in
+				    AddRegion
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

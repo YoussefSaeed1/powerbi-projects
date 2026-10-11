@@ -1,0 +1,8 @@
+/// Full path of the data file. Change it here once if you move the folder.
+expression DataFilePath = "C:\Users\RTX\Desktop\Portfolio Dashboards\Procure-to-Pay Performance\P2P_Sample_Data.xlsx" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: ab75f927-c856-5526-bda5-1368a115088c
+
+	annotation PBI_ResultType = Text
+
+	annotation PBI_NavigationStepName = Navigation
+

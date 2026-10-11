@@ -1,0 +1,43 @@
+table Suppliers
+	lineageTag: d1b2b239-f6ea-5e08-a6e1-849c1be72325
+
+	column SupplierID
+		dataType: string
+		isKey
+		lineageTag: 485cc982-9fff-5859-9ece-4ab298e1d244
+		summarizeBy: none
+		sourceColumn: SupplierID
+
+		annotation SummarizationSetBy = Automatic
+
+	column SupplierName
+		dataType: string
+		lineageTag: f167d295-ca7a-5b72-93f6-26fae2a7b884
+		summarizeBy: none
+		sourceColumn: SupplierName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Country
+		dataType: string
+		lineageTag: 482077f9-259b-521a-89f9-65b76133352f
+		summarizeBy: none
+		sourceColumn: Country
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Suppliers = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="Suppliers",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Selected = Table.SelectColumns(Promoted, {"SupplierID", "SupplierName", "Country"}),
+				    NonBlank = Table.SelectRows(Selected, each [SupplierID] <> null and [SupplierID] <> ""),
+				    Typed = Table.TransformColumnTypes(NonBlank, {{"SupplierID", type text}, {"SupplierName", type text}, {"Country", type text}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+

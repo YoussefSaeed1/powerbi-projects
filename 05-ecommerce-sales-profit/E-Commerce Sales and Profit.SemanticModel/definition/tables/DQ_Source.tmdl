@@ -1,0 +1,98 @@
+/// Counts used by the data quality page.
+table DQ_Source
+	lineageTag: 362bb5c9-eb69-51b5-aab2-481111e2b357
+	isHidden
+
+	column RawRows
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 559118a5-7f2b-52c0-96df-516fa1bd6f8e
+		summarizeBy: none
+		sourceColumn: RawRows
+
+		annotation SummarizationSetBy = Automatic
+
+	column DuplicateRows
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: b810099a-20c1-5ad2-9192-d94f47c058f2
+		summarizeBy: none
+		sourceColumn: DuplicateRows
+
+		annotation SummarizationSetBy = Automatic
+
+	column RowIdConflicts
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 3d00afc5-8891-5536-8926-ebb4d661074f
+		summarizeBy: none
+		sourceColumn: RowIdConflicts
+
+		annotation SummarizationSetBy = Automatic
+
+	column MissingPriority
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 11ca1e73-fa09-5137-9714-cb76211a4191
+		summarizeBy: none
+		sourceColumn: MissingPriority
+
+		annotation SummarizationSetBy = Automatic
+
+	column PaddedPriority
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: f7ded871-9c93-592c-9388-53d189fafaee
+		summarizeBy: none
+		sourceColumn: PaddedPriority
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReturnRows
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 8f8b3736-dd93-5052-9687-df5bd9be55e5
+		summarizeBy: none
+		sourceColumn: ReturnRows
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReturnsMatched
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 60b12757-9caa-59ab-9b2c-3f1d3034e92a
+		summarizeBy: none
+		sourceColumn: ReturnsMatched
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DQ_Source = m
+		mode: import
+		source =
+				let
+				    Raw = Invoices_Raw,
+				    Dedup = Table.Distinct(Raw),
+				    IdGroups = Table.Group(Dedup, {"Row ID"}, {{"n", each Table.RowCount(_), Int64.Type}}),
+				    Wb = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Ret = Table.PromoteHeaders(Wb{[Item="Returns",Kind="Sheet"]}[Data], [PromoteAllScalars=true]),
+				    RetIds = List.Distinct(List.RemoveNulls(Ret[Order ID])),
+				    InvIds = List.Distinct(Dedup[Order ID]),
+				    Result = #table(type table [RawRows = Int64.Type, DuplicateRows = Int64.Type, RowIdConflicts = Int64.Type, MissingPriority = Int64.Type, PaddedPriority = Int64.Type, ReturnRows = Int64.Type, ReturnsMatched = Int64.Type],
+				        {{ Table.RowCount(Raw), Table.RowCount(Raw) - Table.RowCount(Dedup),
+				           Table.RowCount(Table.SelectRows(IdGroups, each [n] > 1)),
+				           Table.RowCount(Table.SelectRows(Dedup, each [Order Priority] = null)),
+				           Table.RowCount(Table.SelectRows(Dedup, each [Order Priority] <> null and Text.Trim([Order Priority]) <> [Order Priority])),
+				           List.Count(RetIds), List.Count(List.Intersect({RetIds, InvIds})) }})
+				in
+				    Result
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

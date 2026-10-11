@@ -1,0 +1,5 @@
+/// Full read access to every region.
+role 'Sales Leadership'
+	modelPermission: read
+
+	annotation PBI_Id = 91bcea662f0d532997d7fdc63e3ef410

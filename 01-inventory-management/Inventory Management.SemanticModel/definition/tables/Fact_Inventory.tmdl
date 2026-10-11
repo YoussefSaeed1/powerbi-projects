@@ -1,0 +1,118 @@
+table Fact_Inventory
+	lineageTag: cc0fb253-5594-51c6-9a0b-787ce649fcf6
+
+	column SnapshotDate
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 63d7b7e2-f826-5d00-9b0c-b94a5773f6f4
+		summarizeBy: none
+		sourceColumn: SnapshotDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column SKU
+		dataType: string
+		isHidden
+		lineageTag: 678e0a71-0d76-5fa3-86b5-b37644268b71
+		summarizeBy: none
+		sourceColumn: SKU
+
+		annotation SummarizationSetBy = Automatic
+
+	column OnHandQty
+		dataType: int64
+		formatString: #,0
+		lineageTag: 10ac6990-d660-521b-909e-12936baceff2
+		summarizeBy: sum
+		sourceColumn: OnHandQty
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitsSold
+		dataType: int64
+		formatString: #,0
+		lineageTag: afa06344-3d1f-5f42-815c-b3bc5749205e
+		summarizeBy: sum
+		sourceColumn: UnitsSold
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitsReceived
+		dataType: int64
+		formatString: #,0
+		lineageTag: 5c43557a-cfe5-5def-9f7e-86e762903b51
+		summarizeBy: sum
+		sourceColumn: UnitsReceived
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Inventory Value' = Fact_Inventory[OnHandQty] * RELATED ( Products[UnitCost] )
+		isHidden
+		formatString: $#,0
+		lineageTag: 0479473a-7159-542f-ae99-154e4e95fa28
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Days of Supply' = IF ( Fact_Inventory[UnitsSold] > 0, MIN ( 365, Fact_Inventory[OnHandQty] / ( Fact_Inventory[UnitsSold] / DAY ( Fact_Inventory[SnapshotDate] ) ) ) )
+		formatString: #,0.0
+		lineageTag: e6ecdc25-9320-5f7b-979b-8db847aaf6c0
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Health Sort' = SWITCH ( TRUE (), Fact_Inventory[OnHandQty] <= 0, 1, Fact_Inventory[OnHandQty] <= RELATED ( Products[ReorderPoint] ), 2, Fact_Inventory[UnitsSold] = 0, 5, Fact_Inventory[Days of Supply] > 120, 4, 3 )
+		isHidden
+		formatString: 0
+		lineageTag: 6a57d1bd-5fe5-59c8-a0fe-fb7e7ac039cb
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Inventory Health' = SWITCH ( Fact_Inventory[Health Sort], 1, "Stockout", 2, "Critical Low", 4, "Overstocked", 5, "Dead Stock", "Healthy" )
+		lineageTag: f5bfd15f-e1f4-5597-89bf-0fd947259314
+		summarizeBy: none
+		sortByColumn: 'Health Sort'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Movement Sort' = SWITCH ( TRUE (), Fact_Inventory[UnitsSold] = 0, 4, Fact_Inventory[Days of Supply] <= 30, 1, Fact_Inventory[Days of Supply] <= 90, 2, 3 )
+		isHidden
+		formatString: 0
+		lineageTag: b45d1af3-5ac1-5329-9b96-5c2db70febc3
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Movement Class' = SWITCH ( Fact_Inventory[Movement Sort], 1, "Fast Moving", 2, "Moderate", 3, "Slow Moving", "Non-Moving" )
+		lineageTag: c3d0100a-9d79-54c6-8d60-b2829744bcb3
+		summarizeBy: none
+		sortByColumn: 'Movement Sort'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Stock Action' = IF ( Fact_Inventory[OnHandQty] <= RELATED ( Products[ReorderPoint] ), "Reorder Now", "Healthy" )
+		lineageTag: 7a621e0e-a419-5321-a2dc-1b2f157ba5d2
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Inventory = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="Inventory_Snapshot",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Selected = Table.SelectColumns(Promoted, {"SnapshotDate", "SKU", "OnHandQty", "UnitsSold", "UnitsReceived"}),
+				    NonBlank = Table.SelectRows(Selected, each [SKU] <> null and [SKU] <> ""),
+				    Typed = Table.TransformColumnTypes(NonBlank, {{"SnapshotDate", type date}, {"SKU", type text}, {"OnHandQty", Int64.Type}, {"UnitsSold", Int64.Type}, {"UnitsReceived", Int64.Type}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

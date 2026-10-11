@@ -1,0 +1,49 @@
+/// Products with their group and list price.
+table Dim_Product
+	lineageTag: 55f4cb4d-233c-589f-97e5-268b7b5aa123
+
+	column Product
+		dataType: string
+		isKey
+		lineageTag: 36a45d6e-f42d-5340-b97e-f64e85c7df9c
+		summarizeBy: none
+		sourceColumn: Product
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Product Group'
+		dataType: string
+		lineageTag: 7acdb6bf-db2b-5e2f-a5fd-d0991cb57fa6
+		summarizeBy: none
+		sourceColumn: Product Group
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'List Price'
+		dataType: double
+		formatString: $#,0.00
+		lineageTag: 366709c5-a902-5454-82e4-0bd6b314ad03
+		summarizeBy: none
+		sourceColumn: List Price
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Product = m
+		mode: import
+		source =
+				let
+				    Source = Sales_Raw,
+				    Prices = Table.Group(Source, {"Product"}, {{"List Price", each List.Max([PriceEach]), type number}}),
+				    AddGroup = Table.AddColumn(Prices, "Product Group", each
+				        if Text.Contains([Product], "Laptop") then "Laptops"
+				        else if Text.Contains([Product], "Phone") and not Text.Contains([Product], "Headphones") or [Product] = "iPhone" then "Phones"
+				        else if Text.Contains([Product], "Monitor") or Text.Contains([Product], "TV") then "Monitors & TVs"
+				        else if Text.Contains([Product], "Headphones") then "Headphones"
+				        else if Text.Contains([Product], "Cable") or Text.Contains([Product], "Batteries") then "Cables & batteries"
+				        else "Appliances", type text)
+				in
+				    AddGroup
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

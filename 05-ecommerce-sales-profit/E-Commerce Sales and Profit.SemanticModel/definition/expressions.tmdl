@@ -1,0 +1,39 @@
+/// Full path of the data file. Change it here once if you move the folder.
+expression DataFilePath = "C:\Users\RTX\Desktop\Portfolio Dashboards\E-Commerce Sales and Profit\E-commerce project.xlsx" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 1ad23851-717c-5583-93c2-9d6be9b99e22
+
+	annotation PBI_ResultType = Text
+
+	annotation PBI_NavigationStepName = Navigation
+
+/// Invoice lines as they are in the workbook, blank rows removed (not loaded).
+expression Invoices_Raw =
+		let
+		    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+		    Sheet = Source{[Item="INVOICES",Kind="Sheet"]}[Data],
+		    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+		    NonBlank = Table.SelectRows(Promoted, each [Row ID] <> null),
+		    Typed = Table.TransformColumnTypes(NonBlank, {{"Row ID", Int64.Type}, {"Order ID", Int64.Type}, {"Order Priority", type text}, {"Discount", type number}, {"Unit Price", type number}, {"Shipping Cost", type number}, {"Customer ID", Int64.Type}, {"Customer Name", type text}, {"Ship Mode", type text}, {"Customer Segment", type text}, {"Product Category", type text}, {"Product Sub-Category", type text}, {"Product Container", type text}, {"Product Name", type text}, {"Product Base Margin", type number}, {"Region", type text}, {"State or Province", type text}, {"City", type text}, {"Order Date", type date}, {"Ship Date", type date}, {"Profit", type number}, {"Quantity ordered new", Int64.Type}, {"Sales", type number}})
+		in
+		    Typed
+	lineageTag: 501f64fa-5dd4-5b8c-9f98-a9cd6b62f64f
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+/// Exact duplicate rows removed, order priority trimmed and blanks set to Not Specified (not loaded).
+expression Invoices_Clean =
+		let
+		    Source = Invoices_Raw,
+		    NoDuplicates = Table.Distinct(Source),
+		    Trimmed = Table.TransformColumns(NoDuplicates, {{"Order Priority", each if _ = null then "Not Specified" else Text.Trim(_), type text}}),
+		    Renamed = Table.RenameColumns(Trimmed, {{"Quantity ordered new", "Quantity"}})
+		in
+		    Renamed
+	lineageTag: 650e2d7f-b188-561d-bbfd-a6406b187159
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

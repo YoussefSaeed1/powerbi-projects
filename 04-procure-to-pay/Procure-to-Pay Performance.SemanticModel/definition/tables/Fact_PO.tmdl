@@ -1,0 +1,299 @@
+/// Purchase orders with every step of the procure-to-pay process.
+table Fact_PO
+	lineageTag: 3d60a322-4752-5b9e-b385-b9f3ba25680c
+
+	/// Purchase order number (one row per PO).
+	column PO_ID
+		dataType: string
+		lineageTag: 2ed774c4-c352-5245-8fe8-a7c141c7da45
+		summarizeBy: none
+		sourceColumn: PO_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Approved requisition behind the PO; blank when the PO was raised without one.
+	column PR_ID
+		dataType: string
+		lineageTag: 5170076a-a57b-5f9b-9761-eee774ce6692
+		summarizeBy: none
+		sourceColumn: PR_ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column PR_Date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 9f9445dd-9f2a-5389-8de0-c02931b4bd6e
+		summarizeBy: none
+		sourceColumn: PR_Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column PO_Date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 5638ef4e-ccbb-5005-a4a1-ec4b3d4d9e18
+		summarizeBy: none
+		sourceColumn: PO_Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Promised_Date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 307ec27b-2caa-527f-86a0-05b1509aa3e1
+		summarizeBy: none
+		sourceColumn: Promised_Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	/// Goods receipt date.
+	column GRN_Date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: cafcbe0a-f456-5e25-8ef7-013b1edcf268
+		summarizeBy: none
+		sourceColumn: GRN_Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Invoice_Date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 96a487ed-cc6c-52ff-aed0-0a53d535d78a
+		summarizeBy: none
+		sourceColumn: Invoice_Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Due_Date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 790a4df3-c650-5352-8c6d-ed1b566795b5
+		summarizeBy: none
+		sourceColumn: Due_Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Payment_Date
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 7034bf19-2dcb-54f8-af29-9d23e46c3b2f
+		summarizeBy: none
+		sourceColumn: Payment_Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column SupplierID
+		dataType: string
+		isHidden
+		lineageTag: 380ff0ac-237b-573e-b90c-1be5ae037f3b
+		summarizeBy: none
+		sourceColumn: SupplierID
+
+		annotation SummarizationSetBy = Automatic
+
+	column MaterialID
+		dataType: string
+		isHidden
+		lineageTag: 4b05b79a-9d04-51fa-b875-d6996fc48a56
+		summarizeBy: none
+		sourceColumn: MaterialID
+
+		annotation SummarizationSetBy = Automatic
+
+	column PlantID
+		dataType: string
+		isHidden
+		lineageTag: 5124855e-7e95-54c5-98a9-f0d6984d486b
+		summarizeBy: none
+		sourceColumn: PlantID
+
+		annotation SummarizationSetBy = Automatic
+
+	column BuyerID
+		dataType: string
+		isHidden
+		lineageTag: f8202e17-1ba3-5832-bd7f-35f30b45510a
+		summarizeBy: none
+		sourceColumn: BuyerID
+
+		annotation SummarizationSetBy = Automatic
+
+	column DepartmentID
+		dataType: string
+		isHidden
+		lineageTag: 53e4f012-447d-5c8c-8f23-3511a925fd90
+		summarizeBy: none
+		sourceColumn: DepartmentID
+
+		annotation SummarizationSetBy = Automatic
+
+	column PO_Value_USD
+		dataType: double
+		isHidden
+		formatString: $#,0
+		lineageTag: b7c2f2d2-14ce-5209-a23f-f066e3a3ae18
+		summarizeBy: none
+		sourceColumn: PO_Value_USD
+
+		annotation SummarizationSetBy = Automatic
+
+	column Qty_Ordered
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 4a9f97bd-cf74-5907-96e0-3144bf8604f9
+		summarizeBy: none
+		sourceColumn: Qty_Ordered
+
+		annotation SummarizationSetBy = Automatic
+
+	column Qty_Accepted
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: c26c5610-f3ea-5175-8adc-0f854cc5dfed
+		summarizeBy: none
+		sourceColumn: Qty_Accepted
+
+		annotation SummarizationSetBy = Automatic
+
+	column Under_Contract
+		dataType: boolean
+		isHidden
+		lineageTag: df9f4dd0-4210-56e2-95b4-cdcada3d4ae3
+		summarizeBy: none
+		sourceColumn: Under_Contract
+
+		annotation SummarizationSetBy = Automatic
+
+	column PO_After_Invoice
+		dataType: boolean
+		isHidden
+		lineageTag: 00aab61f-436d-558b-9fe2-387e6aee22c2
+		summarizeBy: none
+		sourceColumn: PO_After_Invoice
+
+		annotation SummarizationSetBy = Automatic
+
+	column Match_Status
+		dataType: string
+		lineageTag: 36b6fc4f-d1df-5e62-b8af-ac5ebac5296c
+		summarizeBy: none
+		sourceColumn: Match_Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column Payment_Terms_Days
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: ab9c1d31-ab26-5c8e-ba04-e2425c0039a5
+		summarizeBy: none
+		sourceColumn: Payment_Terms_Days
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Days PR to PO' = IF ( NOT ISBLANK ( Fact_PO[PR_Date] ), DATEDIFF ( Fact_PO[PR_Date], Fact_PO[PO_Date], DAY ) )
+		isHidden
+		formatString: 0
+		lineageTag: 899a7fca-063f-584f-b9ee-7faa026c0b6c
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Days PO to Receipt' = IF ( NOT ISBLANK ( Fact_PO[GRN_Date] ), DATEDIFF ( Fact_PO[PO_Date], Fact_PO[GRN_Date], DAY ) )
+		isHidden
+		formatString: 0
+		lineageTag: f551dc88-b43d-55d8-b55d-f88dd5445c80
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Days Receipt to Invoice' = IF ( NOT ISBLANK ( Fact_PO[Invoice_Date] ) && NOT Fact_PO[PO_After_Invoice], DATEDIFF ( Fact_PO[GRN_Date], Fact_PO[Invoice_Date], DAY ) )
+		isHidden
+		formatString: 0
+		lineageTag: 50576464-5e85-5741-88e8-8ff606e52b04
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Days Invoice to Payment' = IF ( NOT ISBLANK ( Fact_PO[Payment_Date] ), DATEDIFF ( Fact_PO[Invoice_Date], Fact_PO[Payment_Date], DAY ) )
+		isHidden
+		formatString: 0
+		lineageTag: f5164713-765b-5b67-bca1-7961c4bf99b6
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Days PR to Receipt' = IF ( NOT ISBLANK ( Fact_PO[PR_Date] ) && NOT ISBLANK ( Fact_PO[GRN_Date] ), DATEDIFF ( Fact_PO[PR_Date], Fact_PO[GRN_Date], DAY ) )
+		isHidden
+		formatString: 0
+		lineageTag: 8ed9254b-eab1-52ce-b257-2ae4ffb77ef6
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'On Time' = IF ( NOT ISBLANK ( Fact_PO[GRN_Date] ), IF ( Fact_PO[GRN_Date] <= Fact_PO[Promised_Date], 1, 0 ) )
+		isHidden
+		formatString: 0
+		lineageTag: 0c15b879-2f02-5b3d-91fb-d9d36146c8df
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Paid Late' = VAR _asof = MAX ( MAX ( Fact_PO[GRN_Date] ), MAX ( Fact_PO[Payment_Date] ) ) RETURN IF ( NOT ISBLANK ( Fact_PO[Payment_Date] ), IF ( Fact_PO[Payment_Date] > Fact_PO[Due_Date], 1, 0 ), IF ( NOT ISBLANK ( Fact_PO[Due_Date] ) && Fact_PO[Due_Date] < _asof, 1 ) )
+		isHidden
+		formatString: 0
+		lineageTag: 1d71b4d4-5159-51dd-9756-9624eff1d610
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Due Reached' = VAR _asof = MAX ( MAX ( Fact_PO[GRN_Date] ), MAX ( Fact_PO[Payment_Date] ) ) RETURN IF ( NOT ISBLANK ( Fact_PO[Due_Date] ) && Fact_PO[Due_Date] <= _asof, 1, 0 )
+		isHidden
+		formatString: 0
+		lineageTag: f255c6ef-478e-5972-85b9-058928d75da9
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column Maverick = IF ( ISBLANK ( Fact_PO[PR_ID] ) || Fact_PO[PO_After_Invoice], 1, 0 )
+		isHidden
+		formatString: 0
+		lineageTag: 371a34e4-5475-5250-9fda-7ba553b3f444
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_PO = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="PurchaseOrders",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Selected = Table.SelectColumns(Promoted, {"PO_ID", "PR_ID", "PR_Date", "PO_Date", "Promised_Date", "GRN_Date", "Invoice_Date", "Due_Date", "Payment_Date", "SupplierID", "MaterialID", "PlantID", "BuyerID", "DepartmentID", "PO_Value_USD", "Qty_Ordered", "Qty_Accepted", "Under_Contract", "PO_After_Invoice", "Match_Status", "Payment_Terms_Days"}),
+				    NonBlank = Table.SelectRows(Selected, each [PO_ID] <> null and [PO_ID] <> ""),
+				    Typed = Table.TransformColumnTypes(NonBlank, {{"PO_ID", type text}, {"PR_ID", type text}, {"PR_Date", type date}, {"PO_Date", type date}, {"Promised_Date", type date}, {"GRN_Date", type date}, {"Invoice_Date", type date}, {"Due_Date", type date}, {"Payment_Date", type date}, {"SupplierID", type text}, {"MaterialID", type text}, {"PlantID", type text}, {"BuyerID", type text}, {"DepartmentID", type text}, {"PO_Value_USD", type number}, {"Qty_Ordered", Int64.Type}, {"Qty_Accepted", Int64.Type}, {"Under_Contract", type logical}, {"PO_After_Invoice", type logical}, {"Match_Status", type text}, {"Payment_Terms_Days", Int64.Type}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

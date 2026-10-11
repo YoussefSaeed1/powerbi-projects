@@ -1,0 +1,171 @@
+/// One row per invoice line (January to June 2015).
+table Fact_Sales
+	lineageTag: b5534c55-47f2-53ef-a526-833bb1868bba
+
+	column 'Row ID'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 9892e9c4-9840-5ea2-a589-26842bf2ee4c
+		summarizeBy: none
+		sourceColumn: Row ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Order ID'
+		dataType: int64
+		formatString: 0
+		lineageTag: 658797f9-ffd8-5df5-92d9-7afa1b3c3c54
+		summarizeBy: none
+		sourceColumn: Order ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Order Date'
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: cf3deb68-6c37-5028-b394-598d01650b9e
+		summarizeBy: none
+		sourceColumn: Order Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Ship Date'
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: ded396d0-6522-5ce4-87f1-550cc18fbf26
+		summarizeBy: none
+		sourceColumn: Ship Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Customer ID'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 12f99e17-0627-5e9b-8649-0971d35fa301
+		summarizeBy: none
+		sourceColumn: Customer ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Product Name'
+		dataType: string
+		isHidden
+		lineageTag: abfe9f5a-b3c5-569d-b46f-451d6cf041ff
+		summarizeBy: none
+		sourceColumn: Product Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		isHidden
+		lineageTag: 3d673e35-80bf-5f3d-a893-79482489a14b
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Customer Segment'
+		dataType: string
+		lineageTag: 6318064c-ea34-511d-863b-dcc98e1032e7
+		summarizeBy: none
+		sourceColumn: Customer Segment
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Order Priority'
+		dataType: string
+		lineageTag: afddddd0-4fb0-59c3-8582-c7b64dbf47e3
+		summarizeBy: none
+		sourceColumn: Order Priority
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Ship Mode'
+		dataType: string
+		lineageTag: 2c76bc21-fc06-549c-98ad-496665b3189f
+		summarizeBy: none
+		sourceColumn: Ship Mode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discount
+		dataType: double
+		isHidden
+		formatString: 0%
+		lineageTag: fc164e4c-5f2a-5594-af4d-8c16c59948f0
+		summarizeBy: none
+		sourceColumn: Discount
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Unit Price'
+		dataType: double
+		isHidden
+		formatString: $#,0.00
+		lineageTag: 498e793e-e2c7-5b57-a586-6c3bd0f5d206
+		summarizeBy: none
+		sourceColumn: Unit Price
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Shipping Cost'
+		dataType: double
+		isHidden
+		formatString: $#,0.00
+		lineageTag: b4630537-fecd-578c-ac88-f27d70ba6367
+		summarizeBy: none
+		sourceColumn: Shipping Cost
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quantity
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: a996e5e4-2ae7-57ec-9cdb-099620145169
+		summarizeBy: none
+		sourceColumn: Quantity
+
+		annotation SummarizationSetBy = Automatic
+
+	column Sales
+		dataType: double
+		isHidden
+		formatString: $#,0
+		lineageTag: b8300fc1-6004-54fa-a853-f721625f9e4a
+		summarizeBy: none
+		sourceColumn: Sales
+
+		annotation SummarizationSetBy = Automatic
+
+	column Profit
+		dataType: double
+		isHidden
+		formatString: $#,0
+		lineageTag: 10557f3c-819c-5532-870c-a25f51649f81
+		summarizeBy: none
+		sourceColumn: Profit
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Sales = m
+		mode: import
+		source =
+				let
+				    Source = Invoices_Clean,
+				    Kept = Table.SelectColumns(Source, {"Row ID", "Order ID", "Order Date", "Ship Date", "Customer ID", "Product Name", "Region", "Customer Segment", "Order Priority", "Ship Mode", "Discount", "Unit Price", "Shipping Cost", "Quantity", "Sales", "Profit"})
+				in
+				    Kept
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

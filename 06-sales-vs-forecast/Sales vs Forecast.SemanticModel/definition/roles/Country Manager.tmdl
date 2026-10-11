@@ -1,0 +1,7 @@
+/// Example row-level security role scoped to one country (duplicate per country, or switch to a mapping table).
+role 'Country Manager'
+	modelPermission: read
+
+	tablePermission Dim_Geography = Dim_Geography[Country] = "United States"
+
+	annotation PBI_Id = 595ade852b855feaa88284c53250a0aa

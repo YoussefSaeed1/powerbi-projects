@@ -1,0 +1,59 @@
+/// One row per exporting country and month: only the total rows (all customs procedures, all transport modes, partner2 = World).
+table Fact_Trade
+	lineageTag: 4b1e3397-2bea-5879-b7e9-48bc4da5ba1d
+
+	column Date
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 3b190149-5015-5dbf-a67b-c70eb1c32407
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column ReporterCode
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 6d3a2a89-35e4-5100-9b74-0067ca3787b0
+		summarizeBy: none
+		sourceColumn: ReporterCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value_USD
+		dataType: double
+		isHidden
+		formatString: $#,0
+		lineageTag: 7e75fb0a-003c-5d03-beaa-b0cee4eaae7b
+		summarizeBy: none
+		sourceColumn: Value_USD
+
+		annotation SummarizationSetBy = Automatic
+
+	column NetWeight_Kg
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: f10ef508-6d3c-5424-9d3a-a660fd4c0dbc
+		summarizeBy: none
+		sourceColumn: NetWeight_Kg
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Trade = m
+		mode: import
+		source =
+				let
+				    Source = Trade_Raw,
+				    Totals = Table.SelectRows(Source, each [customsCode] = "C00" and [motCode] = 0 and [partner2Code] = 0),
+				    Kept = Table.SelectColumns(Totals, {"Date", "reporterCode", "primaryValue", "netWgt"}),
+				    Renamed = Table.RenameColumns(Kept, {{"reporterCode", "ReporterCode"}, {"primaryValue", "Value_USD"}, {"netWgt", "NetWeight_Kg"}})
+				in
+				    Renamed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

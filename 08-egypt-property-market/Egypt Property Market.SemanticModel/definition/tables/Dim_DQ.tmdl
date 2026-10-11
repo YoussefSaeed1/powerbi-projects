@@ -1,0 +1,41 @@
+/// Data quality rules.
+table Dim_DQ
+	lineageTag: 60dd1095-f979-5bc6-9f98-c4e037409d2d
+
+	column Check
+		dataType: string
+		lineageTag: c54431a6-d4a5-52b5-b93b-275891efdf97
+		summarizeBy: none
+		sourceColumn: Check
+		sortByColumn: 'Check Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Check Order'
+		dataType: int64
+		isHidden
+		lineageTag: aa468dcc-ee71-5b7e-8bb8-2d7ba4a33910
+		summarizeBy: none
+		sourceColumn: Check Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rule
+		dataType: string
+		lineageTag: 437a08aa-74ad-5dbb-8182-0f467e24fb8f
+		summarizeBy: none
+		sourceColumn: Rule
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_DQ = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Check" = text, #"Check Order" = Int64.Type, #"Rule" = text], {{"Rows in the raw sheet", 1, "Informational"}, {"Duplicate listing IDs removed", 2, "Each listing counted once"}, {"Rows with no valid area or price removed", 3, "Area > 0 and price > 0"}, {"Listings used in the report", 4, "After cleaning"}, {"Listings with unknown district", 5, "Every district maps to a city"}, {"Bathrooms above bedrooms + 1", 6, "Plausibility check"}, {"Price per m² outside 3K–40K", 7, "Outlier check"}, {"Latest listing date", 8, "Freshness"}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

@@ -1,0 +1,61 @@
+/// Actual sales by month, country and product.
+table Fact_Sales
+	lineageTag: 1f9a029c-2678-511f-91a3-0db382a2fc4f
+
+	column MonthStart
+		dataType: dateTime
+		isHidden
+		formatString: mmm yyyy
+		lineageTag: b3d89123-88dd-52dc-8225-4b85537e4954
+		summarizeBy: none
+		sourceColumn: MonthStart
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Country
+		dataType: string
+		isHidden
+		lineageTag: 086c5c60-6ea5-59a3-b2eb-c8840c2887c4
+		summarizeBy: none
+		sourceColumn: Country
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: f8f5f918-eefd-5689-9a3e-f6695e640bcc
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column SalesAmount
+		dataType: double
+		isHidden
+		formatString: $#,0
+		lineageTag: 69f05489-e53a-567c-8e84-7bec181b095c
+		summarizeBy: none
+		sourceColumn: SalesAmount
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Sales = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="Sales",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Selected = Table.SelectColumns(Promoted, {"MonthStart", "Country", "ProductKey", "SalesAmount"}),
+				    NonBlank = Table.SelectRows(Selected, each [MonthStart] <> null and [MonthStart] <> ""),
+				    Typed = Table.TransformColumnTypes(NonBlank, {{"MonthStart", type date}, {"Country", type text}, {"ProductKey", Int64.Type}, {"SalesAmount", type number}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

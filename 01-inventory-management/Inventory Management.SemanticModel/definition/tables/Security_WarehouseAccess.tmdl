@@ -1,0 +1,32 @@
+/// Row-level security mapping: which user may see which warehouse. Maintained by the BI team; one row per user and warehouse.
+table Security_WarehouseAccess
+	lineageTag: 06bb85e0-283a-5dbf-aed6-88f30e444928
+	isHidden
+
+	column UserEmail
+		dataType: string
+		lineageTag: d2293f8b-14bf-57aa-af23-5a0d39ce1456
+		summarizeBy: none
+		sourceColumn: UserEmail
+
+		annotation SummarizationSetBy = Automatic
+
+	column WarehouseID
+		dataType: string
+		lineageTag: a8397371-8303-5c9c-8919-d3016dc7ad0e
+		summarizeBy: none
+		sourceColumn: WarehouseID
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Security_WarehouseAccess = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"UserEmail" = text, #"WarehouseID" = text], {{"east.manager@sample.local", "WH-E"}, {"central.manager@sample.local", "WH-C"}, {"west.manager@sample.local", "WH-W"}, {"regional.lead@sample.local", "WH-E"}, {"regional.lead@sample.local", "WH-C"}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

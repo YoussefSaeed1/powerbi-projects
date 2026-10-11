@@ -1,0 +1,73 @@
+{
+  "name": "Electronics Sales 2019",
+  "dataColors": [
+    "#15171C",
+    "#3A3F4B",
+    "#5E6472",
+    "#8B91A0",
+    "#FF5A1F",
+    "#9AA0AC",
+    "#2B2F38",
+    "#FFB08F"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#15171C",
+  "tableAccent": "#15171C",
+  "textClasses": {
+    "label": {
+      "fontSize": 9,
+      "color": "#15171C"
+    },
+    "callout": {
+      "fontSize": 26,
+      "color": "#15171C"
+    },
+    "title": {
+      "fontFace": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif",
+      "fontSize": 11,
+      "color": "#15171C"
+    },
+    "header": {
+      "color": "#15171C"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "show": false
+          }
+        ],
+        "border": [
+          {
+            "show": false
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": false
+          }
+        ],
+        "visualHeader": [
+          {
+            "show": false
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#F4F5F7"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

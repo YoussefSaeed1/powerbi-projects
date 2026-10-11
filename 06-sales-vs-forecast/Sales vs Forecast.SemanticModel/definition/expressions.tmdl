@@ -1,0 +1,8 @@
+/// Full path of the data file. Change it here once if you move the folder.
+expression DataFilePath = "C:\Users\RTX\Desktop\Portfolio Dashboards\Sales vs Forecast\Forecast_Sample_Data.xlsx" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: e2e7f672-0bf9-54e7-9749-1de093af0996
+
+	annotation PBI_ResultType = Text
+
+	annotation PBI_NavigationStepName = Navigation
+

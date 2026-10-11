@@ -1,0 +1,51 @@
+/// Discount bands for the profit-drivers page (not related; measures filter by range).
+table Dim_DiscountBand
+	lineageTag: 59655756-25f9-51d3-bbd2-52877ba13132
+
+	column 'Discount Band'
+		dataType: string
+		lineageTag: 44d824c0-a15f-56c4-ab9e-cd88e6522643
+		summarizeBy: none
+		sourceColumn: Discount Band
+		sortByColumn: 'Band Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Band Order'
+		dataType: int64
+		isHidden
+		lineageTag: 10e5154a-dbf2-5fab-a7dc-c85176ad0f1c
+		summarizeBy: none
+		sourceColumn: Band Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column From
+		dataType: double
+		isHidden
+		lineageTag: ceb1a2b9-5ea1-5810-ae7f-e358bace4a15
+		summarizeBy: none
+		sourceColumn: From
+
+		annotation SummarizationSetBy = Automatic
+
+	column To
+		dataType: double
+		isHidden
+		lineageTag: a13e4804-2762-5d3f-89dd-5a58db56b7bf
+		summarizeBy: none
+		sourceColumn: To
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_DiscountBand = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Discount Band" = text, #"Band Order" = Int64.Type, #"From" = number, #"To" = number], {{"0–2%", 1, 0.0, 0.025}, {"3–5%", 2, 0.025, 0.055}, {"6–8%", 3, 0.055, 0.085}, {"9%+", 4, 0.085, 1.0}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

@@ -1,0 +1,11 @@
+relationship d6cf3f7d-5a7e-563d-a21e-f65db1f25a1d
+	fromColumn: Fact_Listings.District
+	toColumn: Dim_Location.District
+
+relationship b4d2107c-ac57-5f7c-aa73-3cb5a240c2f3
+	fromColumn: Fact_Listings.PropertyType
+	toColumn: Dim_Type.PropertyType
+
+relationship 29c1a4ba-f89e-5c37-a21e-23af1a64da6f
+	fromColumn: Fact_Listings.Bedrooms
+	toColumn: Dim_Bedrooms.Bedrooms

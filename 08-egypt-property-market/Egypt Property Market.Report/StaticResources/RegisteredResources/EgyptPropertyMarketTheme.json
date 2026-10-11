@@ -1,0 +1,73 @@
+{
+  "name": "Egypt Property Market",
+  "dataColors": [
+    "#B79A63",
+    "#183A2F",
+    "#5E8574",
+    "#D9C7A3",
+    "#C2603F",
+    "#6E7A73",
+    "#9DB8A9",
+    "#E3C98F"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#1D2A24",
+  "tableAccent": "#183A2F",
+  "textClasses": {
+    "label": {
+      "fontSize": 9,
+      "color": "#1D2A24"
+    },
+    "callout": {
+      "fontSize": 26,
+      "color": "#1D2A24"
+    },
+    "title": {
+      "fontFace": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif",
+      "fontSize": 11,
+      "color": "#1D2A24"
+    },
+    "header": {
+      "color": "#1D2A24"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "show": false
+          }
+        ],
+        "border": [
+          {
+            "show": false
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": false
+          }
+        ],
+        "visualHeader": [
+          {
+            "show": false
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#EEF0EA"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

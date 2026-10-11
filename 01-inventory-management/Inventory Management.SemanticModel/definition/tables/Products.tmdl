@@ -1,0 +1,106 @@
+table Products
+	lineageTag: bc774375-64ac-5f61-962e-93d8506a5646
+
+	column SKU
+		dataType: string
+		isKey
+		lineageTag: 6aa557b8-8a67-58a5-bec2-cd62cab0be01
+		summarizeBy: none
+		sourceColumn: SKU
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductName
+		dataType: string
+		lineageTag: 0a592aed-29ae-5299-a770-fc882f82e44b
+		summarizeBy: none
+		sourceColumn: ProductName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Category
+		dataType: string
+		lineageTag: 34be1fe1-1852-5e9f-827d-ff74e3deb108
+		summarizeBy: none
+		sourceColumn: Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column SupplierID
+		dataType: string
+		isHidden
+		lineageTag: 5d9afca4-fe1c-5513-a3ba-6d99654c1b71
+		summarizeBy: none
+		sourceColumn: SupplierID
+
+		annotation SummarizationSetBy = Automatic
+
+	column WarehouseID
+		dataType: string
+		isHidden
+		lineageTag: 93af0fd3-f867-523d-82ca-c5046e0dacab
+		summarizeBy: none
+		sourceColumn: WarehouseID
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitCost
+		dataType: double
+		formatString: $#,0.00
+		lineageTag: b9f1d84e-81f8-5281-8d9d-9f935242fcec
+		summarizeBy: none
+		sourceColumn: UnitCost
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitPrice
+		dataType: double
+		formatString: $#,0.00
+		lineageTag: 6cf242a5-c33f-5031-834b-14cca8d47a44
+		summarizeBy: none
+		sourceColumn: UnitPrice
+
+		annotation SummarizationSetBy = Automatic
+
+	column LeadTimeDays
+		dataType: int64
+		formatString: 0
+		lineageTag: f65afcf2-7c46-54fc-8b8f-c924a802b7e2
+		summarizeBy: none
+		sourceColumn: LeadTimeDays
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReorderPoint
+		dataType: int64
+		formatString: #,0
+		lineageTag: 24c34c7e-97dc-5efe-ae69-ecb4a0bf7dfd
+		summarizeBy: none
+		sourceColumn: ReorderPoint
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReorderQty
+		dataType: int64
+		formatString: #,0
+		lineageTag: 2a7b1b65-48c4-5f16-9006-8293da6520af
+		summarizeBy: none
+		sourceColumn: ReorderQty
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Products = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="Products",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Selected = Table.SelectColumns(Promoted, {"SKU", "ProductName", "Category", "SupplierID", "WarehouseID", "UnitCost", "UnitPrice", "LeadTimeDays", "ReorderPoint", "ReorderQty"}),
+				    NonBlank = Table.SelectRows(Selected, each [SKU] <> null and [SKU] <> ""),
+				    Typed = Table.TransformColumnTypes(NonBlank, {{"SKU", type text}, {"ProductName", type text}, {"Category", type text}, {"SupplierID", type text}, {"WarehouseID", type text}, {"UnitCost", type number}, {"UnitPrice", type number}, {"LeadTimeDays", Int64.Type}, {"ReorderPoint", Int64.Type}, {"ReorderQty", Int64.Type}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+

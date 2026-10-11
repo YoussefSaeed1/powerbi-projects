@@ -1,0 +1,41 @@
+/// Data quality rules for the Comtrade file.
+table Dim_DQ
+	lineageTag: 69463ee2-0533-5395-b3d5-96449cd854e8
+
+	column Check
+		dataType: string
+		lineageTag: a42540bc-e7b5-57ac-a633-ccdb05b90b90
+		summarizeBy: none
+		sourceColumn: Check
+		sortByColumn: 'Check Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Check Order'
+		dataType: int64
+		isHidden
+		lineageTag: 40202e63-8e12-5548-bf5e-52cb57c19bf7
+		summarizeBy: none
+		sourceColumn: Check Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rule
+		dataType: string
+		lineageTag: e086d8b1-7cea-5c28-bc5f-d98c7daf9bd2
+		summarizeBy: none
+		sourceColumn: Rule
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_DQ = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Check" = text, #"Check Order" = Int64.Type, #"Rule" = text], {{"Rows in the raw file", 1, "Informational"}, {"Total rows used for analysis", 2, "customsCode = C00, motCode = 0, partner2Code = 0"}, {"Value if every raw row were summed", 3, "Shows why the raw rows must not be added up"}, {"Value of the total rows", 4, "The real import value used on every page"}, {"Overstatement if raw rows were summed", 5, "Raw value ÷ total value"}, {"Duplicate total rows", 6, "One total row per country and month"}, {"Rows for another partner than Egypt", 7, "partnerCode = 818 only"}, {"Rows for another flow than export", 8, "flowCode = X only"}, {"Rows for another HS code", 9, "cmdCode = 300420 only"}, {"Total rows without net weight", 10, "Excluded from price per kg"}, {"Months covered", 11, "Informational"}, {"Latest month in the data", 12, "Freshness"}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

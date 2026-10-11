@@ -1,0 +1,32 @@
+relationship 22dc712d-f345-52e4-9c2b-6daaf4eb8c1c
+	fromColumn: Fact_Inventory.SnapshotDate
+	toColumn: Dim_Date.Date
+
+relationship 6af044fc-7249-5f29-bd16-dd3c9973477c
+	fromColumn: Fact_Inventory.SKU
+	toColumn: Products.SKU
+
+relationship 2cc9e427-3317-5840-bfca-cd07dac63445
+	fromColumn: Fact_Sales.OrderDate
+	toColumn: Dim_Date.Date
+
+relationship 8d1f345c-35e0-5332-9d21-fda3a315c750
+	fromColumn: Fact_Sales.SKU
+	toColumn: Products.SKU
+
+relationship e0c0665b-64b7-50c4-ad89-65adeee7e427
+	fromColumn: Fact_PurchaseOrders.OrderDate
+	toColumn: Dim_Date.Date
+
+relationship e343dfc9-4abf-5745-bd83-a56959ad5a6a
+	fromColumn: Fact_PurchaseOrders.SKU
+	toColumn: Products.SKU
+
+relationship 5a77fc85-c3da-503a-9664-8b546ec7d31d
+	fromColumn: Products.SupplierID
+	toColumn: Suppliers.SupplierID
+
+relationship e8a64aa5-021e-5b4f-a594-59ea37a4598f
+	fromColumn: Products.WarehouseID
+	toColumn: Warehouses.WarehouseID
+

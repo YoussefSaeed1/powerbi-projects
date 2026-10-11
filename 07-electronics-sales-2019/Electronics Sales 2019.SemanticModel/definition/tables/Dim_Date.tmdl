@@ -1,0 +1,94 @@
+/// Calendar built from the fact dates; marked as the date table.
+table Dim_Date
+	lineageTag: 949ae010-171a-5904-8fe1-5e87847bb4e6
+	dataCategory: Time
+
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: yyyy-mm-dd
+		lineageTag: 62a945f3-c651-5d09-9342-db6b4e57d78e
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 3dbf1c55-07a1-5174-9a40-942dda7eee28
+		summarizeBy: none
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quarter
+		dataType: string
+		lineageTag: 141da907-5c61-537b-9927-633d83917f41
+		summarizeBy: none
+		sourceColumn: Quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthNo
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 6e0cc916-b210-51d7-b0c7-b2ea664a79cb
+		summarizeBy: none
+		sourceColumn: MonthNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: string
+		lineageTag: 2e2f1ca0-b3ee-5c79-adc6-337271b4e929
+		summarizeBy: none
+		sourceColumn: Month
+		sortByColumn: MonthNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column YearMonthKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 33d35d83-dd8b-5b76-ac59-64fc08462d49
+		summarizeBy: none
+		sourceColumn: YearMonthKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Year-Month'
+		dataType: string
+		lineageTag: 8eec054f-4c18-5225-8d70-82b1949e88de
+		summarizeBy: none
+		sourceColumn: Year-Month
+		sortByColumn: YearMonthKey
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Date = m
+		mode: import
+		source =
+				let
+				    AllDates = List.RemoveNulls(List.Combine({Fact_Sales[OrderDate]})),
+				    StartDate = Date.StartOfYear(List.Min(AllDates)),
+				    EndDate = Date.EndOfYear(List.Max(AllDates)),
+				    Dates = List.Dates(StartDate, Duration.Days(EndDate - StartDate) + 1, #duration(1, 0, 0, 0)),
+				    Base = Table.FromList(Dates, Splitter.SplitByNothing(), {"Date"}),
+				    Typed = Table.TransformColumnTypes(Base, {{"Date", type date}}),
+				    AddYear = Table.AddColumn(Typed, "Year", each Date.Year([Date]), Int64.Type),
+				    AddQuarter = Table.AddColumn(AddYear, "Quarter", each "Q" & Text.From(Date.QuarterOfYear([Date])), type text),
+				    AddMonthNo = Table.AddColumn(AddQuarter, "MonthNo", each Date.Month([Date]), Int64.Type),
+				    AddMonth = Table.AddColumn(AddMonthNo, "Month", each Date.ToText([Date], [Format="MMM", Culture="en-US"]), type text),
+				    AddYMKey = Table.AddColumn(AddMonth, "YearMonthKey", each Date.Year([Date]) * 100 + Date.Month([Date]), Int64.Type),
+				    AddYM = Table.AddColumn(AddYMKey, "Year-Month", each Date.ToText([Date], [Format="MMM yyyy", Culture="en-US"]), type text)
+				in
+				    AddYM
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

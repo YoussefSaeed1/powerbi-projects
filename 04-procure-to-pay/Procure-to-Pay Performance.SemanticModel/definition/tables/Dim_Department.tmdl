@@ -1,0 +1,37 @@
+table Dim_Department
+	lineageTag: 9fded579-067e-53b2-8695-39cd8535d354
+
+	column DepartmentID
+		dataType: string
+		isHidden
+		isKey
+		lineageTag: 5699e7da-8631-5f74-8e99-3b005b6c3cae
+		summarizeBy: none
+		sourceColumn: DepartmentID
+
+		annotation SummarizationSetBy = Automatic
+
+	column DepartmentName
+		dataType: string
+		lineageTag: 2878bd04-60ee-5a32-bd10-0fbaf14af4a7
+		summarizeBy: none
+		sourceColumn: DepartmentName
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Department = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="Departments",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Selected = Table.SelectColumns(Promoted, {"DepartmentID", "DepartmentName"}),
+				    NonBlank = Table.SelectRows(Selected, each [DepartmentID] <> null and [DepartmentID] <> ""),
+				    Typed = Table.TransformColumnTypes(NonBlank, {{"DepartmentID", type text}, {"DepartmentName", type text}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

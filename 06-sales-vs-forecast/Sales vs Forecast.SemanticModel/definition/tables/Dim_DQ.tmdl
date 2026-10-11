@@ -1,0 +1,41 @@
+/// Data quality rules.
+table Dim_DQ
+	lineageTag: 208d2faf-1205-5ab7-a39a-2ee46187e15e
+
+	column Check
+		dataType: string
+		lineageTag: da46f579-1cea-5bd8-b644-f2085545c921
+		summarizeBy: none
+		sourceColumn: Check
+		sortByColumn: 'Check Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Check Order'
+		dataType: int64
+		isHidden
+		lineageTag: 69c1dd58-07f5-5dde-927b-ea7c3432511f
+		summarizeBy: none
+		sourceColumn: Check Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rule
+		dataType: string
+		lineageTag: 087c0dbc-add4-538a-80ff-81caa93e6a0a
+		summarizeBy: none
+		sourceColumn: Rule
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_DQ = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Check" = text, #"Check Order" = Int64.Type, #"Rule" = text], {{"Sales rows loaded", 1, "Row count of the Sales sheet"}, {"Forecast rows loaded", 2, "Row count of the Forecast sheet"}, {"Sales with unknown product", 3, "Every ProductKey exists in Dim_Product"}, {"Sales with unknown country", 4, "Every country exists in Dim_Geography"}, {"Forecast with unknown category", 5, "Every forecast category exists in Dim_Category"}, {"Negative sales or forecast", 6, "Amounts >= 0"}, {"Months with actuals but no forecast (focus year)", 7, "Forecast covers every month with sales"}, {"Latest month", 8, "Freshness"}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

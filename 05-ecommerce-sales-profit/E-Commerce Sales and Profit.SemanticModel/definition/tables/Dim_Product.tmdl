@@ -1,0 +1,49 @@
+/// Products with sub-category and category.
+table Dim_Product
+	lineageTag: 23aadd05-0fe8-56e0-80a9-73490e95fbf1
+
+	column 'Product Name'
+		dataType: string
+		isKey
+		lineageTag: 668dfb4b-decb-5412-a8ec-d9ebbeee2983
+		summarizeBy: none
+		sourceColumn: Product Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Product Sub-Category'
+		dataType: string
+		lineageTag: 03e4216d-4664-5547-b680-284e5ad0a73c
+		summarizeBy: none
+		sourceColumn: Product Sub-Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Product Category'
+		dataType: string
+		lineageTag: 44aa1fb8-d2b0-5492-a83c-b75d81875937
+		summarizeBy: none
+		sourceColumn: Product Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Product Container'
+		dataType: string
+		lineageTag: f5985dd5-3cc7-59d1-9716-dd9d52ea9579
+		summarizeBy: none
+		sourceColumn: Product Container
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Product = m
+		mode: import
+		source =
+				let
+				    Source = Invoices_Clean,
+				    Products = Table.Distinct(Table.SelectColumns(Source, {"Product Name", "Product Sub-Category", "Product Category", "Product Container"}), {"Product Name"})
+				in
+				    Products
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

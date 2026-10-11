@@ -1,0 +1,51 @@
+/// Customers. Segment stays on the invoice line because a customer can buy as more than one segment.
+table Dim_Customer
+	lineageTag: c77d049d-a281-5e0e-a620-d723ac96e4a1
+
+	column 'Customer ID'
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		lineageTag: 41b831dd-811b-543f-95fe-c2a39abf5613
+		summarizeBy: none
+		sourceColumn: Customer ID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Customer Name'
+		dataType: string
+		lineageTag: 032d9d62-7f60-5be3-8a03-5a8cf671308f
+		summarizeBy: none
+		sourceColumn: Customer Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'State or Province'
+		dataType: string
+		lineageTag: ea9d575b-5de3-52c6-8534-09b716b229fa
+		summarizeBy: none
+		sourceColumn: State or Province
+
+		annotation SummarizationSetBy = Automatic
+
+	column City
+		dataType: string
+		lineageTag: 6146046e-a695-5caf-8355-5eacb1ca728d
+		summarizeBy: none
+		sourceColumn: City
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Customer = m
+		mode: import
+		source =
+				let
+				    Source = Invoices_Clean,
+				    Customers = Table.Distinct(Table.SelectColumns(Source, {"Customer ID", "Customer Name", "State or Province", "City"}), {"Customer ID"})
+				in
+				    Customers
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

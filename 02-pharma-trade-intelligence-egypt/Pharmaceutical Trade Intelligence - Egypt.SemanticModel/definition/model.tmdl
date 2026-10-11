@@ -1,0 +1,26 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["DataFilePath","Trade_Raw","_Measures","Fact_Trade","Fact_Transport","Dim_Supplier","DQ_Source","Dim_Date","Trend Year","Dim_DQ","_Refresh"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table _Measures
+ref table Fact_Trade
+ref table Fact_Transport
+ref table Dim_Supplier
+ref table DQ_Source
+ref table Dim_Date
+ref table 'Trend Year'
+ref table Dim_DQ
+ref table _Refresh
+
+ref cultureInfo en-US

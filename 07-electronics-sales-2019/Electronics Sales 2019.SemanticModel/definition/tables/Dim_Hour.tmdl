@@ -1,0 +1,33 @@
+/// Hours of the day for the hourly chart.
+table Dim_Hour
+	lineageTag: 62c9c302-855c-5aeb-a2f6-c197db919e4a
+
+	column Hour
+		dataType: int64
+		formatString: 0
+		lineageTag: cbd08c3f-fcc2-5b79-a28f-dc205ce51550
+		summarizeBy: none
+		sourceColumn: Hour
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Hour Label'
+		dataType: string
+		lineageTag: 5d0a5a78-10a4-5977-94e3-70d1e4f7a9e5
+		summarizeBy: none
+		sourceColumn: Hour Label
+		sortByColumn: Hour
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Hour = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Hour" = Int64.Type, #"Hour Label" = text], {{0, "00:00"}, {1, "01:00"}, {2, "02:00"}, {3, "03:00"}, {4, "04:00"}, {5, "05:00"}, {6, "06:00"}, {7, "07:00"}, {8, "08:00"}, {9, "09:00"}, {10, "10:00"}, {11, "11:00"}, {12, "12:00"}, {13, "13:00"}, {14, "14:00"}, {15, "15:00"}, {16, "16:00"}, {17, "17:00"}, {18, "18:00"}, {19, "19:00"}, {20, "20:00"}, {21, "21:00"}, {22, "22:00"}, {23, "23:00"}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

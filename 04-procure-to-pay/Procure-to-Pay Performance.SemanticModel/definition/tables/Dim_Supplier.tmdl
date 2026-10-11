@@ -1,0 +1,61 @@
+table Dim_Supplier
+	lineageTag: 8817ef81-eb02-55e4-b382-0b5c5be3d5da
+
+	column SupplierID
+		dataType: string
+		isHidden
+		isKey
+		lineageTag: a702595e-8095-5c6b-b062-e3da33b1b409
+		summarizeBy: none
+		sourceColumn: SupplierID
+
+		annotation SummarizationSetBy = Automatic
+
+	column SupplierName
+		dataType: string
+		lineageTag: 6a254310-483c-58f7-a576-08c3ec6e58b3
+		summarizeBy: none
+		sourceColumn: SupplierName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Main_Category
+		dataType: string
+		lineageTag: 246b8abf-f91d-5b1f-8c65-d938d1946d42
+		summarizeBy: none
+		sourceColumn: Main_Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column Origin
+		dataType: string
+		lineageTag: 1b55fdb1-4aa9-5ebb-8995-29be63774c3d
+		summarizeBy: none
+		sourceColumn: Origin
+
+		annotation SummarizationSetBy = Automatic
+
+	column Has_Contract
+		dataType: boolean
+		lineageTag: b432e745-b07d-5dc7-8e58-ef4ddd2516c9
+		summarizeBy: none
+		sourceColumn: Has_Contract
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Supplier = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="Suppliers",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Selected = Table.SelectColumns(Promoted, {"SupplierID", "SupplierName", "Main_Category", "Origin", "Has_Contract"}),
+				    NonBlank = Table.SelectRows(Selected, each [SupplierID] <> null and [SupplierID] <> ""),
+				    Typed = Table.TransformColumnTypes(NonBlank, {{"SupplierID", type text}, {"SupplierName", type text}, {"Main_Category", type text}, {"Origin", type text}, {"Has_Contract", type logical}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

@@ -1,0 +1,35 @@
+relationship 02879338-ba17-59e5-9571-0a5b67ec8837
+	fromColumn: Fact_PO.PO_Date
+	toColumn: Dim_Date.Date
+
+relationship 7b553744-e750-54cd-9553-6b1aa2212e96
+	fromColumn: Fact_PO.SupplierID
+	toColumn: Dim_Supplier.SupplierID
+
+relationship e7839e01-1bb7-521a-8b7b-47f7e895b46c
+	fromColumn: Fact_PO.MaterialID
+	toColumn: Dim_Material.MaterialID
+
+relationship 7b1cfe5a-d01b-5f02-80aa-ef2244bc3c0b
+	fromColumn: Fact_PO.PlantID
+	toColumn: Dim_Plant.PlantID
+
+relationship 0e1c0258-468b-5ba5-a13e-eb971de6a8cb
+	fromColumn: Fact_PO.BuyerID
+	toColumn: Dim_Buyer.BuyerID
+
+relationship 2ddd759c-ace7-5dd9-b71b-c6640966d7ce
+	fromColumn: Fact_PO.DepartmentID
+	toColumn: Dim_Department.DepartmentID
+
+relationship b548527d-f3ff-57e4-862f-478973bfcc7b
+	fromColumn: Fact_PR.PR_Date
+	toColumn: Dim_Date.Date
+
+relationship 7c45d325-d35d-5243-b411-a4b3566c2717
+	fromColumn: Fact_PR.PlantID
+	toColumn: Dim_Plant.PlantID
+
+relationship 8729bc34-16c4-5567-8139-8ca97eee58d8
+	fromColumn: Fact_PR.DepartmentID
+	toColumn: Dim_Department.DepartmentID

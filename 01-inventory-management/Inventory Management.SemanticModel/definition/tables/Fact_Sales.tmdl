@@ -1,0 +1,91 @@
+table Fact_Sales
+	lineageTag: 8af54dc6-95e3-5dd7-ba20-84afd5eb3900
+
+	column OrderDate
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: a0bd5a21-49ed-5800-b206-6c8be571101a
+		summarizeBy: none
+		sourceColumn: OrderDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column SKU
+		dataType: string
+		isHidden
+		lineageTag: 068f3fbb-567d-558d-ad5f-1a9b9c9e9007
+		summarizeBy: none
+		sourceColumn: SKU
+
+		annotation SummarizationSetBy = Automatic
+
+	column Channel
+		dataType: string
+		lineageTag: f02cd499-ea84-5eaa-a560-0821d8162f0a
+		summarizeBy: none
+		sourceColumn: Channel
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quantity
+		dataType: int64
+		formatString: #,0
+		lineageTag: d87fe69a-43ec-5ca5-8ed2-393abf100b9e
+		summarizeBy: sum
+		sourceColumn: Quantity
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitPrice
+		dataType: double
+		formatString: $#,0.00
+		lineageTag: 868ec331-65dd-5467-ba1b-48a961257340
+		summarizeBy: none
+		sourceColumn: UnitPrice
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitCost
+		dataType: double
+		formatString: $#,0.00
+		lineageTag: 41afc2e0-9eb5-54eb-8fd5-acc912c3c1ce
+		summarizeBy: none
+		sourceColumn: UnitCost
+
+		annotation SummarizationSetBy = Automatic
+
+	column Revenue = Fact_Sales[Quantity] * Fact_Sales[UnitPrice]
+		isHidden
+		formatString: $#,0
+		lineageTag: edba6daf-a0c1-5e8e-8944-543afd1caf4c
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column COGS = Fact_Sales[Quantity] * Fact_Sales[UnitCost]
+		isHidden
+		formatString: $#,0
+		lineageTag: 00d713ed-ccb1-5848-9167-9f80dd02fa94
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Sales = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="Sales",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Selected = Table.SelectColumns(Promoted, {"OrderDate", "SKU", "Channel", "Quantity", "UnitPrice", "UnitCost"}),
+				    NonBlank = Table.SelectRows(Selected, each [SKU] <> null and [SKU] <> ""),
+				    Typed = Table.TransformColumnTypes(NonBlank, {{"OrderDate", type date}, {"SKU", type text}, {"Channel", type text}, {"Quantity", Int64.Type}, {"UnitPrice", type number}, {"UnitCost", type number}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

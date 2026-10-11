@@ -1,0 +1,117 @@
+table Fact_PurchaseOrders
+	lineageTag: da8d6c6c-b31e-541c-b3f6-eba55f2f1bbf
+
+	column POID
+		dataType: string
+		lineageTag: 7a5fdb87-b3cc-5ebe-a32e-3b3c9959dbcf
+		summarizeBy: none
+		sourceColumn: POID
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrderDate
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 5922f3ef-0f31-5adf-97b7-5133d892770a
+		summarizeBy: none
+		sourceColumn: OrderDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column ExpectedDate
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 61da12c1-ce9f-5b80-92af-aadb68295c86
+		summarizeBy: none
+		sourceColumn: ExpectedDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column ReceivedDate
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: 01ed9b06-f99d-523d-8a82-93f967fca0be
+		summarizeBy: none
+		sourceColumn: ReceivedDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column SKU
+		dataType: string
+		isHidden
+		lineageTag: 84a5228f-a5c7-5153-bc44-857cb87c91a2
+		summarizeBy: none
+		sourceColumn: SKU
+
+		annotation SummarizationSetBy = Automatic
+
+	column SupplierID
+		dataType: string
+		isHidden
+		lineageTag: e83be88f-0ee4-57c6-95e1-390b4c47db1a
+		summarizeBy: none
+		sourceColumn: SupplierID
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrderedQty
+		dataType: int64
+		formatString: #,0
+		lineageTag: 92fb5f21-0fb3-5948-8159-7e99de005f3e
+		summarizeBy: sum
+		sourceColumn: OrderedQty
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReceivedQty
+		dataType: int64
+		formatString: #,0
+		lineageTag: d2d38724-af8c-5eda-8898-7f5fa05794ca
+		summarizeBy: sum
+		sourceColumn: ReceivedQty
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnitCost
+		dataType: double
+		formatString: $#,0.00
+		lineageTag: 57702b65-d5d4-5f51-8bda-4400dcd08850
+		summarizeBy: none
+		sourceColumn: UnitCost
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Lead Time Days' = IF ( NOT ISBLANK ( Fact_PurchaseOrders[ReceivedDate] ), DATEDIFF ( Fact_PurchaseOrders[OrderDate], Fact_PurchaseOrders[ReceivedDate], DAY ) )
+		formatString: 0
+		lineageTag: 966e3d05-a99b-540a-bc94-bf3a4abc97e2
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Delivery Status' = IF ( ISBLANK ( Fact_PurchaseOrders[ReceivedDate] ), "Open", IF ( Fact_PurchaseOrders[ReceivedDate] <= Fact_PurchaseOrders[ExpectedDate], "On Time", "Late" ) )
+		lineageTag: 64dd2adc-f263-5282-a93d-359ea8aa2a36
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_PurchaseOrders = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="Purchase_Orders",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Selected = Table.SelectColumns(Promoted, {"POID", "OrderDate", "ExpectedDate", "ReceivedDate", "SKU", "SupplierID", "OrderedQty", "ReceivedQty", "UnitCost"}),
+				    NonBlank = Table.SelectRows(Selected, each [POID] <> null and [POID] <> ""),
+				    Typed = Table.TransformColumnTypes(NonBlank, {{"POID", type text}, {"OrderDate", type date}, {"ExpectedDate", type date}, {"ReceivedDate", type date}, {"SKU", type text}, {"SupplierID", type text}, {"OrderedQty", Int64.Type}, {"ReceivedQty", Int64.Type}, {"UnitCost", type number}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+

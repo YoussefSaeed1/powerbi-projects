@@ -1,0 +1,27 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["DataFilePath","_Measures","Fact_Sales","Fact_Forecast","Dim_Product","Dim_Geography","Dim_Category","Dim_Date","Bridge Step","Dim_DQ","_Refresh"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table _Measures
+ref table Fact_Sales
+ref table Fact_Forecast
+ref table Dim_Product
+ref table Dim_Geography
+ref table Dim_Category
+ref table Dim_Date
+ref table 'Bridge Step'
+ref table Dim_DQ
+ref table _Refresh
+
+ref cultureInfo en-US

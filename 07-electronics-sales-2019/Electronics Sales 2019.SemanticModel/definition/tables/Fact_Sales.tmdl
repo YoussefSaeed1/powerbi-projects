@@ -1,0 +1,87 @@
+/// One row per order line.
+table Fact_Sales
+	lineageTag: f550134e-8929-5e81-865c-da16b96d8eb8
+
+	column OrderID
+		dataType: int64
+		formatString: 0
+		lineageTag: 3b206a57-1540-5922-9bb6-b8d526373151
+		summarizeBy: none
+		sourceColumn: OrderID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Product
+		dataType: string
+		isHidden
+		lineageTag: 9da4df8a-f7a1-5a29-bd59-b6368dc57644
+		summarizeBy: none
+		sourceColumn: Product
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quantity
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: b2275bf7-36ff-521f-81db-ea4e55d10abd
+		summarizeBy: none
+		sourceColumn: Quantity
+
+		annotation SummarizationSetBy = Automatic
+
+	column PriceEach
+		dataType: double
+		isHidden
+		formatString: $#,0.00
+		lineageTag: 4542fad5-c578-5449-8674-f5b2cb150939
+		summarizeBy: none
+		sourceColumn: PriceEach
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrderDate
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: 2d9bae62-02a1-5b54-92ad-cc0f557812cb
+		summarizeBy: none
+		sourceColumn: OrderDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Hour
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 3605e845-91a5-5d62-a152-d7a2e291493f
+		summarizeBy: none
+		sourceColumn: Hour
+
+		annotation SummarizationSetBy = Automatic
+
+	column City
+		dataType: string
+		isHidden
+		lineageTag: ad85d15c-8d1b-5247-a7a7-0b7b19033c1e
+		summarizeBy: none
+		sourceColumn: City
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Sales = m
+		mode: import
+		source =
+				let
+				    Source = Sales_Raw,
+				    AddDate = Table.AddColumn(Source, "OrderDate", each DateTime.Date([OrderDateTime]), type date),
+				    AddHour = Table.AddColumn(AddDate, "Hour", each Time.Hour([OrderDateTime]), Int64.Type),
+				    Kept = Table.SelectColumns(AddHour, {"OrderID", "Product", "Quantity", "PriceEach", "OrderDate", "Hour", "City"})
+				in
+				    Kept
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

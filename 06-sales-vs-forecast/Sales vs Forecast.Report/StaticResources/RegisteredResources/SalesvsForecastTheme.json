@@ -1,0 +1,73 @@
+{
+  "name": "Sales vs Forecast",
+  "dataColors": [
+    "#A99BFF",
+    "#F4B860",
+    "#5FD0C0",
+    "#7B86F0",
+    "#FF7E7E",
+    "#5FA8F0",
+    "#3E4A75",
+    "#C9C3FF"
+  ],
+  "background": "#172036",
+  "foreground": "#E8ECF7",
+  "tableAccent": "#A99BFF",
+  "textClasses": {
+    "label": {
+      "fontSize": 9,
+      "color": "#E8ECF7"
+    },
+    "callout": {
+      "fontSize": 26,
+      "color": "#E8ECF7"
+    },
+    "title": {
+      "fontFace": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif",
+      "fontSize": 11,
+      "color": "#E8ECF7"
+    },
+    "header": {
+      "color": "#E8ECF7"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "show": false
+          }
+        ],
+        "border": [
+          {
+            "show": false
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": false
+          }
+        ],
+        "visualHeader": [
+          {
+            "show": false
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#0E1424"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

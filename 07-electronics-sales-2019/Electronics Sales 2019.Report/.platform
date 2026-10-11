@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "Electronics Sales 2019"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "04166a69-0a9b-5c2b-a7c3-f4146db34ffc"
+  }
+}

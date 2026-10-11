@@ -1,0 +1,15 @@
+relationship f91ac3fd-cad7-5d2e-932b-6528d81148d5
+	fromColumn: Fact_Sales.'Order Date'
+	toColumn: Dim_Date.Date
+
+relationship 9e7db6b9-d749-55c6-803d-912bbf2695ec
+	fromColumn: Fact_Sales.'Customer ID'
+	toColumn: Dim_Customer.'Customer ID'
+
+relationship 524400e5-92fb-533a-97ed-ef23376d6b99
+	fromColumn: Fact_Sales.'Product Name'
+	toColumn: Dim_Product.'Product Name'
+
+relationship 29dc832a-69c4-5a6d-91b5-2d8be388935e
+	fromColumn: Fact_Sales.Region
+	toColumn: Dim_Region.Region

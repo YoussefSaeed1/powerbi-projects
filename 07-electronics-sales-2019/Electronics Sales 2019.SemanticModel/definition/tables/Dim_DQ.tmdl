@@ -1,0 +1,41 @@
+/// Data quality rules.
+table Dim_DQ
+	lineageTag: c9ed5462-f67f-5be9-be3a-4790a0ceaec3
+
+	column Check
+		dataType: string
+		lineageTag: 2a26adf7-1068-534b-a17b-e28707bf662c
+		summarizeBy: none
+		sourceColumn: Check
+		sortByColumn: 'Check Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Check Order'
+		dataType: int64
+		isHidden
+		lineageTag: 2264d9b0-d062-5c85-834e-dd9fe9e30512
+		summarizeBy: none
+		sourceColumn: Check Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rule
+		dataType: string
+		lineageTag: 0020ae70-5b66-52aa-a911-3cdb59ef72f0
+		summarizeBy: none
+		sourceColumn: Rule
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_DQ = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Check" = text, #"Check Order" = Int64.Type, #"Rule" = text], {{"Order lines loaded", 1, "Row count of the CSV"}, {"Distinct orders", 2, "Orders can have several lines"}, {"Lines with unknown product", 3, "Every product exists in Dim_Product"}, {"Zero or negative quantity", 4, "Quantity > 0"}, {"Prices that differ from list price", 5, "Same product, same price"}, {"Orders spread over several cities", 6, "An order ships to one address"}, {"Lines outside 2019", 7, "The report covers 2019 only"}, {"Latest order date", 8, "Freshness"}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

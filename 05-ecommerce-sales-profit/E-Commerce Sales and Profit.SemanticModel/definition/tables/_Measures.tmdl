@@ -1,0 +1,397 @@
+table _Measures
+	lineageTag: abef8546-c188-5617-a71c-5f900e425f7d
+
+	measure 'Last Refresh' = "Data refreshed " & FORMAT ( MAX ( _Refresh[RefreshedAt] ), "dd mmm yyyy" )
+		displayFolder: Helpers
+		lineageTag: 016abf7f-8e70-5457-8597-22ea6965ce89
+
+	/// Invoice sales after removing duplicate rows.
+	measure Sales = SUM ( Fact_Sales[Sales] )
+		formatString: $#,0
+		displayFolder: Sales
+		lineageTag: 5868dbf4-a8f3-527e-9956-613b2272072e
+
+	measure Profit = SUM ( Fact_Sales[Profit] )
+		formatString: $#,0
+		displayFolder: Sales
+		lineageTag: a403d967-c44d-50c0-a1cf-5ce672f4d810
+
+	measure 'Sales $K' = DIVIDE ( [Sales], 1000 )
+		formatString: #,0.0
+		displayFolder: Sales
+		lineageTag: dca4ecdf-e9d2-583e-8b3a-4d31eeb68631
+
+	measure 'Profit $K' = DIVIDE ( [Profit], 1000 )
+		formatString: #,0.0
+		displayFolder: Sales
+		lineageTag: 70a35387-c4f3-5d7c-8e5d-b9f28767c217
+
+	/// Profit ÷ sales.
+	measure 'Margin %' = DIVIDE ( [Profit], [Sales] )
+		formatString: 0.0%
+		displayFolder: Sales
+		lineageTag: 60095d78-c2d3-5d80-98c5-a4fd0c94b8ac
+
+	/// Distinct orders. Replaces the old 'Number of Orders', which returned the returned-order IDs.
+	measure Orders = DISTINCTCOUNT ( Fact_Sales[Order ID] )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: cd055a11-8b42-5432-991d-d1d68732c22e
+
+	measure Customers = DISTINCTCOUNT ( Fact_Sales[Customer ID] )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: df749197-9738-5480-92ec-8920d60b7e0f
+
+	measure Units = SUM ( Fact_Sales[Quantity] )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: fbccc7fc-39c5-51b4-93cb-f98e18763e5c
+
+	/// Average discount rate per line. Replaces 'Total Discount', which added rates together and showed them as dollars.
+	measure 'Average Discount' = AVERAGE ( Fact_Sales[Discount] )
+		formatString: 0.0%
+		displayFolder: Sales
+		lineageTag: 618ff18e-52be-5073-ba5f-79a6a2d2df77
+
+	measure 'Shipping Cost' = SUM ( Fact_Sales[Shipping Cost] )
+		formatString: $#,0
+		displayFolder: Sales
+		lineageTag: 0c4ef268-7b38-5c1e-a741-afee221216da
+
+	measure 'Band Sales $K' =
+			VAR _lo = SELECTEDVALUE ( Dim_DiscountBand[From] )
+			VAR _hi = SELECTEDVALUE ( Dim_DiscountBand[To] )
+			RETURN
+			    CALCULATE ( [Sales $K], Fact_Sales[Discount] >= _lo, Fact_Sales[Discount] < _hi )
+		formatString: #,0
+		displayFolder: Profit Drivers
+		lineageTag: 951dcf1f-4065-52e6-a2fe-02f3b8fe8db3
+
+	/// Margin of the lines whose discount falls in the band.
+	measure 'Band Margin %' =
+			VAR _lo = SELECTEDVALUE ( Dim_DiscountBand[From] )
+			VAR _hi = SELECTEDVALUE ( Dim_DiscountBand[To] )
+			RETURN
+			    CALCULATE ( [Margin %], Fact_Sales[Discount] >= _lo, Fact_Sales[Discount] < _hi )
+		formatString: 0.0%
+		displayFolder: Profit Drivers
+		lineageTag: 870fd7b7-ccdf-536c-ab82-75a9e86330d3
+
+	measure 'High Discount Margin' = CALCULATE ( [Margin %], Fact_Sales[Discount] >= 0.085 )
+		formatString: 0.0%
+		displayFolder: Profit Drivers
+		lineageTag: 94bdade0-7f9c-50df-b4c1-6af084ed62de
+
+	measure 'High Discount Sales' = CALCULATE ( [Sales], Fact_Sales[Discount] >= 0.085 )
+		formatString: $#,0
+		displayFolder: Profit Drivers
+		lineageTag: ae2e7369-bef0-57a2-a6a1-496a09f7962c
+
+	measure 'Low Discount Margin' = CALCULATE ( [Margin %], Fact_Sales[Discount] < 0.025 )
+		formatString: 0.0%
+		displayFolder: Profit Drivers
+		lineageTag: d9356874-0c4a-5bf8-9c4f-d1df96dfa5dd
+
+	measure 'Profit Color' = IF ( [Profit] < 0, "#F25F5C", "#2EC4B6" )
+		displayFolder: Formatting
+		lineageTag: b7cf2acf-8760-5297-8ba0-871d0607f70b
+
+	measure 'Band Color' = IF ( [Band Margin %] < 0, "#F25F5C", "#2EC4B6" )
+		displayFolder: Formatting
+		lineageTag: 0926953b-0946-5f56-bc7e-6810dadf5d41
+
+	measure 'Worst Region' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Region[Region] ), [Profit], ASC )
+			RETURN
+			    MAXX ( _t, Dim_Region[Region] )
+		displayFolder: Insights
+		lineageTag: d3d98feb-f3ae-525a-a4f4-37e0a735e005
+
+	measure 'Worst Region Profit' = MINX ( ALL ( Dim_Region[Region] ), [Profit] )
+		formatString: $#,0
+		displayFolder: Insights
+		lineageTag: b0162e0b-1dd9-57d9-b63d-902d53b25b0a
+
+	measure 'Worst Region Sales' = VAR _r = [Worst Region] RETURN CALCULATE ( [Sales], Dim_Region[Region] = _r )
+		formatString: $#,0
+		displayFolder: Insights
+		lineageTag: 4b8889e8-769c-5463-8c6a-694e42397ba6
+
+	measure 'Worst Region Discount' = VAR _r = [Worst Region] RETURN CALCULATE ( [Average Discount], Dim_Region[Region] = _r )
+		formatString: 0.0%
+		displayFolder: Insights
+		lineageTag: bf674086-5505-576a-826d-76fa5354966c
+
+	measure 'Worst Region Category' =
+			VAR _r = [Worst Region]
+			VAR _t = TOPN ( 1, ALL ( Dim_Product[Product Category] ), CALCULATE ( [Profit], Dim_Region[Region] = _r ), ASC )
+			RETURN
+			    MAXX ( _t, Dim_Product[Product Category] )
+		displayFolder: Insights
+		lineageTag: b1895a2d-0678-5ab0-9629-49ae985c5728
+
+	measure 'Worst Region Category Profit' =
+			VAR _r = [Worst Region]
+			RETURN
+			    MINX ( ALL ( Dim_Product[Product Category] ), CALCULATE ( [Profit], Dim_Region[Region] = _r ) )
+		formatString: $#,0
+		displayFolder: Insights
+		lineageTag: d0b35698-d5c8-568d-b29f-299b8b26035d
+
+	measure 'Worst Region Sub-Category' =
+			VAR _r = [Worst Region]
+			VAR _t = TOPN ( 1, ALL ( Dim_Product[Product Sub-Category] ), CALCULATE ( [Profit], Dim_Region[Region] = _r ), ASC )
+			RETURN
+			    LOWER ( MAXX ( _t, Dim_Product[Product Sub-Category] ) )
+		displayFolder: Insights
+		lineageTag: 7fbdfaa3-3218-5bf7-abcd-389ed3442c14
+
+	measure 'Best Month' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Date[Month], Dim_Date[MonthNo] ), [Profit], DESC )
+			RETURN
+			    FORMAT ( DATE ( 2015, MAXX ( _t, Dim_Date[MonthNo] ), 1 ), "mmmm" )
+		displayFolder: Insights
+		lineageTag: cb1899c7-2d4d-5346-92c9-4761d9abe5eb
+
+	measure 'Best Month Profit' = MAXX ( ALL ( Dim_Date[Month], Dim_Date[MonthNo] ), [Profit] )
+		formatString: $#,0
+		displayFolder: Insights
+		lineageTag: ed87d3df-493f-56a9-96ea-642d36928459
+
+	measure 'Best Month Sales' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Date[Month], Dim_Date[MonthNo] ), [Profit], DESC )
+			RETURN
+			    SUMX ( _t, [Sales] )
+		formatString: $#,0
+		displayFolder: Insights
+		lineageTag: b26b4de4-360c-579e-9237-6ece06518892
+
+	/// Months whose margin was below 1%.
+	measure 'Break-even Months' =
+			VAR _t = FILTER ( ALL ( Dim_Date[Month], Dim_Date[MonthNo] ), NOT ISBLANK ( [Sales] ) && [Margin %] < 0.01 )
+			RETURN
+			    CONCATENATEX ( _t, FORMAT ( DATE ( 2015, Dim_Date[MonthNo], 1 ), "mmmm" ), " and ", Dim_Date[MonthNo], ASC )
+		displayFolder: Insights
+		lineageTag: 58da75a5-b53e-508e-8f8b-7e03de5cec00
+
+	measure 'Worst Sub-Category' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Product[Product Sub-Category] ), [Profit], ASC )
+			RETURN
+			    MAXX ( _t, Dim_Product[Product Sub-Category] )
+		displayFolder: Insights
+		lineageTag: f0df8956-2d4b-5efd-81d8-40bb0615095c
+
+	measure 'Worst Sub-Category Profit' = MINX ( ALL ( Dim_Product[Product Sub-Category] ), [Profit] )
+		formatString: $#,0
+		displayFolder: Insights
+		lineageTag: 05fd8eac-5a68-53e6-851f-417e1ba92269
+
+	measure 'Worst Sub-Category Sales' = VAR _s = [Worst Sub-Category] RETURN CALCULATE ( [Sales], Dim_Product[Product Sub-Category] = _s )
+		formatString: $#,0
+		displayFolder: Insights
+		lineageTag: dda6ae47-e0d6-5354-a8e2-3302ae4c236b
+
+	measure 'Best Segment' =
+			VAR _t = TOPN ( 1, ALL ( Fact_Sales[Customer Segment] ), [Margin %], DESC )
+			RETURN
+			    MAXX ( _t, Fact_Sales[Customer Segment] )
+		displayFolder: Insights
+		lineageTag: 7e25c4e5-ab30-5ecc-8fca-7b987833f55d
+
+	measure 'Best Segment Margin' = MAXX ( ALL ( Fact_Sales[Customer Segment] ), [Margin %] )
+		formatString: 0.0%
+		displayFolder: Insights
+		lineageTag: b6d769c7-a9ca-504f-b91f-4a59c56b4d5f
+
+	measure 'Largest Segment' =
+			VAR _t = TOPN ( 1, ALL ( Fact_Sales[Customer Segment] ), [Sales], DESC )
+			RETURN
+			    MAXX ( _t, Fact_Sales[Customer Segment] )
+		displayFolder: Insights
+		lineageTag: 36937ec7-3209-574b-8ee3-6d184ad7979c
+
+	measure 'Largest Segment Margin' = VAR _s = [Largest Segment] RETURN CALCULATE ( [Margin %], Fact_Sales[Customer Segment] = _s )
+		formatString: 0.0%
+		displayFolder: Insights
+		lineageTag: 4ec368ef-3761-5260-a4df-358a34df5d89
+
+	measure 'Loss Sub-Categories' = COUNTROWS ( FILTER ( ALL ( Dim_Product[Product Sub-Category] ), [Profit] < 0 ) )
+		formatString: 0
+		displayFolder: Insights
+		lineageTag: 6059fbea-b62b-57bc-9ae9-e808ef7a9dac
+
+	/// Diverging bars: the six sub-categories that lose the most and the six that earn the most.
+	measure 'Sub-Category Bars' =
+			VAR _all = ADDCOLUMNS ( ALL ( Dim_Product[Product Sub-Category] ), "@p", [Profit] )
+			VAR _rows = UNION ( TOPN ( 6, _all, [@p], ASC ), TOPN ( 6, _all, [@p], DESC ) )
+			VAR _max = MAXX ( _rows, ABS ( [@p] ) )
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#102A43;height:176px;overflow:hidden'>"
+			        & CONCATENATEX (
+			            _rows,
+			            VAR _w = DIVIDE ( ABS ( [@p] ), _max ) * 150
+			            VAR _neg = [@p] < 0
+			            RETURN
+			                "<div style='display:flex;align-items:center;height:14.5px;font-size:10px'>"
+			                    & "<div style='width:230px;text-align:right;padding-right:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>" & Dim_Product[Product Sub-Category] & "</div>"
+			                    & "<div style='width:160px;display:flex;justify-content:flex-end;align-items:center;gap:4px'>" & IF ( _neg, "<span style='color:#F25F5C;font-weight:600'>" & FORMAT ( [@p] / 1000, "0.0" ) & "</span><div style='height:10px;width:" & FORMAT ( _w, "0" ) & "px;background:#F25F5C'></div>", "" ) & "</div>"
+			                    & "<div style='width:1px;height:14.5px;background:#C9D3DA'></div>"
+			                    & "<div style='width:200px;display:flex;align-items:center;gap:4px'>" & IF ( _neg, "", "<div style='height:10px;width:" & FORMAT ( _w, "0" ) & "px;background:#2EC4B6'></div><span style='font-weight:600'>" & FORMAT ( [@p] / 1000, "0.0" ) & "</span>" ) & "</div></div>",
+			            "", [@p], ASC )
+			        & "<div style='font-size:9px;color:#5B6B7A;margin-top:4px'>$K · worst six and best six sub-categories</div></div>"
+		displayFolder: KPI Cards
+		lineageTag: c9aba94c-7961-50c7-b1ac-666540b66d64
+
+	/// Profit by region and category ($K); coral is a loss, mint a profit, darker is larger.
+	measure 'Region Category Heatmap' =
+			VAR _cats = ALL ( Dim_Product[Product Category] )
+			VAR _head =
+			    CONCATENATEX ( _cats, "<div style='flex:1;text-align:center;font-size:10.5px;font-weight:700;color:#5B6B7A'>" & Dim_Product[Product Category] & "</div>", "", Dim_Product[Product Category], ASC )
+			VAR _rows =
+			    CONCATENATEX (
+			        ALL ( Dim_Region[Region] ),
+			        VAR _r = Dim_Region[Region]
+			        RETURN
+			            "<div style='display:flex;align-items:center;gap:8px;margin-top:6px'><div style='width:120px;font-size:12px;font-weight:600'>" & _r & "</div>"
+			                & CONCATENATEX (
+			                    _cats,
+			                    VAR _v = CALCULATE ( [Profit], Dim_Region[Region] = _r )
+			                    VAR _a = MIN ( 1, 0.18 + ABS ( _v ) / 55000 )
+			                    VAR _bg = IF ( _v < 0, "rgba(242,95,92,", "rgba(46,196,182," ) & FORMAT ( _a, "0.00" ) & ")"
+			                    RETURN
+			                        "<div style='flex:1;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:" & _bg & ";color:" & IF ( _a > 0.6, "#FFFFFF", "#102A43" ) & "'>" & IF ( _v > 0, "+", "" ) & FORMAT ( _v / 1000, "0.0" ) & "</div>",
+			                    "", Dim_Product[Product Category], ASC )
+			                & "</div>",
+			        "", Dim_Region[Region], ASC )
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#102A43'><div style='display:flex;gap:8px'><div style='width:120px'></div>" & _head & "</div>" & _rows & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 97971d90-997f-5393-baac-0714b986f306
+
+	measure 'KPI Row' =
+			VAR _a0 = ( "#102A43" )
+			VAR _n0 = ( "#5B6B7A" )
+			VAR _a1 = ( "#2EC4B6" )
+			VAR _n1 = ( "#F25F5C" )
+			VAR _a2 = ( "#102A43" )
+			VAR _n2 = ( "#5B6B7A" )
+			VAR _a3 = ( "#102A43" )
+			VAR _n3 = ( "#5B6B7A" )
+			VAR _a4 = ( "#102A43" )
+			VAR _n4 = ( "#5B6B7A" )
+			RETURN
+			    "<div style='display:flex;gap:12px;height:78px;box-sizing:border-box;overflow:hidden;padding-bottom:2px;font-family:Segoe UI,sans-serif'>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:12px;padding:8px 14px 7px;box-shadow:0 2px 8px rgba(16,42,67,.08);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a0 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#5B6B7A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Sales</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#102A43'>" & ( FORMAT ( DIVIDE ( [Sales], 1000000 ), "$#,0.00" ) & "M" ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n0 & "'>" & ( "H1 " & FORMAT ( MAX ( Dim_Date[Year] ), "0" ) ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:12px;padding:8px 14px 7px;box-shadow:0 2px 8px rgba(16,42,67,.08);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a1 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#5B6B7A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Profit</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#102A43'>" & ( FORMAT ( DIVIDE ( [Profit], 1000 ), "$#,0.0" ) & "K" ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n1 & "'>" & ( [Worst Region] & " lost " & FORMAT ( DIVIDE ( ABS ( [Worst Region Profit] ), 1000 ), "$#,0.0" ) & "K" ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:12px;padding:8px 14px 7px;box-shadow:0 2px 8px rgba(16,42,67,.08);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a2 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#5B6B7A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Profit margin</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#102A43'>" & ( FORMAT ( [Margin %], "0.0%" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n2 & "'>" & ( "profit ÷ sales" ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:12px;padding:8px 14px 7px;box-shadow:0 2px 8px rgba(16,42,67,.08);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a3 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#5B6B7A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Orders</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#102A43'>" & ( FORMAT ( [Orders], "#,0" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n3 & "'>" & ( FORMAT ( [Units], "#,0" ) & " units" ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:12px;padding:8px 14px 7px;box-shadow:0 2px 8px rgba(16,42,67,.08);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a4 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#5B6B7A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Customers</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#102A43'>" & ( FORMAT ( [Customers], "#,0" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n4 & "'>" & ( "avg discount " & FORMAT ( [Average Discount], "0.0%" ) ) & "</div></div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 001976e0-1543-5bfa-8d57-9b1e5ae30218
+
+	measure 'Insight Overview' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#102A43;color:#D9E6F2;border-radius:12px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>What the data says</div>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b style='color:#2EC4B6'>" & [Worst Region] & "</b>" & " sold " & FORMAT ( DIVIDE ( [Worst Region Sales], 1000 ), "$#,0" ) & "K" & " but lost " & "<b style='color:#2EC4B6'>" & FORMAT ( DIVIDE ( ABS ( [Worst Region Profit] ), 1000 ), "$#,0.0" ) & "K" & "</b>" & ". Its average discount is " & FORMAT ( [Worst Region Discount], "0.0%" ) & " against " & FORMAT ( [Average Discount], "0.0%" ) & " overall, so the loss comes from what it sells: " & [Worst Region Category] & " lost " & FORMAT ( DIVIDE ( ABS ( [Worst Region Category Profit] ), 1000 ), "$#,0.0" ) & "K" & " there, mostly " & [Worst Region Sub-Category] & "." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b style='color:#2EC4B6'>" & [Best Month] & "</b>" & " was the most profitable month: " & FORMAT ( DIVIDE ( [Best Month Profit], 1000 ), "$#,0.0" ) & "K" & " profit on " & FORMAT ( DIVIDE ( [Best Month Sales], 1000 ), "$#,0.0" ) & "K" & " sales." & IF ( [Break-even Months] <> "", " " & [Break-even Months] & " barely broke even.", "" ) ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b style='color:#2EC4B6'>" & [Worst Sub-Category] & "</b>" & " are the biggest loss-maker (" & FORMAT ( DIVIDE ( ABS ( [Worst Sub-Category Profit] ), 1000 ), "$#,0.0" ) & "K" & " lost on " & FORMAT ( DIVIDE ( [Worst Sub-Category Sales], 1000 ), "$#,0" ) & "K" & " of sales)." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: 9babcdd9-0f47-51e4-8acb-162bd243cbbb
+
+	measure 'Insight Drivers' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#102A43;color:#D9E6F2;border-radius:12px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>What the data says</div>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "Lines discounted 9% or more lose money: a " & "<b style='color:#2EC4B6'>" & FORMAT ( [High Discount Margin], "0.0%" ) & "</b>" & " margin on " & FORMAT ( DIVIDE ( [High Discount Sales], 1000 ), "$#,0" ) & "K" & " of sales, against " & FORMAT ( [Low Discount Margin], "0.0%" ) & " when the discount is 2% or less." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b style='color:#2EC4B6'>" & [Best Segment] & "</b>" & " customers return the best margin (" & FORMAT ( [Best Segment Margin], "0.0%" ) & "); " & [Largest Segment] & " buys the most but keeps only " & FORMAT ( [Largest Segment Margin], "0.0%" ) & "." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "Capping discounts at 8%% is the quickest margin lever; " & [Worst Region] & " needs a look at its " & LOWER ( [Worst Region Category] ) & " pricing." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: e50f76a8-2734-567c-aaa3-c57221ea00ae
+
+	measure 'DQ Value' =
+			VAR _o = SELECTEDVALUE ( Dim_DQ[Check Order] )
+			RETURN
+			    SWITCH (
+			        _o,
+			        1, FORMAT ( MAX ( DQ_Source[RawRows] ), "#,0" ),
+			        2, FORMAT ( MAX ( DQ_Source[DuplicateRows] ), "#,0" ),
+			        3, FORMAT ( MAX ( DQ_Source[RowIdConflicts] ), "#,0" ),
+			        4, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_Sales ), Fact_Sales[Profit] > Fact_Sales[Sales] ) ), "#,0" ),
+			        5, FORMAT ( MAX ( DQ_Source[MissingPriority] ), "#,0" ),
+			        6, FORMAT ( MAX ( DQ_Source[PaddedPriority] ), "#,0" ),
+			        7, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_Sales ), Fact_Sales[Ship Date] < Fact_Sales[Order Date] ) ), "#,0" ),
+			        8, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_Sales ), Fact_Sales[Sales] <= 0 ) ), "#,0" ),
+			        9, FORMAT ( MAX ( DQ_Source[ReturnsMatched] ), "#,0" ) & " of " & FORMAT ( MAX ( DQ_Source[ReturnRows] ), "#,0" ),
+			        10, FORMAT ( CALCULATE ( MAX ( Fact_Sales[Order Date] ), REMOVEFILTERS () ), "dd mmm yyyy" )
+			    )
+		displayFolder: Data Quality
+		lineageTag: 2999276b-fae7-5a6c-8dac-fc40c1df2e0f
+
+	measure 'DQ Status' =
+			VAR _o = SELECTEDVALUE ( Dim_DQ[Check Order] )
+			VAR _v = [DQ Value]
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        ISBLANK ( _o ), BLANK (),
+			        _o IN { 1, 10 }, "Info",
+			        _o IN { 2, 6 }, IF ( _v = "0", "Pass", "Cleaned" ),
+			        _o = 9, "Watch",
+			        _v = "0", "Pass",
+			        _o IN { 3, 4, 5 }, "Watch",
+			        "Fail"
+			    )
+		displayFolder: Data Quality
+		lineageTag: fc8ff6df-1a8a-525d-b670-1f7ba69fb4b2
+
+	measure 'DQ Status Pill' =
+			VAR _t = [DQ Status]
+			VAR _bg = SWITCH ( _t, "Pass", "#2E9E6B", "Info", "#9FB3C8", "Cleaned", "#2EC4B6", "Watch", "#F2A541", "#F25F5C" )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='62' height='20' viewBox='0 0 62 20'>"
+			        & "<rect x='1' y='2' width='60' height='16' rx='8' fill='" & _bg & "'/>"
+			        & "<text x='31' y='14' text-anchor='middle' font-family='Segoe UI,sans-serif' font-size='10' font-weight='600' fill='#FFFFFF'>" & _t & "</text></svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( _t ),
+			        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( _svg, "%", "%25" ), "#", "%23" ) )
+		displayFolder: Formatting
+		lineageTag: 868995e0-9972-58d1-80fa-8191109c8a5c
+		dataCategory: ImageUrl
+
+	measure 'DQ Watch Checks' = COUNTROWS ( FILTER ( ALL ( Dim_DQ ), [DQ Status] IN { "Watch", "Fail" } ) )
+		formatString: 0
+		displayFolder: Data Quality
+		lineageTag: 8b078579-42ae-5f9d-b2a8-ad3529ee3658
+
+	measure 'DQ Summary' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#102A43;color:#D9E6F2;border-radius:12px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>How this report is governed</div>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>One source:</b> the workbook is read once by a staging query; the invoice, customer and product tables are built from it, and the file path is the DataFilePath parameter." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Security:</b> the Area Manager role shows each manager only their region (ManagerEmail in Dim_Region = USERPRINCIPALNAME). Sales Leadership sees every region." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Returns:</b> only " & FORMAT ( MAX ( DQ_Source[ReturnsMatched] ), "#,0" ) & " of the " & FORMAT ( MAX ( DQ_Source[ReturnRows] ), "#,0" ) & " returned orders appear in the invoices, so returns are tracked here instead of on the main pages." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Watch list:</b> " & FORMAT ( [DQ Watch Checks], "0" ) & " checks need attention at the source; nothing is hidden from the totals." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Freshness:</b> " & [Last Refresh] & "." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: 83df1f8f-7e68-5041-8840-c5f08993b9b8
+
+	column Placeholder
+		dataType: string
+		isHidden
+		lineageTag: f574f20f-a5dc-56ae-afc8-7057ae32d7b7
+		summarizeBy: none
+		sourceColumn: Placeholder
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Measures = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Placeholder = text], {})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

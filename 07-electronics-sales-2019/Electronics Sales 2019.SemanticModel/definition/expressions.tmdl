@@ -1,0 +1,22 @@
+/// Full path of the data file. Change it here once if you move the folder.
+expression DataFilePath = "C:\Users\RTX\Desktop\Portfolio Dashboards\Electronics Sales 2019\Electronics_Sales_2019.csv" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 13a28b85-a3b5-566f-9c64-0b647ca6b60a
+
+	annotation PBI_ResultType = Text
+
+	annotation PBI_NavigationStepName = Navigation
+
+/// Raw order lines (not loaded).
+expression Sales_Raw =
+		let
+		    Source = Csv.Document(File.Contents(DataFilePath), [Delimiter=",", Columns=7, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+		    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+		    Typed = Table.TransformColumnTypes(Promoted, {{"OrderID", Int64.Type}, {"Product", type text}, {"Quantity", Int64.Type}, {"PriceEach", type number}, {"OrderDateTime", type datetime}, {"City", type text}, {"State", type text}}, "en-US")
+		in
+		    Typed
+	lineageTag: 86b696fe-a94f-523d-b359-5ee4b5aacd46
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

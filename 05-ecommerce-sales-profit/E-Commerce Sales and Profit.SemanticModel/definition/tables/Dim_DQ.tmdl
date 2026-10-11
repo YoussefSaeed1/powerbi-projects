@@ -1,0 +1,41 @@
+/// Data quality rules.
+table Dim_DQ
+	lineageTag: 182f6664-8de5-5970-9ffa-81d51abe299e
+
+	column Check
+		dataType: string
+		lineageTag: 255691e6-32c9-5929-9565-1ae54cdd99cc
+		summarizeBy: none
+		sourceColumn: Check
+		sortByColumn: 'Check Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Check Order'
+		dataType: int64
+		isHidden
+		lineageTag: 9676f5a3-f016-5048-b1a9-074ff97e03a0
+		summarizeBy: none
+		sourceColumn: Check Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rule
+		dataType: string
+		lineageTag: 084dad82-cbce-55b8-ae35-398da4c1c76d
+		summarizeBy: none
+		sourceColumn: Rule
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_DQ = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Check" = text, #"Check Order" = Int64.Type, #"Rule" = text], {{"Invoice rows loaded", 1, "INVOICES rows after blank rows"}, {"Exact duplicate rows", 2, "Removed in Power Query"}, {"Row ID used by two orders", 3, "Row ID should be unique"}, {"Profit larger than sales", 4, "Profit ≤ Sales"}, {"Missing order priority", 5, "Set to Not Specified"}, {"Priority labels with extra spaces", 6, "Trimmed in Power Query"}, {"Ship date before order date", 7, "Ship ≥ Order"}, {"Zero or negative sales", 8, "Sales > 0"}, {"Returned orders found in invoices", 9, "Returns sheet vs invoices"}, {"Latest order date", 10, "Freshness"}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

@@ -1,0 +1,5 @@
+/// Full read access to every plant.
+role 'Procurement Leadership'
+	modelPermission: read
+
+	annotation PBI_Id = 28aec2e374aa5af0bd21afdafe4b30cd

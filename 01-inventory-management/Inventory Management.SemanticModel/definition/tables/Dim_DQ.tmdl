@@ -1,0 +1,41 @@
+/// Data quality rules checked on every refresh.
+table Dim_DQ
+	lineageTag: 1a7ed7cd-09c0-5f0c-a424-db21faba463b
+
+	column Check
+		dataType: string
+		lineageTag: 9137c1ca-678d-54a6-b13f-a0e82b34cd52
+		summarizeBy: none
+		sourceColumn: Check
+		sortByColumn: 'Check Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Check Order'
+		dataType: int64
+		isHidden
+		lineageTag: 826e356b-fbc0-5186-acb0-8eb1ada508e7
+		summarizeBy: none
+		sourceColumn: Check Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rule
+		dataType: string
+		lineageTag: 035b9f10-f21b-54ed-a288-6b99d8e0dcf3
+		summarizeBy: none
+		sourceColumn: Rule
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_DQ = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Check" = text, #"Check Order" = Int64.Type, #"Rule" = text], {{"Sales rows loaded", 1, "Row count of the Sales sheet"}, {"Inventory snapshot rows loaded", 2, "Row count of the Inventory_Snapshot sheet"}, {"Purchase order rows loaded", 3, "Row count of the Purchase_Orders sheet"}, {"Duplicate SKUs in Products", 4, "Each SKU appears once"}, {"Sales rows with unknown SKU", 5, "Every sale maps to a product"}, {"Snapshot rows with unknown SKU", 6, "Every snapshot row maps to a product"}, {"Negative on-hand quantity", 7, "OnHandQty >= 0"}, {"POs received before they were ordered", 8, "ReceivedDate on or after OrderDate"}, {"POs received above ordered quantity", 9, "ReceivedQty <= OrderedQty"}, {"Sales with zero or negative price", 10, "UnitPrice > 0"}, {"Latest inventory snapshot", 11, "Freshness of the source data"}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

@@ -1,0 +1,145 @@
+/// One-row table of data quality counts, computed from the raw file on every refresh.
+table DQ_Source
+	lineageTag: 65d044d1-da81-5a33-858c-b66eaed8041b
+	isHidden
+
+	column RawRows
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 12b9e360-10ee-5761-a366-3f40086cd8e1
+		summarizeBy: none
+		sourceColumn: RawRows
+
+		annotation SummarizationSetBy = Automatic
+
+	column TotalRows
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: a4f17a6f-db68-5d03-8e07-6eb1270041e5
+		summarizeBy: none
+		sourceColumn: TotalRows
+
+		annotation SummarizationSetBy = Automatic
+
+	column RawValue
+		dataType: double
+		isHidden
+		formatString: $#,0
+		lineageTag: e2720119-e9a9-5259-a606-cec9aa29fed5
+		summarizeBy: none
+		sourceColumn: RawValue
+
+		annotation SummarizationSetBy = Automatic
+
+	column TotalValue
+		dataType: double
+		isHidden
+		formatString: $#,0
+		lineageTag: b998a32b-3a2a-52ae-ab1f-10f5a3a9736a
+		summarizeBy: none
+		sourceColumn: TotalValue
+
+		annotation SummarizationSetBy = Automatic
+
+	column TotalRowsNoWeight
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 0f4b9bd1-e072-5f2f-87a3-dd8a07790fbd
+		summarizeBy: none
+		sourceColumn: TotalRowsNoWeight
+
+		annotation SummarizationSetBy = Automatic
+
+	column DuplicateTotals
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: bf1ea5d3-4a05-55f7-bcab-2993432f6de3
+		summarizeBy: none
+		sourceColumn: DuplicateTotals
+
+		annotation SummarizationSetBy = Automatic
+
+	column NotEgyptPartner
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 2001c3f5-ee2e-5c74-a865-8d7654e1e501
+		summarizeBy: none
+		sourceColumn: NotEgyptPartner
+
+		annotation SummarizationSetBy = Automatic
+
+	column NotExportFlow
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: c404ba83-4d16-5b68-a059-f30415bd0352
+		summarizeBy: none
+		sourceColumn: NotExportFlow
+
+		annotation SummarizationSetBy = Automatic
+
+	column OtherCommodity
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: f7f1522a-4744-5bef-a719-e8f62a6e502e
+		summarizeBy: none
+		sourceColumn: OtherCommodity
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthsCovered
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 20e3c7b1-b56e-5271-ba8d-074d68243fda
+		summarizeBy: none
+		sourceColumn: MonthsCovered
+
+		annotation SummarizationSetBy = Automatic
+
+	column LastPeriod
+		dataType: dateTime
+		isHidden
+		formatString: mmm yyyy
+		lineageTag: 7f8e568f-1876-55ef-b39d-62c1bc11ea09
+		summarizeBy: none
+		sourceColumn: LastPeriod
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition DQ_Source = m
+		mode: import
+		source =
+				let
+				    Source = Trade_Raw,
+				    Totals = Table.SelectRows(Source, each [customsCode] = "C00" and [motCode] = 0 and [partner2Code] = 0),
+				    Result = #table(
+				        type table [RawRows = Int64.Type, TotalRows = Int64.Type, RawValue = number, TotalValue = number, TotalRowsNoWeight = Int64.Type, DuplicateTotals = Int64.Type, NotEgyptPartner = Int64.Type, NotExportFlow = Int64.Type, OtherCommodity = Int64.Type, MonthsCovered = Int64.Type, LastPeriod = date],
+				        {{
+				            Table.RowCount(Source),
+				            Table.RowCount(Totals),
+				            List.Sum(Source[primaryValue]),
+				            List.Sum(Totals[primaryValue]),
+				            Table.RowCount(Table.SelectRows(Totals, each [netWgt] = null or [netWgt] = 0)),
+				            Table.RowCount(Totals) - Table.RowCount(Table.Distinct(Table.SelectColumns(Totals, {"reporterCode", "Date"}))),
+				            Table.RowCount(Table.SelectRows(Source, each [partnerCode] <> 818)),
+				            Table.RowCount(Table.SelectRows(Source, each [flowCode] <> "X")),
+				            Table.RowCount(Table.SelectRows(Source, each [cmdCode] <> 300420)),
+				            List.Count(List.Distinct(Totals[Date])),
+				            List.Max(Totals[Date])
+				        }}
+				    )
+				in
+				    Result
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

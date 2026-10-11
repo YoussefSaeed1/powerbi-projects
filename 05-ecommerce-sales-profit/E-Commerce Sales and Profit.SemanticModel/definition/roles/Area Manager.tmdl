@@ -1,0 +1,7 @@
+/// Each area manager sees only their own region (ManagerEmail in Dim_Region).
+role 'Area Manager'
+	modelPermission: read
+
+	tablePermission Dim_Region = Dim_Region[ManagerEmail] = USERPRINCIPALNAME ()
+
+	annotation PBI_Id = aa806f86eb655685bf12baf904db7e34

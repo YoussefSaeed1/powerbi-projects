@@ -1,0 +1,23 @@
+/// Full path of the data file. Change it here once if you move the folder.
+expression DataFilePath = "C:\Users\RTX\Desktop\Portfolio Dashboards\Pharmaceutical Trade Intelligence - Egypt\Trade_Data.csv" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 8712269f-9a1b-59c8-a2b9-e7fd37333ced
+
+	annotation PBI_ResultType = Text
+
+	annotation PBI_NavigationStepName = Navigation
+
+/// Raw UN Comtrade file (not loaded). Contains total rows AND breakdown rows, so it must never be summed directly.
+expression Trade_Raw =
+		let
+		    Source = Csv.Document(File.Contents(DataFilePath), [Delimiter=",", Columns=47, Encoding=1252, QuoteStyle=QuoteStyle.Csv]),
+		    Promoted = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+		    Typed = Table.TransformColumnTypes(Promoted, {{"refYear", Int64.Type}, {"refMonth", Int64.Type}, {"reporterCode", Int64.Type}, {"reporterISO", type text}, {"reporterDesc", type text}, {"flowCode", type text}, {"partnerCode", Int64.Type}, {"partner2Code", Int64.Type}, {"cmdCode", Int64.Type}, {"customsCode", type text}, {"motCode", Int64.Type}, {"motDesc", type text}, {"qty", type number}, {"netWgt", type number}, {"primaryValue", type number}}),
+		    AddDate = Table.AddColumn(Typed, "Date", each #date([refYear], [refMonth], 1), type date)
+		in
+		    AddDate
+	lineageTag: 2e671099-eb41-5da2-a5d5-4887ba9a810f
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,5 @@
+/// Full read access to every warehouse.
+role 'Inventory Leadership'
+	modelPermission: read
+
+	annotation PBI_Id = 8bde360861745d1992273fcc01db35e7

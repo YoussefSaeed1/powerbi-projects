@@ -1,0 +1,32 @@
+table 'Ops Metric'
+	lineageTag: fd8bd9b2-b7fa-5ded-bb43-f3f0a453ef91
+
+	column Metric
+		dataType: string
+		lineageTag: 8434f25e-f94d-5143-9364-348dd0973c53
+		summarizeBy: none
+		sourceColumn: Metric
+		sortByColumn: 'Metric Sort'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Metric Sort'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: cb26d8f2-e5ff-5155-8b1f-02b42574dff7
+		summarizeBy: none
+		sourceColumn: Metric Sort
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Ops Metric' = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Metric" = text, #"Metric Sort" = Int64.Type], {{"Avg. Days of Supply", 1}, {"Stockout Rate %", 2}, {"Units Received", 3}, {"Units Sold", 4}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

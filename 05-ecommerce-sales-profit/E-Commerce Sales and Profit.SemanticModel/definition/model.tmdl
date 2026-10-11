@@ -1,0 +1,27 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["DataFilePath","Invoices_Raw","Invoices_Clean","_Measures","Fact_Sales","Dim_Customer","Dim_Product","Dim_Region","Dim_DiscountBand","DQ_Source","Dim_DQ","Dim_Date","_Refresh"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table _Measures
+ref table Fact_Sales
+ref table Dim_Customer
+ref table Dim_Product
+ref table Dim_Region
+ref table Dim_DiscountBand
+ref table DQ_Source
+ref table Dim_DQ
+ref table Dim_Date
+ref table _Refresh
+
+ref cultureInfo en-US

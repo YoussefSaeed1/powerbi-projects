@@ -1,0 +1,351 @@
+table _Measures
+	lineageTag: acd1d92f-de5e-5ea3-9ed7-198cb5efd91e
+
+	measure 'Last Refresh' = "Data refreshed " & FORMAT ( MAX ( _Refresh[RefreshedAt] ), "dd mmm yyyy" )
+		displayFolder: Helpers
+		lineageTag: 86f562a2-c032-5081-9e38-f10a2c31a56c
+
+	/// Quantity × price each.
+	measure Revenue = SUMX ( Fact_Sales, Fact_Sales[Quantity] * Fact_Sales[PriceEach] )
+		formatString: $#,0
+		displayFolder: Sales
+		lineageTag: 674ac1b4-2b92-5221-ba7d-863e0888cf7d
+
+	measure 'Revenue $M' = DIVIDE ( [Revenue], 1000000 )
+		formatString: $#,0.00
+		displayFolder: Sales
+		lineageTag: dd52884d-c4a4-5755-90d0-bbf62cb19238
+
+	measure Units = SUM ( Fact_Sales[Quantity] )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: 91876a07-de98-5dc1-8d03-6829b1312780
+
+	/// Distinct order IDs. The original report counted order lines (185.95K); one order can hold several lines.
+	measure Orders = DISTINCTCOUNT ( Fact_Sales[OrderID] )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: 28d806a5-0cae-5847-afe5-09f25bc19a03
+
+	measure 'Order Lines' = COUNTROWS ( Fact_Sales )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: 44efde3d-3a9d-58b5-8e59-e62835c31a00
+
+	measure 'Average Order Value' = DIVIDE ( [Revenue], [Orders] )
+		formatString: $#,0.0
+		displayFolder: Sales
+		lineageTag: 06ad5f18-d842-5b9f-9b74-e2652212902e
+
+	measure 'Revenue Share %' = DIVIDE ( [Revenue], CALCULATE ( [Revenue], ALL ( Dim_City ), ALL ( Dim_Product ) ) )
+		formatString: 0.0%
+		displayFolder: Sales
+		lineageTag: c730cd0b-2c3d-5142-9884-3deffd412eae
+
+	measure 'Units Share %' = DIVIDE ( [Units], CALCULATE ( [Units], ALL ( Dim_City ), ALL ( Dim_Product ) ) )
+		formatString: 0.0%
+		displayFolder: Sales
+		lineageTag: af3f9b92-bcc1-5094-a3cb-a9b6a270d523
+
+	measure 'Group Role' =
+			VAR _r = [Revenue Share %]
+			VAR _u = [Units Share %]
+			RETURN
+			    IF ( ISBLANK ( _r ), BLANK (), IF ( _r >= 0.2, "Revenue driver", IF ( _u >= 0.3, "Traffic driver", IF ( _r >= 0.1, "Steady", "Add-on" ) ) ) )
+		displayFolder: Sales
+		lineageTag: 83def2dc-992f-5e64-8d9a-2275ba04ccd6
+
+	measure 'Peak Month' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Date[Month], Dim_Date[MonthNo] ), [Revenue], DESC )
+			RETURN
+			    MAXX ( _t, Dim_Date[Month] )
+		displayFolder: Insights
+		lineageTag: eaf856b6-8ff2-5ee0-913b-68ee02f3502e
+
+	measure 'Peak Month Revenue' = MAXX ( ALL ( Dim_Date[Month], Dim_Date[MonthNo] ), [Revenue] )
+		formatString: $#,0
+		displayFolder: Insights
+		lineageTag: 86f1bd88-54d6-569b-9756-9ee3b5f7bba0
+
+	measure 'Peak Month Share' = DIVIDE ( [Peak Month Revenue], CALCULATE ( [Revenue], ALL ( Dim_Date ) ) )
+		formatString: 0%
+		displayFolder: Insights
+		lineageTag: d4899f95-e45f-5efc-9954-86077582a621
+
+	measure 'Q4 Share' = DIVIDE ( CALCULATE ( [Revenue], Dim_Date[Quarter] = "Q4" ), CALCULATE ( [Revenue], ALL ( Dim_Date[Quarter] ) ) )
+		formatString: 0%
+		displayFolder: Insights
+		lineageTag: 1cb15a85-5bc0-56d2-b728-f542943d2d0c
+
+	measure 'Top City' =
+			VAR _t = TOPN ( 1, ALL ( Dim_City[City] ), [Revenue], DESC )
+			RETURN
+			    MAXX ( _t, Dim_City[City] )
+		displayFolder: Insights
+		lineageTag: c585e235-8f1c-5307-8764-b15b22597a76
+
+	measure 'Top City Share' = DIVIDE ( MAXX ( ALL ( Dim_City[City] ), [Revenue] ), CALCULATE ( [Revenue], ALL ( Dim_City ) ) )
+		formatString: 0%
+		displayFolder: Insights
+		lineageTag: 5403a949-7f48-504c-9d6a-981637a8304f
+
+	measure 'Orders by Hour' = [Orders]
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: d4bedf43-8bf7-56cd-b33e-ca19b258b4d6
+
+	measure 'Peak Hours' =
+			VAR _t = TOPN ( 2, ALL ( Dim_Hour[Hour], Dim_Hour[Hour Label] ), [Orders], DESC )
+			RETURN
+			    CONCATENATEX ( _t, Dim_Hour[Hour Label], " and ", Dim_Hour[Hour], ASC )
+		displayFolder: Insights
+		lineageTag: 3de8f892-8e1b-5e64-a6a1-28375a34b039
+
+	/// Peak month in orange, the rest of Q4 in light orange.
+	measure 'Month Color' =
+			VAR _m = SELECTEDVALUE ( Dim_Date[MonthNo] )
+			RETURN
+			    IF ( [Revenue] = [Peak Month Revenue], "#FF5A1F", IF ( _m >= 10, "#FFB08F", "#2B2F38" ) )
+		displayFolder: Formatting
+		lineageTag: 094d0703-ccc0-5cca-8f9f-9e20c6dfea89
+
+	measure 'City Color' = IF ( SELECTEDVALUE ( Dim_City[City] ) = [Top City], "#FF5A1F", "#2B2F38" )
+		displayFolder: Formatting
+		lineageTag: b6764a80-9d34-51a3-ad71-7f190d475868
+
+	measure 'Group Color' = IF ( [Revenue Share %] >= 0.2, "#FF5A1F", "#2B2F38" )
+		displayFolder: Formatting
+		lineageTag: ffd44901-9acc-58a8-9a2f-68256d723b7f
+
+	measure 'Laptop Revenue Share' = CALCULATE ( [Revenue Share %], Dim_Product[Product Group] = "Laptops" )
+		formatString: 0%
+		displayFolder: Insights
+		lineageTag: 8a1e60b4-4576-518c-b984-f36650dbd661
+
+	measure 'Laptop Units Share' = CALCULATE ( [Units Share %], Dim_Product[Product Group] = "Laptops" )
+		formatString: 0%
+		displayFolder: Insights
+		lineageTag: 8f9601a0-5d91-5848-b503-c739bf2de4f6
+
+	measure 'Cable Revenue Share' = CALCULATE ( [Revenue Share %], Dim_Product[Product Group] = "Cables & batteries" )
+		formatString: 0%
+		displayFolder: Insights
+		lineageTag: 7c483dec-4b70-52c7-bce4-652d38d682c1
+
+	measure 'Cable Units Share' = CALCULATE ( [Units Share %], Dim_Product[Product Group] = "Cables & batteries" )
+		formatString: 0%
+		displayFolder: Insights
+		lineageTag: 9db7a494-ad6f-5f77-984c-adab85ba9ebf
+
+	measure 'Top Product' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Product[Product] ), [Revenue], DESC )
+			RETURN
+			    MAXX ( _t, Dim_Product[Product] )
+		displayFolder: Insights
+		lineageTag: 2893e43a-7fd9-5a01-ad9d-75b990836b5f
+
+	measure 'Top Product Revenue' = MAXX ( ALL ( Dim_Product[Product] ), [Revenue] )
+		formatString: $#,0
+		displayFolder: Insights
+		lineageTag: aa4f1508-a605-5d7e-927b-a648bc6bc405
+
+	measure 'Most Units Product' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Product[Product] ), [Units], DESC )
+			RETURN
+			    MAXX ( _t, Dim_Product[Product] )
+		displayFolder: Insights
+		lineageTag: 4fa79258-67eb-53d8-8585-31a9f1ed2634
+
+	measure 'Most Units' = MAXX ( ALL ( Dim_Product[Product] ), [Units] )
+		formatString: #,0
+		displayFolder: Insights
+		lineageTag: c02c407a-f517-5b7d-8bab-448cffb7aaa6
+
+	/// Orders that contain both an iPhone and a Lightning cable.
+	measure 'iPhone + Lightning Orders' =
+			VAR _a = CALCULATETABLE ( VALUES ( Fact_Sales[OrderID] ), Dim_Product[Product] = "iPhone" )
+			VAR _b = CALCULATETABLE ( VALUES ( Fact_Sales[OrderID] ), Dim_Product[Product] = "Lightning Charging Cable" )
+			RETURN
+			    COUNTROWS ( INTERSECT ( _a, _b ) )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: 3c70920c-80b5-5409-95e8-792596a2130f
+
+	measure 'Multi-Product Orders %' =
+			VAR _o = ADDCOLUMNS ( VALUES ( Fact_Sales[OrderID] ), "@n", CALCULATE ( COUNTROWS ( Fact_Sales ) ) )
+			RETURN
+			    DIVIDE ( COUNTROWS ( FILTER ( _o, [@n] > 1 ) ), COUNTROWS ( _o ) )
+		formatString: 0.0%
+		displayFolder: Sales
+		lineageTag: 0e8cfa57-0dc6-5c47-b885-d7a89c38a488
+
+	measure 'DQ Value' =
+			VAR _o = SELECTEDVALUE ( Dim_DQ[Check Order] )
+			RETURN
+			    SWITCH (
+			        _o,
+			        1, FORMAT ( 0 + COUNTROWS ( ALL ( Fact_Sales ) ), "#,0" ),
+			        2, FORMAT ( CALCULATE ( DISTINCTCOUNT ( Fact_Sales[OrderID] ), REMOVEFILTERS () ), "#,0" ),
+			        3, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_Sales ), ISBLANK ( RELATED ( Dim_Product[Product Group] ) ) ) ), "#,0" ),
+			        4, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_Sales ), Fact_Sales[Quantity] <= 0 ) ), "#,0" ),
+			        5, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_Sales ), Fact_Sales[PriceEach] <> RELATED ( Dim_Product[List Price] ) ) ), "#,0" ),
+			        6, FORMAT ( 0 + COUNTROWS ( FILTER ( ADDCOLUMNS ( ALL ( Fact_Sales[OrderID] ), "@c", CALCULATE ( DISTINCTCOUNT ( Fact_Sales[City] ), REMOVEFILTERS ( Dim_City ) ) ), [@c] > 1 ) ), "#,0" ),
+			        7, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_Sales ), YEAR ( Fact_Sales[OrderDate] ) <> 2019 ) ), "#,0" ),
+			        8, FORMAT ( CALCULATE ( MAX ( Fact_Sales[OrderDate] ), REMOVEFILTERS () ), "dd mmm yyyy" )
+			    )
+		displayFolder: Data Quality
+		lineageTag: 48e09a61-45cd-5f70-92c0-ddef6044412e
+
+	measure 'DQ Status' =
+			VAR _o = SELECTEDVALUE ( Dim_DQ[Check Order] )
+			VAR _v = [DQ Value]
+			RETURN
+			    SWITCH ( TRUE (), ISBLANK ( _o ), BLANK (), _o IN { 1, 2, 8 }, "Info", _v = "0", "Pass", "Fail" )
+		displayFolder: Data Quality
+		lineageTag: f32949c8-925e-56b4-ad33-9f7bac372920
+
+	measure 'DQ Status Pill' =
+			VAR _t = [DQ Status]
+			VAR _bg = SWITCH ( _t, "Pass", "#2F9E6E", "Info", "#8A8A96", "#E0303F" )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='56' height='20' viewBox='0 0 56 20'>"
+			        & "<rect x='1' y='2' width='54' height='16' rx='8' fill='" & _bg & "'/>"
+			        & "<text x='28' y='14' text-anchor='middle' font-family='Segoe UI,sans-serif' font-size='10' font-weight='600' fill='#FFFFFF'>" & _t & "</text></svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( _t ),
+			        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( _svg, "%", "%25" ), "#", "%23" ) )
+		displayFolder: Formatting
+		lineageTag: c348ecb5-5c8c-52ec-9fa1-0a29576eb96f
+		dataCategory: ImageUrl
+
+	measure 'DQ Failed Checks' = COUNTROWS ( FILTER ( ALL ( Dim_DQ ), [DQ Status] = "Fail" ) )
+		formatString: 0
+		displayFolder: Data Quality
+		lineageTag: 6b0c19e1-a8d2-56db-819c-4c36acf2dc22
+
+	measure 'Quietest Hour' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Hour[Hour], Dim_Hour[Hour Label] ), [Orders], ASC )
+			RETURN
+			    MAXX ( _t, Dim_Hour[Hour Label] )
+		displayFolder: Insights
+		lineageTag: 7ab00e9b-797f-5809-a334-7710cc781ebb
+
+	/// KPI ticker for the When & Where page (HTML Content visual).
+	measure 'Ticker When' =
+			"<div style='display:flex;height:76px;overflow:hidden;font-family:Segoe UI,sans-serif;color:#15171C'>"
+			    & "<div style='flex:1;min-width:0;padding:4px 18px 4px 0;'><div style='font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#6B7280'>Revenue</div><div style='font-size:30px;font-weight:800;letter-spacing:-.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#15171C'>" & ( FORMAT ( DIVIDE ( [Revenue], 1000000 ), "$#,0.00" ) & "M" ) & "</div><div style='font-size:11px;color:#6B7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>" & ( FORMAT ( DISTINCTCOUNT ( Dim_City[City] ), "0" ) & " US cities" ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;padding:4px 18px;border-left:1px solid #D5D8DE;'><div style='font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#6B7280'>Orders</div><div style='font-size:30px;font-weight:800;letter-spacing:-.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#15171C'>" & ( FORMAT ( [Orders] / 1000, "#,0.0" ) & "K" ) & "</div><div style='font-size:11px;color:#6B7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>" & ( FORMAT ( [Units] / 1000, "#,0" ) & "K units" ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;padding:4px 18px;border-left:1px solid #D5D8DE;'><div style='font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#6B7280'>Average order</div><div style='font-size:30px;font-weight:800;letter-spacing:-.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#15171C'>" & ( FORMAT ( [Average Order Value], "$#,0" ) ) & "</div><div style='font-size:11px;color:#6B7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>" & ( "revenue per order" ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;padding:4px 18px;border-left:1px solid #D5D8DE;'><div style='font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#6B7280'>Peak month</div><div style='font-size:30px;font-weight:800;letter-spacing:-.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#FF5A1F'>" & ( FORMAT ( DATE ( 2019, MAXX ( TOPN ( 1, ALL ( Dim_Date[Month], Dim_Date[MonthNo] ), [Revenue], DESC ), Dim_Date[MonthNo] ), 1 ), "mmmm" ) ) & "</div><div style='font-size:11px;color:#6B7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>" & ( FORMAT ( DIVIDE ( [Peak Month Revenue], 1000000 ), "$#,0.00" ) & "M" & " · " & FORMAT ( [Peak Month Share], "0%" ) & " of the year" ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;padding:4px 18px;border-left:1px solid #D5D8DE;'><div style='font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#6B7280'>Oct–Dec share</div><div style='font-size:30px;font-weight:800;letter-spacing:-.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#15171C'>" & ( FORMAT ( [Q4 Share], "0%" ) ) & "</div><div style='font-size:11px;color:#6B7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>" & ( "of the year's revenue" ) & "</div></div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 59b0fdad-49d0-5e87-be3a-751128f4b761
+
+	/// KPI ticker for the Products page (HTML Content visual).
+	measure 'Ticker Products' =
+			"<div style='display:flex;height:76px;overflow:hidden;font-family:Segoe UI,sans-serif;color:#15171C'>"
+			    & "<div style='flex:1;min-width:0;padding:4px 18px 4px 0;'><div style='font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#6B7280'>Laptops</div><div style='font-size:30px;font-weight:800;letter-spacing:-.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#15171C'>" & ( FORMAT ( [Laptop Revenue Share], "0%" ) ) & "</div><div style='font-size:11px;color:#6B7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>" & ( "of revenue · " & FORMAT ( [Laptop Units Share], "0%" ) & " of units" ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;padding:4px 18px;border-left:1px solid #D5D8DE;'><div style='font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#6B7280'>Top product</div><div style='font-size:21px;font-weight:800;letter-spacing:-.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#15171C'>" & ( [Top Product] ) & "</div><div style='font-size:11px;color:#6B7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>" & ( FORMAT ( DIVIDE ( [Top Product Revenue], 1000000 ), "$#,0.00" ) & "M" & " revenue" ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;padding:4px 18px;border-left:1px solid #D5D8DE;'><div style='font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#6B7280'>Most units</div><div style='font-size:21px;font-weight:800;letter-spacing:-.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#15171C'>" & ( [Most Units Product] ) & "</div><div style='font-size:11px;color:#6B7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>" & ( FORMAT ( [Most Units] / 1000, "#,0.0" ) & "K units" ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;padding:4px 18px;border-left:1px solid #D5D8DE;'><div style='font-size:10.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#6B7280'>Bought together</div><div style='font-size:30px;font-weight:800;letter-spacing:-.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#FF5A1F'>" & ( FORMAT ( [iPhone + Lightning Orders], "#,0" ) ) & "</div><div style='font-size:11px;color:#6B7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>" & ( "iPhone + Lightning cable orders" ) & "</div></div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 7c22df4f-d3ec-515a-863d-347aa14731de
+
+	/// Q4 call-out on the monthly chart.
+	measure 'Q4 Label' = "<div style='text-align:right;font-family:Segoe UI,sans-serif;font-size:11.5px;font-weight:700;color:#FF5A1F'>Q4 = " & FORMAT ( [Q4 Share], "0%" ) & " of revenue</div>"
+		displayFolder: KPI Cards
+		lineageTag: 8fbd836a-8a3d-5b82-aee7-46d541f1ff93
+
+	/// Orders by hour as a 24-cell heat strip; the two busiest hours in orange.
+	measure 'Hour Strip' =
+			VAR _max = MAXX ( ALL ( Dim_Hour[Hour] ), [Orders] )
+			VAR _top = TOPN ( 2, ALL ( Dim_Hour[Hour] ), [Orders], DESC )
+			VAR _cells =
+			    CONCATENATEX (
+			        ALL ( Dim_Hour[Hour] ),
+			        VAR _a = 0.08 + 0.92 * DIVIDE ( [Orders], _max )
+			        VAR _rgb = IF ( Dim_Hour[Hour] IN _top, "255,90,31", "43,47,56" )
+			        RETURN
+			            "<div style='flex:1;height:100px;border-radius:2px;background:rgba(" & _rgb & "," & FORMAT ( _a, "0.00" ) & ")'></div>",
+			        "", Dim_Hour[Hour], ASC )
+			VAR _labels =
+			    CONCATENATEX (
+			        ALL ( Dim_Hour[Hour] ),
+			        "<div style='flex:1;text-align:center;font-size:10px;color:#6B7280'>" & IF ( MOD ( Dim_Hour[Hour], 3 ) = 0, FORMAT ( Dim_Hour[Hour], "00" ) & "h", "" ) & "</div>",
+			        "", Dim_Hour[Hour], ASC )
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif'><div style='display:flex;gap:2px'>" & _cells & "</div>"
+			        & "<div style='display:flex;gap:2px;margin-top:5px'>" & _labels & "</div>"
+			        & "<div style='font-size:11.5px;color:#15171C;margin-top:12px'>Peaks at <b style='color:#FF5A1F'>" & [Peak Hours] & "</b>; quietest at " & [Quietest Hour] & "</div></div>"
+		displayFolder: KPI Cards
+		lineageTag: a58f0e1b-d7e2-5321-b72e-8a461da52be7
+
+	/// Share of units vs share of revenue by product group, drawn as a butterfly chart.
+	measure 'Units vs Revenue' =
+			VAR _rows =
+			    CONCATENATEX (
+			        ALL ( Dim_Product[Product Group] ),
+			        VAR _u = [Units Share %]
+			        VAR _r = [Revenue Share %]
+			        VAR _uc = IF ( _u >= 0.3, "#FF5A1F", "#8B91A0" )
+			        RETURN
+			            "<div style='text-align:center;font-size:12px;font-weight:600;margin-top:7px'>" & Dim_Product[Product Group] & "</div>"
+			                & "<div style='display:flex;align-items:center;height:14px'>"
+			                & "<div style='width:50%;display:flex;justify-content:flex-end;align-items:center;gap:5px;padding-right:6px'><span style='font-size:10.5px'>" & FORMAT ( _u, "0.0%" ) & "</span><div style='height:11px;width:" & FORMAT ( _u * 330, "0" ) & "px;background:" & _uc & "'></div></div>"
+			                & "<div style='width:50%;display:flex;align-items:center;gap:5px;padding-left:6px'><div style='height:11px;width:" & FORMAT ( _r * 330, "0" ) & "px;background:#15171C'></div><span style='font-size:10.5px'>" & FORMAT ( _r, "0.0%" ) & "</span></div></div>",
+			        "", [Revenue], DESC )
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#15171C;height:262px;overflow:hidden'><div style='display:flex;font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280'><div style='width:50%;text-align:right;padding-right:10px'>UNITS</div><div style='width:50%;padding-left:10px'>REVENUE</div></div>" & _rows & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 9e4a0837-1bbd-5d9a-b6fb-64b7c4b2621f
+
+	measure 'Insight When' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#15171C;color:#E6E8EC;border-radius:4px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>What the data says</div>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b style='color:#FF7A45'>" & FORMAT ( DATE ( 2019, MAXX ( TOPN ( 1, ALL ( Dim_Date[Month], Dim_Date[MonthNo] ), [Revenue], DESC ), Dim_Date[MonthNo] ), 1 ), "mmmm" ) & "</b>" & " alone brings " & "<b style='color:#FF7A45'>" & FORMAT ( DIVIDE ( [Peak Month Revenue], 1000000 ), "$#,0.00" ) & "M" & "</b>" & ", and October to December bring " & "<b style='color:#FF7A45'>" & FORMAT ( [Q4 Share], "0%" ) & "</b>" & " of the year, so Q4 budgets should be set by the summer." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b style='color:#FF7A45'>" & [Top City] & "</b>" & " brings " & FORMAT ( [Top City Share], "0%" ) & " of revenue, the largest of the nine cities." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "Ads that start just before " & "<b style='color:#FF7A45'>" & [Peak Hours] & "</b>" & " reach people when they are ready to buy." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: 3e270ce8-1954-5793-acfa-122cd100ab37
+
+	measure 'Insight Products' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#15171C;color:#E6E8EC;border-radius:4px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>What the data says</div>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "Laptops are " & FORMAT ( [Laptop Units Share], "0%" ) & " of units but " & "<b style='color:#FF7A45'>" & FORMAT ( [Laptop Revenue Share], "0%" ) & "</b>" & " of revenue." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "Cables and batteries are " & "<b style='color:#FF7A45'>" & FORMAT ( [Cable Units Share], "0%" ) & "</b>" & " of units but only " & FORMAT ( [Cable Revenue Share], "0%" ) & " of revenue. They bring traffic, not revenue." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b style='color:#FF7A45'>" & FORMAT ( [iPhone + Lightning Orders], "#,0" ) & "</b>" & " orders already pair an iPhone with a Lightning cable, so a bundle raises the order value without new customers." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: 812ba8f5-7e17-5793-95b3-c4814a1ec045
+
+	measure 'DQ Summary' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#15171C;color:#E6E8EC;border-radius:4px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>How this report is governed</div>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Data quality:</b> " & IF ( [DQ Failed Checks] = 0, "all checks pass on the last refresh.", FORMAT ( [DQ Failed Checks], "0" ) & " check(s) failed on the last refresh." ) ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Definition fix:</b> orders are distinct order IDs (" & FORMAT ( [Orders], "#,0" ) & "), not order lines (" & FORMAT ( [Order Lines], "#,0" ) & "). The original report showed lines as orders." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>One source:</b> the CSV is read once (Sales_Raw) and the product and city tables are built from it, so they always match the facts." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Freshness:</b> " & [Last Refresh] & "." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: 439625fe-4df4-54fa-a82f-f0619c88af77
+
+	column Placeholder
+		dataType: string
+		isHidden
+		lineageTag: e05887db-e1d8-52d5-8621-3b69f561c463
+		summarizeBy: none
+		sourceColumn: Placeholder
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Measures = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Placeholder = text], {})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

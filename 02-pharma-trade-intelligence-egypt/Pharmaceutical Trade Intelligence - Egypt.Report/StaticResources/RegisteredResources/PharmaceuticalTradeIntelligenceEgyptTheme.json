@@ -1,0 +1,73 @@
+{
+  "name": "Pharmaceutical Trade Intelligence - Egypt",
+  "dataColors": [
+    "#1F3E8C",
+    "#2F6FD1",
+    "#E7A923",
+    "#A9C1EC",
+    "#D1495B",
+    "#2E9E6B",
+    "#7A86A8",
+    "#C9D3EA"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#16213E",
+  "tableAccent": "#1F3E8C",
+  "textClasses": {
+    "label": {
+      "fontSize": 9,
+      "color": "#16213E"
+    },
+    "callout": {
+      "fontSize": 26,
+      "color": "#16213E"
+    },
+    "title": {
+      "fontFace": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif",
+      "fontSize": 11,
+      "color": "#16213E"
+    },
+    "header": {
+      "color": "#16213E"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "show": false
+          }
+        ],
+        "border": [
+          {
+            "show": false
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": false
+          }
+        ],
+        "visualHeader": [
+          {
+            "show": false
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#F2F4F9"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

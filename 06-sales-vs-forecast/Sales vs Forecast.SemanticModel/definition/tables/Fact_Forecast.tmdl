@@ -1,0 +1,60 @@
+/// Sales forecast by month, country and category (the planning grain).
+table Fact_Forecast
+	lineageTag: 5d5a8f14-3761-5aa6-a91c-fdb3266e087f
+
+	column MonthStart
+		dataType: dateTime
+		isHidden
+		formatString: mmm yyyy
+		lineageTag: 09cd6f5d-87d2-5c26-a120-792179ea33a2
+		summarizeBy: none
+		sourceColumn: MonthStart
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Country
+		dataType: string
+		isHidden
+		lineageTag: 70396a5e-5fab-5941-a258-938d271204ef
+		summarizeBy: none
+		sourceColumn: Country
+
+		annotation SummarizationSetBy = Automatic
+
+	column Category
+		dataType: string
+		isHidden
+		lineageTag: 37505a58-20e7-54ac-ac02-0d3a03f9ba17
+		summarizeBy: none
+		sourceColumn: Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column ForecastAmount
+		dataType: double
+		isHidden
+		formatString: $#,0
+		lineageTag: 8d9ab2dc-3c23-57a0-b95b-3b3f78829d09
+		summarizeBy: none
+		sourceColumn: ForecastAmount
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Forecast = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="Forecast",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Selected = Table.SelectColumns(Promoted, {"MonthStart", "Country", "Category", "ForecastAmount"}),
+				    NonBlank = Table.SelectRows(Selected, each [MonthStart] <> null and [MonthStart] <> ""),
+				    Typed = Table.TransformColumnTypes(NonBlank, {{"MonthStart", type date}, {"Country", type text}, {"Category", type text}, {"ForecastAmount", type number}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

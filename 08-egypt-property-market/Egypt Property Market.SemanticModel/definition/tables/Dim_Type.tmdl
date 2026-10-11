@@ -1,0 +1,22 @@
+table Dim_Type
+	lineageTag: 26af8d92-c6eb-5122-8980-66f9bdd590bc
+
+	column PropertyType
+		dataType: string
+		lineageTag: 1585fc34-f78a-5529-8a5b-1cf16cd52400
+		summarizeBy: none
+		sourceColumn: PropertyType
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Type = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"PropertyType" = text], {{"Apartment"}, {"Villa"}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

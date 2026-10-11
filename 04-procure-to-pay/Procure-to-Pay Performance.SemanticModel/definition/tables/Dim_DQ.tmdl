@@ -1,0 +1,41 @@
+/// Data quality rules checked on every refresh.
+table Dim_DQ
+	lineageTag: 7f62e437-ab04-5ca6-bed4-e6eb17194942
+
+	column Check
+		dataType: string
+		lineageTag: 679d4b5a-3cad-52b7-99fc-37208302cd5b
+		summarizeBy: none
+		sourceColumn: Check
+		sortByColumn: 'Check Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Check Order'
+		dataType: int64
+		isHidden
+		lineageTag: ee3347a2-aac5-5f41-8810-3cbb25120f8b
+		summarizeBy: none
+		sourceColumn: Check Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rule
+		dataType: string
+		lineageTag: f3b7136e-5c20-592d-9080-043a4717d418
+		summarizeBy: none
+		sourceColumn: Rule
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_DQ = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Check" = text, #"Check Order" = Int64.Type, #"Rule" = text], {{"PO rows loaded", 1, "Row count of the PurchaseOrders sheet"}, {"Duplicate PO numbers", 2, "Each PO_ID appears once"}, {"POs with unknown supplier", 3, "Every SupplierID exists in Dim_Supplier"}, {"POs with unknown plant", 4, "Every PlantID exists in Dim_Plant"}, {"Zero or negative PO value", 5, "PO_Value_USD > 0"}, {"Receipt before PO date", 6, "GRN_Date on or after PO_Date"}, {"Payment before invoice", 7, "Payment_Date on or after Invoice_Date"}, {"Open POs (not received yet)", 8, "Informational: POs still waiting for goods"}, {"Latest PO date", 9, "Freshness of the source data"}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

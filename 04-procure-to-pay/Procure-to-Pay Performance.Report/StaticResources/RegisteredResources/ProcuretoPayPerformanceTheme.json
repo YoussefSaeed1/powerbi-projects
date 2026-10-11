@@ -1,0 +1,73 @@
+{
+  "name": "Procure-to-Pay Performance",
+  "dataColors": [
+    "#0F4C5C",
+    "#2E7D8C",
+    "#9CC4CC",
+    "#E8A33D",
+    "#D2584E",
+    "#5B8DB8",
+    "#3C8D5A",
+    "#B7C4C9"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#1C2B33",
+  "tableAccent": "#0F4C5C",
+  "textClasses": {
+    "label": {
+      "fontSize": 9,
+      "color": "#1C2B33"
+    },
+    "callout": {
+      "fontSize": 26,
+      "color": "#1C2B33"
+    },
+    "title": {
+      "fontFace": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif",
+      "fontSize": 11,
+      "color": "#1C2B33"
+    },
+    "header": {
+      "color": "#1C2B33"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "show": false
+          }
+        ],
+        "border": [
+          {
+            "show": false
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": false
+          }
+        ],
+        "visualHeader": [
+          {
+            "show": false
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#EEF1F1"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

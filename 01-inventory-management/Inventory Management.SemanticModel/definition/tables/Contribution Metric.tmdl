@@ -1,0 +1,32 @@
+table 'Contribution Metric'
+	lineageTag: cf717d97-33b0-5a1c-943d-93afc7a9889c
+
+	column Metric
+		dataType: string
+		lineageTag: 88cbb4c2-2d28-5fd8-bb66-7d591227cdcd
+		summarizeBy: none
+		sourceColumn: Metric
+		sortByColumn: 'Metric Sort'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Metric Sort'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 604a9dea-7146-51c2-85a8-2c1e487ae0fe
+		summarizeBy: none
+		sourceColumn: Metric Sort
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Contribution Metric' = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Metric" = text, #"Metric Sort" = Int64.Type], {{"Revenue", 1}, {"Gross Profit", 2}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

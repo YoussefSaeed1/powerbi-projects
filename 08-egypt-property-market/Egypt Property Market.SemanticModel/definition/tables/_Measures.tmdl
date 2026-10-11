@@ -1,0 +1,370 @@
+table _Measures
+	lineageTag: 501ea0a0-04b1-5cc7-9405-1fe9024b4ba5
+
+	measure 'Last Refresh' = "Data refreshed " & FORMAT ( MAX ( _Refresh[RefreshedAt] ), "dd mmm yyyy" )
+		displayFolder: Helpers
+		lineageTag: 85cf46cc-1849-5725-ab2f-b2a83c4e84e4
+
+	measure Listings = COUNTROWS ( Fact_Listings )
+		formatString: #,0
+		displayFolder: Market
+		lineageTag: cfa22516-c7d2-5aff-b687-16e649840a3c
+
+	measure 'Average Price' = AVERAGE ( Fact_Listings[Price_EGP] )
+		formatString: #,0
+		displayFolder: Market
+		lineageTag: b22cad8e-d7e8-595f-a3f8-25eec3b79422
+
+	measure 'Average Price M' = DIVIDE ( [Average Price], 1000000 )
+		formatString: #,0.00
+		displayFolder: Market
+		lineageTag: 278ec47c-1cab-5a9e-823a-d31f7b7ac28d
+
+	measure 'Median Price' = MEDIAN ( Fact_Listings[Price_EGP] )
+		formatString: #,0
+		displayFolder: Market
+		lineageTag: e29c76a6-ee2d-5b56-8834-27f701748d4c
+
+	measure 'Average Area' = AVERAGE ( Fact_Listings[Area_m2] )
+		formatString: #,0
+		displayFolder: Market
+		lineageTag: 4e412b91-4dbd-566d-9c87-39e9e3036241
+
+	/// Total asking price ÷ total area (EGP per m²).
+	measure 'Price per m2' = DIVIDE ( SUM ( Fact_Listings[Price_EGP] ), SUM ( Fact_Listings[Area_m2] ) )
+		formatString: #,0
+		displayFolder: Market
+		lineageTag: 32db9d05-2b5a-52f6-8a6f-01d1a6e6fe45
+
+	measure 'Price per m2 K' = DIVIDE ( [Price per m2], 1000 )
+		formatString: #,0.0
+		displayFolder: Market
+		lineageTag: aceac2d5-4090-53e9-a2de-5dfbcf4d038c
+
+	/// Square metres EGP 2 million buys at the average price per m².
+	measure 'Area for EGP 2M' = DIVIDE ( 2000000, [Price per m2] )
+		formatString: #,0
+		displayFolder: Value
+		lineageTag: e793662c-551e-5105-909b-bf9987b7b0a5
+
+	measure 'Listings Share %' = DIVIDE ( [Listings], CALCULATE ( [Listings], ALL ( Dim_Bedrooms ), ALL ( Dim_Budget ) ) )
+		formatString: 0%
+		displayFolder: Market
+		lineageTag: 63cb9a30-5717-5471-91ae-eafd1b00a25c
+
+	measure 'Most Expensive Segment' =
+			VAR _t = TOPN ( 1, CROSSJOIN ( ALL ( Dim_Location[City] ), ALL ( Dim_Type[PropertyType] ) ), [Average Price], DESC )
+			RETURN
+			    MAXX ( _t, Dim_Location[City] & " " & LOWER ( Dim_Type[PropertyType] ) & "s" )
+		displayFolder: Insights
+		lineageTag: 8c3dd703-643d-596e-8096-2baa299ecda5
+
+	measure 'Most Expensive Segment Price' = MAXX ( CROSSJOIN ( ALL ( Dim_Location[City] ), ALL ( Dim_Type[PropertyType] ) ), [Average Price] )
+		formatString: #,0
+		displayFolder: Insights
+		lineageTag: 67ce536b-77e1-560d-a5e2-4d8ea9b08459
+
+	measure 'Cheapest Apartment City' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Location[City] ), CALCULATE ( [Price per m2], Dim_Type[PropertyType] = "Apartment" ), ASC )
+			RETURN
+			    MAXX ( _t, Dim_Location[City] )
+		displayFolder: Insights
+		lineageTag: 4a162d05-e2e8-5169-8e0b-084390a98990
+
+	measure 'Cheapest Apartment PPM' = MINX ( ALL ( Dim_Location[City] ), CALCULATE ( [Price per m2], Dim_Type[PropertyType] = "Apartment" ) )
+		formatString: #,0
+		displayFolder: Insights
+		lineageTag: 83e484bb-eab9-5cdc-b03a-8a3f52e6cf09
+
+	measure 'Priciest Villa City' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Location[City] ), CALCULATE ( [Price per m2], Dim_Type[PropertyType] = "Villa" ), DESC )
+			RETURN
+			    MAXX ( _t, Dim_Location[City] )
+		displayFolder: Insights
+		lineageTag: 37d46602-899c-5e94-9868-6f952662ae7b
+
+	measure 'Priciest Villa PPM' = MAXX ( ALL ( Dim_Location[City] ), CALCULATE ( [Price per m2], Dim_Type[PropertyType] = "Villa" ) )
+		formatString: #,0
+		displayFolder: Insights
+		lineageTag: e4067e66-edde-5b9a-8ceb-b8682fff79a0
+
+	measure 'Most Common Bedrooms' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Bedrooms[Bedrooms], Dim_Bedrooms[Bedroom Label] ), [Listings], DESC )
+			RETURN
+			    MAXX ( _t, Dim_Bedrooms[Bedroom Label] )
+		displayFolder: Insights
+		lineageTag: cbbcc4f0-ec30-5a9c-b81d-56f3f7a64ca1
+
+	measure 'Most Common Bedrooms Share' = DIVIDE ( MAXX ( ALL ( Dim_Bedrooms[Bedrooms] ), [Listings] ), CALCULATE ( [Listings], ALL ( Dim_Bedrooms ) ) )
+		formatString: 0%
+		displayFolder: Insights
+		lineageTag: 453d32bb-5cf9-51e1-b6d3-4e906df80d7c
+
+	/// How much more apartment space the cheapest city buys than Cairo for the same budget.
+	measure 'Space Gain vs Cairo' =
+			VAR _cairo = CALCULATE ( [Price per m2], Dim_Type[PropertyType] = "Apartment", Dim_Location[City] = "Cairo" )
+			VAR _best = [Cheapest Apartment PPM]
+			RETURN
+			    DIVIDE ( _cairo, _best ) - 1
+		formatString: 0%
+		displayFolder: Insights
+		lineageTag: 4672644a-ef3d-5fb4-b950-4653573d62fb
+
+	measure 'Budget Listings' =
+			VAR _lo = SELECTEDVALUE ( Dim_Budget[From EGP] )
+			VAR _hi = SELECTEDVALUE ( Dim_Budget[To EGP] )
+			RETURN
+			    CALCULATE ( [Listings], Fact_Listings[Price_EGP] >= _lo, Fact_Listings[Price_EGP] < _hi )
+		formatString: #,0
+		displayFolder: Value
+		lineageTag: c9d88cb1-506f-5d31-a2d3-b1d8a77d08ba
+
+	measure 'Budget Share %' = DIVIDE ( [Budget Listings], CALCULATE ( [Listings], ALL ( Dim_Budget ) ) )
+		formatString: 0%
+		displayFolder: Value
+		lineageTag: 6cdab8dc-f28d-58b6-accd-8ec3b8e5b138
+
+	/// Median area of the listings in the budget band.
+	measure 'Budget Typical Area' =
+			VAR _lo = SELECTEDVALUE ( Dim_Budget[From EGP] )
+			VAR _hi = SELECTEDVALUE ( Dim_Budget[To EGP] )
+			RETURN
+			    CALCULATE ( MEDIAN ( Fact_Listings[Area_m2] ), Fact_Listings[Price_EGP] >= _lo, Fact_Listings[Price_EGP] < _hi )
+		formatString: #,0
+		displayFolder: Value
+		lineageTag: 633cf542-3bab-55e5-938b-be3018207e55
+
+	measure 'Budget Typical Type' =
+			VAR _lo = SELECTEDVALUE ( Dim_Budget[From EGP] )
+			VAR _hi = SELECTEDVALUE ( Dim_Budget[To EGP] )
+			VAR _t = TOPN ( 1, ADDCOLUMNS ( CROSSJOIN ( ALL ( Dim_Bedrooms[Bedrooms] ), ALL ( Dim_Type[PropertyType] ) ),
+			        "@n", CALCULATE ( [Listings], Fact_Listings[Price_EGP] >= _lo, Fact_Listings[Price_EGP] < _hi ) ), [@n], DESC )
+			RETURN
+			    MAXX ( _t, Dim_Bedrooms[Bedrooms] & "-bed " & LOWER ( Dim_Type[PropertyType] ) )
+		displayFolder: Value
+		lineageTag: be4c48b6-f3de-546d-bede-46405027f03a
+
+	measure 'Bedroom Color' = IF ( [Price per m2] = MINX ( ALL ( Dim_Bedrooms ), [Price per m2] ), "#C2603F", "#5E8574" )
+		displayFolder: Formatting
+		lineageTag: 50640d2d-b183-5ec3-ab2a-0d5266a37ede
+
+	/// HTML heatmap of price per m² by city and property type.
+	measure 'PPM Heatmap' =
+			VAR _rows =
+			    CONCATENATEX (
+			        VALUES ( Dim_Location[City] ),
+			        "<tr><td style='padding:6px 10px;color:#1D2A24;font-weight:600'>" & Dim_Location[City] & "</td>"
+			            & CONCATENATEX (
+			                VALUES ( Dim_Type[PropertyType] ),
+			                VAR _v = CALCULATE ( [Price per m2] )
+			                VAR _a = MAX ( 0.15, MIN ( 1, ( _v - 9000 ) / 7000 ) )
+			                RETURN
+			                    "<td style='padding:0 4px'><div style='border-radius:8px;padding:9px 0;text-align:center;font-weight:600;font-size:13px;background:rgba(29,53,87," & FORMAT ( _a, "0.00" ) & ");color:" & IF ( _a > 0.55, "#FFFFFF", "#1D2A24" ) & "'>" & FORMAT ( _v / 1000, "#,0.0" ) & "K</div></td>",
+			                "", Dim_Type[PropertyType], ASC ),
+			        "", Dim_Location[City], ASC )
+			VAR _head = CONCATENATEX ( VALUES ( Dim_Type[PropertyType] ), "<th style='padding:6px;color:#6E7A73;font-weight:600'>" & Dim_Type[PropertyType] & "</th>", "", Dim_Type[PropertyType], ASC )
+			RETURN
+			    "<table style='width:100%;border-collapse:separate;border-spacing:0 4px;font-family:Segoe UI,sans-serif;font-size:12px'><tr><th></th>" & _head & "</tr>" & _rows & "</table>"
+		displayFolder: KPI Cards
+		lineageTag: 7b5ca2a9-e051-53a7-9a2c-0cd071a81170
+
+	measure 'DQ Value' =
+			VAR _o = SELECTEDVALUE ( Dim_DQ[Check Order] )
+			RETURN
+			    SWITCH (
+			        _o,
+			        1, FORMAT ( MAX ( DQ_Source[RawRows] ), "#,0" ),
+			        2, FORMAT ( MAX ( DQ_Source[DuplicateIDs] ), "#,0" ),
+			        3, FORMAT ( MAX ( DQ_Source[InvalidAreaOrPrice] ), "#,0" ),
+			        4, FORMAT ( 0 + COUNTROWS ( ALL ( Fact_Listings ) ), "#,0" ),
+			        5, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_Listings ), ISBLANK ( RELATED ( Dim_Location[City] ) ) ) ), "#,0" ),
+			        6, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_Listings ), Fact_Listings[Bathrooms] > Fact_Listings[Bedrooms] + 1 ) ), "#,0" ),
+			        7, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_Listings ), DIVIDE ( Fact_Listings[Price_EGP], Fact_Listings[Area_m2] ) < 3000 || DIVIDE ( Fact_Listings[Price_EGP], Fact_Listings[Area_m2] ) > 40000 ) ), "#,0" ),
+			        8, FORMAT ( CALCULATE ( MAX ( Fact_Listings[ListedOn] ), REMOVEFILTERS () ), "dd mmm yyyy" )
+			    )
+		displayFolder: Data Quality
+		lineageTag: f2eeb1bb-e5e9-5311-af3b-a2e731da4014
+
+	measure 'DQ Status' =
+			VAR _o = SELECTEDVALUE ( Dim_DQ[Check Order] )
+			VAR _v = [DQ Value]
+			RETURN
+			    SWITCH ( TRUE (), ISBLANK ( _o ), BLANK (), _o IN { 1, 4, 8 }, "Info", _o IN { 2, 3 }, IF ( _v = "0", "Pass", "Cleaned" ), _v = "0", "Pass", "Fail" )
+		displayFolder: Data Quality
+		lineageTag: eba7e2cd-1df8-5d09-8625-1dfc18c67d65
+
+	measure 'DQ Status Pill' =
+			VAR _t = [DQ Status]
+			VAR _bg = SWITCH ( _t, "Pass", "#2E8B57", "Info", "#C9D3CC", "Cleaned", "#C2603F", "#B23A3A" )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='62' height='20' viewBox='0 0 62 20'>"
+			        & "<rect x='1' y='2' width='60' height='16' rx='8' fill='" & _bg & "'/>"
+			        & "<text x='31' y='14' text-anchor='middle' font-family='Segoe UI,sans-serif' font-size='10' font-weight='600' fill='#FFFFFF'>" & _t & "</text></svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( _t ),
+			        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( _svg, "%", "%25" ), "#", "%23" ) )
+		displayFolder: Formatting
+		lineageTag: be79adb4-b3c8-5877-82ce-5393cc2fc4ff
+		dataCategory: ImageUrl
+
+	measure 'DQ Failed Checks' = COUNTROWS ( FILTER ( ALL ( Dim_DQ ), [DQ Status] = "Fail" ) )
+		formatString: 0
+		displayFolder: Data Quality
+		lineageTag: e5133742-6db9-5d2f-ac6a-1fa92e298975
+
+	/// Headline numbers in the side panel (HTML Content visual).
+	measure 'Side KPIs' =
+			"<div style='font-family:Segoe UI,sans-serif;display:grid;grid-template-columns:1fr 1fr;gap:14px 10px;color:#FFFFFF'>"
+			    & "<div><div style='font-size:9.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#86A698'>Listings</div><div style='font-size:22px;font-weight:800'>" & FORMAT ( [Listings], "#,0" ) & "</div><div style='font-size:10px;color:#A9C2B6'>after cleaning</div></div>"
+			    & "<div><div style='font-size:9.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#86A698'>Average price</div><div style='font-size:22px;font-weight:800'>" & FORMAT ( [Average Price M], "#,0.00" ) & "M</div><div style='font-size:10px;color:#A9C2B6'>EGP · median " & FORMAT ( [Median Price] / 1000000, "#,0.00" ) & "M</div></div>"
+			    & "<div><div style='font-size:9.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#86A698'>Average area</div><div style='font-size:22px;font-weight:800'>" & FORMAT ( [Average Area], "#,0" ) & " m²</div><div style='font-size:10px;color:#A9C2B6'>per listing</div></div>"
+			    & "<div><div style='font-size:9.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#86A698'>Price per m²</div><div style='font-size:22px;font-weight:800'>" & FORMAT ( [Price per m2] / 1000, "#,0.0" ) & "K</div><div style='font-size:10px;color:#A9C2B6'>EGP</div></div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 162fff46-b7e6-5b86-b530-3d63cce38eb9
+
+	/// One card per city: average price and price per m² for apartments and villas. The cheapest apartment city is highlighted.
+	measure 'City Cards' =
+			VAR _pmax = MAXX ( CROSSJOIN ( ALL ( Dim_Location[City] ), ALL ( Dim_Type[PropertyType] ) ), [Average Price] )
+			VAR _qmax = MAXX ( CROSSJOIN ( ALL ( Dim_Location[City] ), ALL ( Dim_Type[PropertyType] ) ), [Price per m2] )
+			VAR _cheap = [Cheapest Apartment City]
+			VAR _cards =
+			    CONCATENATEX (
+			        VALUES ( Dim_Location[City] ),
+			        VAR _c = Dim_Location[City]
+			        VAR _ap = CALCULATE ( [Average Price], Dim_Type[PropertyType] = "Apartment" )
+			        VAR _vp = CALCULATE ( [Average Price], Dim_Type[PropertyType] = "Villa" )
+			        VAR _aq = CALCULATE ( [Price per m2], Dim_Type[PropertyType] = "Apartment" )
+			        VAR _vq = CALCULATE ( [Price per m2], Dim_Type[PropertyType] = "Villa" )
+			        VAR _n = CALCULATE ( [Listings], ALL ( Dim_Type ) )
+			        VAR _row = "<div style='display:grid;grid-template-columns:66px 1fr 44px;align-items:center;gap:8px;font-size:11px;margin-top:5px'><span>"
+			        RETURN
+			            "<div style='width:300px;flex:none;background:#FFFFFF;border-radius:10px;padding:13px 16px;box-sizing:border-box'>"
+			                & "<div style='display:flex;justify-content:space-between;align-items:baseline'><b style='font-size:15px'>" & _c & "</b><span style='font-size:10.5px;color:#6E7A73;font-weight:600'>" & FORMAT ( _n, "#,0" ) & " listings</span></div>"
+			                & "<div style='font-size:9.5px;color:#6E7A73;margin-top:7px;letter-spacing:.6px;font-weight:700'>AVERAGE PRICE · EGP M</div>"
+			                & _row & "Apartment</span><div style='height:10px;border-radius:2px;background:#D9C7A3;width:" & FORMAT ( DIVIDE ( _ap, _pmax ) * 100, "0" ) & "%'></div><b>" & FORMAT ( _ap / 1000000, "0.00" ) & "</b></div>"
+			                & _row & "Villa</span><div style='height:10px;border-radius:2px;background:#183A2F;width:" & FORMAT ( DIVIDE ( _vp, _pmax ) * 100, "0" ) & "%'></div><b>" & FORMAT ( _vp / 1000000, "0.00" ) & "</b></div>"
+			                & "<div style='font-size:9.5px;color:#6E7A73;margin-top:9px;letter-spacing:.6px;font-weight:700'>PRICE PER M² · EGP K</div>"
+			                & _row & "Apartment</span><div style='height:10px;border-radius:2px;background:" & IF ( _c = _cheap, "#C2603F", "#D9C7A3" ) & ";width:" & FORMAT ( DIVIDE ( _aq, _qmax ) * 100, "0" ) & "%'></div><b>" & FORMAT ( _aq / 1000, "0.0" ) & "</b></div>"
+			                & _row & "Villa</span><div style='height:10px;border-radius:2px;background:#183A2F;width:" & FORMAT ( DIVIDE ( _vq, _qmax ) * 100, "0" ) & "%'></div><b>" & FORMAT ( _vq / 1000, "0.0" ) & "</b></div>"
+			                & "</div>",
+			        "", Dim_Location[City], ASC )
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#1D2A24;display:flex;gap:12px;height:184px;overflow:hidden'>" & _cards & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 7cd00732-41e2-556d-9f94-3b43b5251176
+
+	/// Area of the listing (used per listing in the scatter).
+	measure 'Listing Area' = SUM ( Fact_Listings[Area_m2] )
+		formatString: #,0
+		displayFolder: Market
+		lineageTag: 24ca54fa-19ae-568f-ab28-1a7b191ea42c
+
+	measure 'Listing Price M' = DIVIDE ( SUM ( Fact_Listings[Price_EGP] ), 1000000 )
+		formatString: #,0.00
+		displayFolder: Market
+		lineageTag: 52b9ab24-1dd1-51f1-a590-854e8eeba16b
+
+	measure 'District Color' = SWITCH ( SELECTEDVALUE ( Dim_Location[City] ), "Cairo", "#183A2F", "Giza", "#5E8574", "#C2603F" )
+		displayFolder: Formatting
+		lineageTag: a9637978-7109-57d8-bac6-871c33c7df23
+
+	/// What EGP 2 million buys in each city and property type; each square is 10 m².
+	measure 'Budget Waffle' =
+			VAR _t =
+			    ADDCOLUMNS (
+			        CROSSJOIN ( VALUES ( Dim_Location[City] ), VALUES ( Dim_Type[PropertyType] ) ),
+			        "@m2", [Area for EGP 2M]
+			    )
+			VAR _best = MAXX ( _t, [@m2] )
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#1D2A24'>"
+			        & CONCATENATEX (
+			            FILTER ( _t, NOT ISBLANK ( [@m2] ) ),
+			            VAR _n = ROUND ( [@m2] / 10, 0 )
+			            VAR _c = IF ( [@m2] = _best, "#C2603F", IF ( Dim_Type[PropertyType] = "Villa", "#183A2F", "#D9C7A3" ) )
+			            RETURN
+			                "<div style='display:flex;align-items:center;height:30px'><div style='width:164px;font-size:11.5px;font-weight:600'>" & Dim_Location[City]
+			                    & " <span style='font-weight:400;color:#6E7A73'>· " & LOWER ( Dim_Type[PropertyType] ) & "</span></div>"
+			                    & REPT ( "<span style='display:inline-block;width:26px;height:20px;border-radius:2px;margin-right:4px;background:" & _c & "'></span>", _n )
+			                    & "<b style='margin-left:6px;font-size:12px'>" & FORMAT ( [@m2], "#,0" ) & " m²</b></div>",
+			            "", [@m2], DESC )
+			        & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 872e4298-23cb-500d-a3f6-aa3f33afb273
+
+	measure 'Mid Band Share' = CALCULATE ( [Budget Share %], Dim_Budget[Budget Order] = 2 )
+		formatString: 0%
+		displayFolder: Value
+		lineageTag: cbbdbf25-ee8d-522a-b059-268383c84018
+
+	measure 'Mid Band Typical Area' = CALCULATE ( [Budget Typical Area], Dim_Budget[Budget Order] = 2 )
+		formatString: #,0
+		displayFolder: Value
+		lineageTag: ca53944e-bebd-51b8-96fd-b37bc0183542
+
+	measure 'Mid Band Typical Type' = CALCULATE ( [Budget Typical Type], Dim_Budget[Budget Order] = 2 )
+		displayFolder: Value
+		lineageTag: 41976c2f-09b7-5c15-aa7d-464d78698b62
+
+	measure 'Cheapest Bedrooms' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Bedrooms[Bedrooms], Dim_Bedrooms[Bedroom Label] ), [Price per m2], ASC )
+			RETURN
+			    MAXX ( _t, Dim_Bedrooms[Bedroom Label] )
+		displayFolder: Insights
+		lineageTag: bd42dc77-f6d0-5a53-8828-79f2972e342d
+
+	/// Checks whether the cheapest Cairo district is still above every other district.
+	measure 'Cairo Premium' =
+			VAR _cmin = MINX ( CALCULATETABLE ( VALUES ( Dim_Location[District] ), Dim_Location[City] = "Cairo" ), [Price per m2] )
+			VAR _omax = MAXX ( CALCULATETABLE ( VALUES ( Dim_Location[District] ), Dim_Location[City] <> "Cairo" ), [Price per m2] )
+			RETURN
+			    IF ( _cmin > _omax, "Every Cairo district costs more per m² than any district in Giza or Alexandria.", "Cairo districts are the most expensive per m² on average." )
+		displayFolder: Insights
+		lineageTag: 11618fbf-5185-5372-9b83-eb774200ff24
+
+	measure 'Insight Market' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#183A2F;color:#E6EDE8;border-radius:10px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>What the data says</div>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b style='color:#E3C98F'>" & [Cheapest Apartment City] & "</b>" & " has the cheapest apartments per m² (EGP " & FORMAT ( [Cheapest Apartment PPM] / 1000, "#,0.0" ) & "K) and " & "<b style='color:#E3C98F'>" & [Priciest Villa City] & "</b>" & " the priciest villas (EGP " & FORMAT ( [Priciest Villa PPM] / 1000, "#,0.0" ) & "K)." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( [Cairo Premium] ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: 42dc9a68-e9e2-53a7-86f2-206b4b0f26f6
+
+	measure 'Insight Value' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#183A2F;color:#E6EDE8;border-radius:10px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>What the data says</div>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b style='color:#E3C98F'>" & FORMAT ( [Mid Band Share], "0%" ) & "</b>" & " of listings sit between EGP 1M and 2M, where a typical buy is a " & [Mid Band Typical Type] & " of " & FORMAT ( [Mid Band Typical Area], "#,0" ) & " m²." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "For the same budget an apartment in " & [Cheapest Apartment City] & " gives " & "<b style='color:#E3C98F'>" & FORMAT ( [Space Gain vs Cairo], "0%" ) & "</b>" & " more space than one in Cairo. " & [Cheapest Bedrooms] & " units are the cheapest per m²." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: 57db73f5-e826-5b9a-93ce-4a4784bcdbc7
+
+	measure 'DQ Summary' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#183A2F;color:#E6EDE8;border-radius:10px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>How this report is governed</div>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Cleaning in Power Query:</b> " & FORMAT ( MAX ( DQ_Source[DuplicateIDs] ), "#,0" ) & " duplicate listings and " & FORMAT ( MAX ( DQ_Source[InvalidAreaOrPrice] ), "#,0" ) & " rows without a valid area or price are removed before any number is shown." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Price per m²</b> is total price ÷ total area, so large villas are not under-weighted the way an average of ratios would do." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Freshness:</b> " & [Last Refresh] & "." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: b556368a-41ab-5b04-9243-4f9d44c8c4a7
+
+	column Placeholder
+		dataType: string
+		isHidden
+		lineageTag: e0ab3b7e-0adb-591f-9de6-7168c5aa9ebb
+		summarizeBy: none
+		sourceColumn: Placeholder
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Measures = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Placeholder = text], {})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

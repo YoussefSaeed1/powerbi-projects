@@ -1,0 +1,58 @@
+/// Value by mode of transport, where the exporting country reports it (about half of the value).
+table Fact_Transport
+	lineageTag: 65c33dfe-3230-567a-a0dd-2ebaed53f4fd
+
+	column Date
+		dataType: dateTime
+		isHidden
+		formatString: mmm yyyy
+		lineageTag: 757da243-7d9a-52f7-98a0-af8799497e1e
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column ReporterCode
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 5bca5962-9cbc-5d3d-aec6-b796208d7791
+		summarizeBy: none
+		sourceColumn: ReporterCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Mode
+		dataType: string
+		lineageTag: 7ff57ccf-0d5a-5c26-967a-9d38d23628c9
+		summarizeBy: none
+		sourceColumn: Mode
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value_USD
+		dataType: double
+		isHidden
+		formatString: $#,0
+		lineageTag: 7d6cab2a-f678-5205-be05-9a9ec0849096
+		summarizeBy: none
+		sourceColumn: Value_USD
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Transport = m
+		mode: import
+		source =
+				let
+				    Source = Trade_Raw,
+				    Modes = Table.SelectRows(Source, each [customsCode] = "C00" and [motCode] <> 0 and [partner2Code] = 0),
+				    Kept = Table.SelectColumns(Modes, {"Date", "reporterCode", "motDesc", "primaryValue"}),
+				    Renamed = Table.RenameColumns(Kept, {{"reporterCode", "ReporterCode"}, {"motDesc", "Mode"}, {"primaryValue", "Value_USD"}})
+				in
+				    Renamed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

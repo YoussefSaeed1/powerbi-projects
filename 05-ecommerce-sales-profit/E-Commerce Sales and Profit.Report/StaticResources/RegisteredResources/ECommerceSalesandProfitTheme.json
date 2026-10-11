@@ -1,0 +1,73 @@
+{
+  "name": "E-Commerce Sales and Profit",
+  "dataColors": [
+    "#2EC4B6",
+    "#102A43",
+    "#F25F5C",
+    "#A9DDD6",
+    "#F2A541",
+    "#5B6B7A",
+    "#7FD8CE",
+    "#FF8A87"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#102A43",
+  "tableAccent": "#102A43",
+  "textClasses": {
+    "label": {
+      "fontSize": 9,
+      "color": "#102A43"
+    },
+    "callout": {
+      "fontSize": 26,
+      "color": "#102A43"
+    },
+    "title": {
+      "fontFace": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif",
+      "fontSize": 11,
+      "color": "#102A43"
+    },
+    "header": {
+      "color": "#102A43"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "show": false
+          }
+        ],
+        "border": [
+          {
+            "show": false
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": false
+          }
+        ],
+        "visualHeader": [
+          {
+            "show": false
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#F4F7F8"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

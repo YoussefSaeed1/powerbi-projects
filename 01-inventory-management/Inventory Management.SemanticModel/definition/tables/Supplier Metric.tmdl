@@ -1,0 +1,34 @@
+table 'Supplier Metric'
+	lineageTag: b1d25119-8247-5afa-ad0e-a9419882656a
+
+	column Metric
+		dataType: string
+		lineageTag: fe84fffe-28db-5e38-b617-b47fd4315d29
+		summarizeBy: none
+		sourceColumn: Metric
+		sortByColumn: 'Metric Sort'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Metric Sort'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: fc35da10-fdff-5a22-904b-a2464cd47175
+		summarizeBy: none
+		sourceColumn: Metric Sort
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Supplier Metric' = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Metric" = text, #"Metric Sort" = Int64.Type], {{"Stockout Rate %", 1}, {"Avg Lead Time (Days)", 2}, {"Inventory Value", 3}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

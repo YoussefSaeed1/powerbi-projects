@@ -1,0 +1,32 @@
+table Dim_Funnel
+	lineageTag: 925c2c24-f1e8-5664-8109-68a56b672459
+
+	column Step
+		dataType: string
+		lineageTag: afd9c140-1ae0-5cde-9cdd-3e10bba746e7
+		summarizeBy: none
+		sourceColumn: Step
+		sortByColumn: 'Step Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Step Order'
+		dataType: int64
+		isHidden
+		lineageTag: 6f1bc4e9-3463-5baa-b739-69984441891f
+		summarizeBy: none
+		sourceColumn: Step Order
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Funnel = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Step" = text, #"Step Order" = Int64.Type], {{"Requisitions raised", 1}, {"Requisitions approved", 2}, {"POs issued", 3}, {"Goods received", 4}, {"Invoices received", 5}, {"Matched first time", 6}, {"Paid", 7}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

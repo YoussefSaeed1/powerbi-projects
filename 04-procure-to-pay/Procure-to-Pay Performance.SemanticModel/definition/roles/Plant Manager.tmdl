@@ -1,0 +1,7 @@
+/// Row-level security: a plant manager sees only the plant whose ManagerEmail matches their sign-in.
+role 'Plant Manager'
+	modelPermission: read
+
+	tablePermission Dim_Plant = Dim_Plant[ManagerEmail] = USERPRINCIPALNAME ()
+
+	annotation PBI_Id = 3c63b67b5f15503597534b1faff193ea

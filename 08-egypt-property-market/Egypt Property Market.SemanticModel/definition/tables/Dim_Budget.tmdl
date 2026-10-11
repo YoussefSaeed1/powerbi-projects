@@ -1,0 +1,51 @@
+/// Budget bands for the value-for-money page.
+table Dim_Budget
+	lineageTag: 645c0e02-060c-5d53-a801-4b08f9267218
+
+	column Budget
+		dataType: string
+		lineageTag: 88cb4d32-d292-5eb8-8d77-0e2f96c803d3
+		summarizeBy: none
+		sourceColumn: Budget
+		sortByColumn: 'Budget Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Budget Order'
+		dataType: int64
+		isHidden
+		lineageTag: 5e9e6ff5-ae34-534c-9454-f053e1e67383
+		summarizeBy: none
+		sourceColumn: Budget Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'From EGP'
+		dataType: double
+		isHidden
+		lineageTag: 8778c20a-0752-5d2d-a951-1f96ea4f4699
+		summarizeBy: none
+		sourceColumn: From EGP
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'To EGP'
+		dataType: double
+		isHidden
+		lineageTag: 84839c8d-6d84-541b-9f8f-aae1895eb24b
+		summarizeBy: none
+		sourceColumn: To EGP
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Budget = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Budget" = text, #"Budget Order" = Int64.Type, #"From EGP" = number, #"To EGP" = number], {{"Under EGP 1M", 1, 0.0, 1000000.0}, {"EGP 1–2M", 2, 1000000.0, 2000000.0}, {"EGP 2–4M", 3, 2000000.0, 4000000.0}, {"EGP 4–6M", 4, 4000000.0, 6000000.0}, {"Over EGP 6M", 5, 6000000.0, 1000000000.0}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

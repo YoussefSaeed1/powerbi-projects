@@ -1,0 +1,32 @@
+table 'Warehouse Metric'
+	lineageTag: 21c838e5-9058-5e62-9405-77b1e60817a7
+
+	column Metric
+		dataType: string
+		lineageTag: 628e2cc4-c5b8-5167-89f5-cae362b0f859
+		summarizeBy: none
+		sourceColumn: Metric
+		sortByColumn: 'Metric Sort'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Metric Sort'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 43fac902-97e2-5a9b-8002-cbd5fe36eb92
+		summarizeBy: none
+		sourceColumn: Metric Sort
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Warehouse Metric' = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Metric" = text, #"Metric Sort" = Int64.Type], {{"Inventory", 1}, {"Revenue", 2}, {"Units Sold", 3}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+

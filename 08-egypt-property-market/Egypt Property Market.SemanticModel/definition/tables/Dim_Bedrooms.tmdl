@@ -1,0 +1,32 @@
+table Dim_Bedrooms
+	lineageTag: 5c793844-0315-5abf-93fc-90a36f86c6e3
+
+	column Bedrooms
+		dataType: int64
+		formatString: 0
+		lineageTag: a7f8afff-5962-599f-9b61-cff9af3849c7
+		summarizeBy: none
+		sourceColumn: Bedrooms
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Bedroom Label'
+		dataType: string
+		lineageTag: 903cda57-8e0b-56a0-bd74-9eda07466663
+		summarizeBy: none
+		sourceColumn: Bedroom Label
+		sortByColumn: Bedrooms
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Bedrooms = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Bedrooms" = Int64.Type, #"Bedroom Label" = text], {{1, "1 bed"}, {2, "2 bed"}, {3, "3 bed"}, {4, "4 bed"}, {5, "5 bed"}, {6, "6+ bed"}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

@@ -1,0 +1,55 @@
+table Dim_Plant
+	lineageTag: 4d477ec4-db1b-51a0-9204-fb43fa5dc0e2
+
+	column PlantID
+		dataType: string
+		isHidden
+		isKey
+		lineageTag: 92c94e6c-7280-55e3-9103-3172b7a66111
+		summarizeBy: none
+		sourceColumn: PlantID
+
+		annotation SummarizationSetBy = Automatic
+
+	column PlantName
+		dataType: string
+		lineageTag: a19fd61e-bd23-5968-9d23-0c7b3c2eb820
+		summarizeBy: none
+		sourceColumn: PlantName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		lineageTag: a68192ea-47cb-55dd-9fb4-08350c82e0d1
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	/// Used by the Plant Manager security role.
+	column ManagerEmail
+		dataType: string
+		isHidden
+		lineageTag: df548b7c-1e66-54cc-85ef-0a887dc2e505
+		summarizeBy: none
+		sourceColumn: ManagerEmail
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Plant = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="Plants",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Selected = Table.SelectColumns(Promoted, {"PlantID", "PlantName", "Region", "ManagerEmail"}),
+				    NonBlank = Table.SelectRows(Selected, each [PlantID] <> null and [PlantID] <> ""),
+				    Typed = Table.TransformColumnTypes(NonBlank, {{"PlantID", type text}, {"PlantName", type text}, {"Region", type text}, {"ManagerEmail", type text}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

@@ -1,0 +1,324 @@
+table _Measures
+	lineageTag: 4ec63799-c626-5451-9830-8dd8e8734640
+
+	measure 'Latest Month' = CALCULATE ( MAX ( Fact_Sales[MonthStart] ), REMOVEFILTERS () )
+		formatString: mmm yyyy
+		displayFolder: Helpers
+		lineageTag: 22a1f8d8-3326-5b35-a946-4b6b8946b252
+
+	measure 'Selected Year' = IF ( ISFILTERED ( Dim_Date[Year] ), MAX ( Dim_Date[Year] ), YEAR ( [Latest Month] ) )
+		formatString: 0
+		displayFolder: Helpers
+		lineageTag: ec3453af-05dc-54fb-a78d-196ace9a944e
+
+	measure 'Last Refresh' = "Data refreshed " & FORMAT ( MAX ( _Refresh[RefreshedAt] ), "dd mmm yyyy" )
+		displayFolder: Helpers
+		lineageTag: 5df214f8-9065-5724-972d-123442b9bf40
+
+	/// Actual sales amount.
+	measure 'Actual Sales' = SUM ( Fact_Sales[SalesAmount] )
+		formatString: $#,0
+		displayFolder: Sales
+		lineageTag: 7c2e19e0-1402-5e52-b83a-f43e417aa537
+
+	/// Planned (forecast) sales amount.
+	measure 'Forecast Sales' = SUM ( Fact_Forecast[ForecastAmount] )
+		formatString: $#,0
+		displayFolder: Forecast
+		lineageTag: 12653eb8-ef95-561c-9b45-f4795da878d2
+
+	measure 'Actual CY' = VAR _y = [Selected Year] RETURN CALCULATE ( [Actual Sales], Dim_Date[Year] = _y )
+		formatString: $#,0
+		displayFolder: Sales
+		lineageTag: 5e88e0cb-c153-50b4-a7f4-b5e81db7a7fe
+
+	measure 'Actual LY' = VAR _y = [Selected Year] RETURN CALCULATE ( [Actual Sales], Dim_Date[Year] = _y - 1 )
+		formatString: $#,0
+		displayFolder: Sales
+		lineageTag: f5370cc4-ab8b-5a58-8a6b-728a3cd0de3b
+
+	measure 'Forecast CY' = VAR _y = [Selected Year] RETURN CALCULATE ( [Forecast Sales], Dim_Date[Year] = _y )
+		formatString: $#,0
+		displayFolder: Forecast
+		lineageTag: b72547d1-d5c8-56ce-b568-543c5b246fee
+
+	measure 'Actual CY $M' = DIVIDE ( [Actual CY], 1000000 )
+		formatString: $#,0.00
+		displayFolder: Sales
+		lineageTag: f9dbb617-217d-57ad-aa9f-4da1935dccf6
+
+	measure 'Actual LY $M' = DIVIDE ( [Actual LY], 1000000 )
+		formatString: $#,0.00
+		displayFolder: Sales
+		lineageTag: d75159cc-424a-531c-9558-0b9774cc57a5
+
+	measure 'Forecast CY $M' = DIVIDE ( [Forecast CY], 1000000 )
+		formatString: $#,0.00
+		displayFolder: Forecast
+		lineageTag: 893526f2-0901-5469-9258-591c7461b798
+
+	measure 'Change vs LY' = [Actual CY] - [Actual LY]
+		formatString: $#,0
+		displayFolder: Sales
+		lineageTag: 300d630e-8f4a-5fe6-817a-c2885a8758c3
+
+	measure 'Change vs LY %' = DIVIDE ( [Change vs LY], [Actual LY] )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Sales
+		lineageTag: c98183e1-2494-580b-a611-3a1c9e9df3ac
+
+	measure 'Change vs LY $M' = DIVIDE ( [Change vs LY], 1000000 )
+		formatString: +$#,0.00;-$#,0.00
+		displayFolder: Sales
+		lineageTag: 11bb4b78-c65f-5ec3-923c-346c4d29e832
+
+	/// Actual minus forecast; positive means the plan was beaten.
+	measure 'Gap vs Forecast' = [Actual CY] - [Forecast CY]
+		formatString: +$#,0;-$#,0
+		displayFolder: Forecast
+		lineageTag: 719def85-62e4-534f-9b2b-11a203a0328e
+
+	measure 'Gap vs Forecast %' = DIVIDE ( [Gap vs Forecast], [Forecast CY] )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Forecast
+		lineageTag: 9b2340e5-9205-5353-a606-4a8f01158a65
+
+	/// Actual vs forecast for the cell in context. Positive means the forecast was too low.
+	measure 'Bias %' = DIVIDE ( [Actual CY] - [Forecast CY], [Forecast CY] )
+		formatString: 0.0%
+		displayFolder: Forecast
+		lineageTag: 6907f355-81de-525c-a96e-32ddcf3b6d29
+
+	/// 100% minus the mean absolute percentage error across the months of the year in focus, at the grain in context.
+	measure 'Forecast Accuracy %' =
+			VAR _y = [Selected Year]
+			VAR _months =
+			    FILTER (
+			        CALCULATETABLE ( VALUES ( Dim_Date[YearMonthKey] ), Dim_Date[Year] = _y ),
+			        NOT ISBLANK ( CALCULATE ( [Forecast Sales] ) )
+			    )
+			VAR _mape =
+			    AVERAGEX ( _months, ABS ( DIVIDE ( CALCULATE ( [Actual Sales] ) - CALCULATE ( [Forecast Sales] ), CALCULATE ( [Forecast Sales] ) ) ) )
+			RETURN
+			    IF ( NOT ISBLANK ( _mape ), 1 - _mape )
+		formatString: 0.0%
+		displayFolder: Forecast
+		lineageTag: 364ef705-8ec1-54f6-a13a-4e91eb9109e5
+
+	measure 'MAPE %' = 1 - [Forecast Accuracy %]
+		formatString: 0.0%
+		displayFolder: Forecast
+		lineageTag: 31882595-b26e-514f-b9a6-ef9ead4e487a
+
+	/// Values for the year-on-year bridge: last year, then each country's change. The waterfall total is this year.
+	measure 'Bridge Value $M' =
+			VAR _o = SELECTEDVALUE ( 'Bridge Step'[Step Order] )
+			VAR _c = SELECTEDVALUE ( 'Bridge Step'[Country] )
+			RETURN
+			    IF (
+			        _o = 1,
+			        CALCULATE ( [Actual LY $M], REMOVEFILTERS ( Dim_Geography ) ),
+			        CALCULATE ( [Change vs LY $M], Dim_Geography[Country] = _c )
+			    )
+		formatString: $#,0.00
+		displayFolder: Sales
+		lineageTag: 2face1ac-6f1b-5123-8713-b0aacf0918bc
+
+	measure 'Change Color' = IF ( [Change vs LY] < 0, "#FF7E7E", "#5FD0C0" )
+		displayFolder: Formatting
+		lineageTag: c020a605-7451-5483-b650-9c4973e206d3
+
+	measure 'Bias Color' = IF ( ABS ( [Bias %] ) > 0.05, "#F4B860", "#7B86F0" )
+		displayFolder: Formatting
+		lineageTag: 1937ec39-62b4-57a1-bb48-3c3739614c58
+
+	/// HTML heatmap of forecast accuracy by category (rows) and country (columns).
+	measure 'Accuracy Heatmap' =
+			VAR _cats = VALUES ( Dim_Category[Category] )
+			VAR _ctry = VALUES ( Dim_Geography[Country] )
+			VAR _head = CONCATENATEX ( _ctry, "<th style='padding:6px 8px;font-weight:600;color:#93A0BF;text-align:center'>" & Dim_Geography[Country] & "</th>", "", Dim_Geography[Country], ASC )
+			VAR _rows =
+			    CONCATENATEX (
+			        _cats,
+			        "<tr><td style='padding:6px 8px;color:#E8ECF7;white-space:nowrap'>" & Dim_Category[Category] & "</td>"
+			            & CONCATENATEX (
+			                _ctry,
+			                VAR _v = CALCULATE ( [Forecast Accuracy %] )
+			                VAR _a = MAX ( 0.12, MIN ( 1, ( _v - 0.86 ) / 0.12 ) )
+			                RETURN
+			                    "<td style='padding:0 3px'><div style='border-radius:6px;padding:9px 0;text-align:center;font-weight:600;background:rgba(169,155,255," & FORMAT ( _a, "0.00" ) & ");color:" & IF ( _a > 0.6, "#0E1424", "#E8ECF7" ) & "'>" & FORMAT ( _v, "0.0%" ) & "</div></td>",
+			                "",
+			                Dim_Geography[Country], ASC
+			            ) & "</tr>",
+			        "",
+			        Dim_Category[Category], ASC
+			    )
+			RETURN
+			    "<table style='width:100%;border-collapse:separate;border-spacing:0 5px;font-family:Segoe UI,sans-serif;font-size:12px'><tr><th></th>" & _head & "</tr>" & _rows & "</table>"
+		displayFolder: KPI Cards
+		lineageTag: 4c8e9d0a-8347-5d23-8c42-a3f8ef392ec8
+
+	measure 'Lowest Accuracy Category' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Category[Category] ), [Forecast Accuracy %], ASC )
+			RETURN
+			    MAXX ( _t, Dim_Category[Category] )
+		displayFolder: Insights
+		lineageTag: c94424c6-2035-5c7b-a2c0-c97cf95941ef
+
+	measure 'Lowest Accuracy' = MINX ( ALL ( Dim_Category[Category] ), [Forecast Accuracy %] )
+		formatString: 0.0%
+		displayFolder: Insights
+		lineageTag: b3ab78c9-faa6-5077-9110-c880d19a010e
+
+	/// Months in the year in focus where actuals beat the forecast.
+	measure 'Months Under Forecast' =
+			VAR _y = [Selected Year]
+			RETURN
+			    COUNTROWS ( FILTER ( CALCULATETABLE ( VALUES ( Dim_Date[YearMonthKey] ), Dim_Date[Year] = _y ), CALCULATE ( [Actual Sales] ) > CALCULATE ( [Forecast Sales] ) ) )
+		formatString: 0
+		displayFolder: Insights
+		lineageTag: f562b50a-388b-5a0a-944d-f86e8d7441ef
+
+	measure 'Months With Forecast' =
+			VAR _y = [Selected Year]
+			RETURN
+			    COUNTROWS ( FILTER ( CALCULATETABLE ( VALUES ( Dim_Date[YearMonthKey] ), Dim_Date[Year] = _y ), NOT ISBLANK ( CALCULATE ( [Forecast Sales] ) ) ) )
+		formatString: 0
+		displayFolder: Insights
+		lineageTag: b8c53c0a-085e-5289-9f28-473dfdf2d341
+
+	measure 'Biggest Decline Country' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Geography[Country] ), [Change vs LY], ASC )
+			RETURN
+			    MAXX ( _t, Dim_Geography[Country] )
+		displayFolder: Insights
+		lineageTag: 9c3df498-4a00-573a-a953-8402fd2793f8
+
+	measure 'Biggest Decline Share' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Geography[Country] ), [Change vs LY], ASC )
+			RETURN
+			    DIVIDE ( MAXX ( _t, [Change vs LY] ), CALCULATE ( [Change vs LY], ALL ( Dim_Geography ) ) )
+		formatString: 0%
+		displayFolder: Insights
+		lineageTag: 8252dfee-c4bf-5cc5-aef1-277000a62876
+
+	measure 'Growing Categories' =
+			VAR _t = FILTER ( ALL ( Dim_Category[Category] ), [Change vs LY] > 0 )
+			RETURN
+			    CONCATENATEX ( _t, Dim_Category[Category], ", " )
+		displayFolder: Insights
+		lineageTag: b5ac843c-fea4-5ef8-92e3-e534396c02e6
+
+	measure 'DQ Value' =
+			VAR _o = SELECTEDVALUE ( Dim_DQ[Check Order] )
+			VAR _y = [Selected Year]
+			RETURN
+			    SWITCH (
+			        _o,
+			        1, FORMAT ( 0 + COUNTROWS ( ALL ( Fact_Sales ) ), "#,0" ),
+			        2, FORMAT ( 0 + COUNTROWS ( ALL ( Fact_Forecast ) ), "#,0" ),
+			        3, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_Sales ), ISBLANK ( RELATED ( Dim_Product[ProductName] ) ) ) ), "#,0" ),
+			        4, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_Sales ), ISBLANK ( RELATED ( Dim_Geography[Region] ) ) ) ), "#,0" ),
+			        5, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_Forecast ), ISBLANK ( RELATED ( Dim_Category[Category] ) ) ) ), "#,0" ),
+			        6, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_Sales ), Fact_Sales[SalesAmount] < 0 ) ) + COUNTROWS ( FILTER ( ALL ( Fact_Forecast ), Fact_Forecast[ForecastAmount] < 0 ) ), "#,0" ),
+			        7, FORMAT ( 0 + COUNTROWS ( FILTER ( CALCULATETABLE ( VALUES ( Dim_Date[YearMonthKey] ), REMOVEFILTERS (), Dim_Date[Year] = _y ),
+			                NOT ISBLANK ( CALCULATE ( [Actual Sales], REMOVEFILTERS ( Dim_Geography ), REMOVEFILTERS ( Dim_Category ) ) )
+			                    && ISBLANK ( CALCULATE ( [Forecast Sales], REMOVEFILTERS ( Dim_Geography ), REMOVEFILTERS ( Dim_Category ) ) ) ) ), "#,0" ),
+			        8, FORMAT ( [Latest Month], "mmm yyyy" )
+			    )
+		displayFolder: Data Quality
+		lineageTag: 777da975-2d6c-509e-8d3a-2a24c01f219f
+
+	measure 'DQ Status' =
+			VAR _o = SELECTEDVALUE ( Dim_DQ[Check Order] )
+			VAR _v = [DQ Value]
+			RETURN
+			    SWITCH ( TRUE (), ISBLANK ( _o ), BLANK (), _o IN { 1, 2, 8 }, "Info", _v = "0", "Pass", "Fail" )
+		displayFolder: Data Quality
+		lineageTag: 13114c76-d37f-5f19-9ca7-65464ab151d0
+
+	measure 'DQ Status Pill' =
+			VAR _t = [DQ Status]
+			VAR _bg = SWITCH ( _t, "Pass", "#2E9E6B", "Info", "#5B6690", "#D1495B" )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='56' height='20' viewBox='0 0 56 20'>"
+			        & "<rect x='1' y='2' width='54' height='16' rx='8' fill='" & _bg & "'/>"
+			        & "<text x='28' y='14' text-anchor='middle' font-family='Segoe UI,sans-serif' font-size='10' font-weight='600' fill='#FFFFFF'>" & _t & "</text></svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( _t ),
+			        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( _svg, "%", "%25" ), "#", "%23" ) )
+		displayFolder: Formatting
+		lineageTag: fcf68d17-07e5-562e-af84-686a1c8b2305
+		dataCategory: ImageUrl
+
+	measure 'DQ Failed Checks' = COUNTROWS ( FILTER ( ALL ( Dim_DQ ), [DQ Status] = "Fail" ) )
+		formatString: 0
+		displayFolder: Data Quality
+		lineageTag: 2b0e6710-1f36-5c51-9de4-b28ec2ccced8
+
+	measure 'KPI Plan' =
+			VAR _a0 = ( "#A99BFF" )
+			VAR _n0 = ( IF ( [Change vs LY] >= 0, "#5FD0C0", "#FF7E7E" ) )
+			VAR _a1 = ( "#A99BFF" )
+			VAR _n1 = ( "#93A0BF" )
+			VAR _a2 = ( IF ( [Gap vs Forecast] >= 0, "#5FD0C0", "#FF7E7E" ) )
+			VAR _n2 = ( IF ( [Gap vs Forecast] >= 0, "#5FD0C0", "#FF7E7E" ) )
+			VAR _a3 = ( "#A99BFF" )
+			VAR _n3 = ( "#93A0BF" )
+			RETURN
+			    "<div style='display:flex;gap:12px;height:78px;box-sizing:border-box;overflow:hidden;padding-bottom:2px;font-family:Segoe UI,sans-serif'>"
+			    & "<div style='flex:1;min-width:0;background:#172036;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 2px rgba(0,0,0,.35);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a0 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#93A0BF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Actual sales</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#E8ECF7'>" & ( FORMAT ( DIVIDE ( [Actual CY], 1000000 ), "$#,0.00" ) & "M" ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n0 & "'>" & ( VAR _d = [Change vs LY %] RETURN IF ( _d >= 0, "▲ ", "▼ " ) & FORMAT ( ABS ( _d ), "0.0%" ) & " vs " & ( [Selected Year] - 1 ) ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#172036;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 2px rgba(0,0,0,.35);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a1 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#93A0BF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Forecast</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#E8ECF7'>" & ( FORMAT ( DIVIDE ( [Forecast CY], 1000000 ), "$#,0.00" ) & "M" ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n1 & "'>" & ( "plan for " & [Selected Year] ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#172036;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 2px rgba(0,0,0,.35);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a2 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#93A0BF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Vs forecast</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#E8ECF7'>" & ( IF ( [Gap vs Forecast] >= 0, "+", "−" ) & FORMAT ( DIVIDE ( ABS ( [Gap vs Forecast] ), 1000000 ), "$#,0.00" ) & "M" ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n2 & "'>" & ( FORMAT ( ABS ( [Gap vs Forecast %] ), "0.0%" ) & IF ( [Gap vs Forecast] >= 0, " above plan", " below plan" ) ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#172036;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 2px rgba(0,0,0,.35);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a3 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#93A0BF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Forecast accuracy</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#E8ECF7'>" & ( FORMAT ( [Forecast Accuracy %], "0.0%" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n3 & "'>" & ( "MAPE " & FORMAT ( [MAPE %], "0.0%" ) & ", monthly" ) & "</div></div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 59ced9f4-4d3a-5cb3-93ec-310c1ed5f792
+
+	measure 'Insight Plan' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#2A2160;color:#DCD6FF;border-radius:10px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>What the data says</div>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "Sales fell " & "<b style='color:#F4B860'>" & FORMAT ( DIVIDE ( ABS ( [Change vs LY] ), 1000000 ), "$#,0.00" ) & "M" & "</b>" & " vs " & ( [Selected Year] - 1 ) & ", and " & FORMAT ( [Biggest Decline Share], "0%" ) & " of the drop came from " & "<b style='color:#F4B860'>" & [Biggest Decline Country] & "</b>" & "." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "Sales still " & IF ( [Gap vs Forecast] >= 0, "beat", "missed" ) & " the forecast by " & "<b style='color:#F4B860'>" & FORMAT ( DIVIDE ( ABS ( [Gap vs Forecast] ), 1000000 ), "$#,0.00" ) & "M" & "</b>" & ", because the plan expected a deeper fall." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( IF ( [Growing Categories] = "", "No category grew.", "<b style='color:#F4B860'>" & [Growing Categories] & "</b>" & " grew; every other category declined." ) ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: c153979b-3102-5b92-b7dd-95de5e347457
+
+	measure 'Insight Accuracy' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#2A2160;color:#DCD6FF;border-radius:10px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>What the data says</div>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "Actuals beat the forecast in " & "<b style='color:#F4B860'>" & FORMAT ( [Months Under Forecast], "0" ) & "</b>" & " of " & [Months With Forecast] & " months: a steady downward bias to correct in the next plan." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b style='color:#F4B860'>" & [Lowest Accuracy Category] & "</b>" & " is the hardest category to plan, at " & FORMAT ( [Lowest Accuracy], "0.0%" ) & " accuracy." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: 266bb0e9-8446-5e34-b204-48d3cd672db2
+
+	measure 'DQ Summary' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#2A2160;color:#DCD6FF;border-radius:10px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>How this report is governed</div>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Data quality:</b> " & IF ( [DQ Failed Checks] = 0, "all checks pass on the last refresh.", FORMAT ( [DQ Failed Checks], "0" ) & " check(s) failed on the last refresh." ) ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Grain:</b> the forecast is planned by month, country and category, so it joins the model through Dim_Category and Dim_Geography, not through products." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Accuracy:</b> measured as 100% minus MAPE across months, recalculated at whatever grain the visual shows." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Freshness:</b> " & [Last Refresh] & "." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: 66e11365-6b34-5038-9d13-1ed60e446103
+
+	column Placeholder
+		dataType: string
+		isHidden
+		lineageTag: 0daa00b0-cbeb-5b7f-8979-0b04d3904923
+		summarizeBy: none
+		sourceColumn: Placeholder
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Measures = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Placeholder = text], {})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

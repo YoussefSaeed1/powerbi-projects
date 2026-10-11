@@ -1,0 +1,110 @@
+/// Listings for sale after cleaning: duplicate IDs removed, rows without a valid area or price removed.
+table Fact_Listings
+	lineageTag: cce8f1a3-7140-5a62-b8e4-982506d57645
+
+	column ListingID
+		dataType: string
+		lineageTag: 4d0d0a77-1ad7-5df0-a24c-267594715f46
+		summarizeBy: none
+		sourceColumn: ListingID
+
+		annotation SummarizationSetBy = Automatic
+
+	column District
+		dataType: string
+		isHidden
+		lineageTag: 4385075f-6cac-5769-87d0-22e7971d60e3
+		summarizeBy: none
+		sourceColumn: District
+
+		annotation SummarizationSetBy = Automatic
+
+	column PropertyType
+		dataType: string
+		isHidden
+		lineageTag: edd186a9-2ad0-59d0-b75e-d06dbe6113d1
+		summarizeBy: none
+		sourceColumn: PropertyType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Bedrooms
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: f998bdfa-165a-5ef2-85de-5fceb4f8123a
+		summarizeBy: none
+		sourceColumn: Bedrooms
+
+		annotation SummarizationSetBy = Automatic
+
+	column Bathrooms
+		dataType: int64
+		formatString: 0
+		lineageTag: 8d3371d1-a627-57b7-ad6e-48a01a685f1c
+		summarizeBy: none
+		sourceColumn: Bathrooms
+
+		annotation SummarizationSetBy = Automatic
+
+	column Area_m2
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: 3e746c2c-bde6-5a9b-b378-dec2ffd8bb21
+		summarizeBy: none
+		sourceColumn: Area_m2
+
+		annotation SummarizationSetBy = Automatic
+
+	column Price_EGP
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: 55a07ce0-6ac3-5f51-ac65-19a332f5ea5c
+		summarizeBy: none
+		sourceColumn: Price_EGP
+
+		annotation SummarizationSetBy = Automatic
+
+	column Furnished
+		dataType: boolean
+		lineageTag: 5d18b26f-121e-5cbb-a2b3-a7fd1ae8f42d
+		summarizeBy: none
+		sourceColumn: Furnished
+
+		annotation SummarizationSetBy = Automatic
+
+	column Compound
+		dataType: boolean
+		lineageTag: 3c8dcd53-0199-5dd6-ba55-ead116aa9bfe
+		summarizeBy: none
+		sourceColumn: Compound
+
+		annotation SummarizationSetBy = Automatic
+
+	column ListedOn
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: f55cef1b-7ba6-587d-a8d1-c4506b4a225c
+		summarizeBy: none
+		sourceColumn: ListedOn
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition Fact_Listings = m
+		mode: import
+		source =
+				let
+				    Source = Listings_Raw,
+				    NoDuplicates = Table.Distinct(Source, {"ListingID"}),
+				    ValidArea = Table.SelectRows(NoDuplicates, each [Area_m2] <> null and [Area_m2] > 0 and [Price_EGP] <> null and [Price_EGP] > 0),
+				    Kept = Table.SelectColumns(ValidArea, {"ListingID", "District", "PropertyType", "Bedrooms", "Bathrooms", "Area_m2", "Price_EGP", "Furnished", "Compound", "ListedOn"})
+				in
+				    Kept
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

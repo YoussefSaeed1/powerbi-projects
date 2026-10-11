@@ -1,0 +1,32 @@
+table Dim_City
+	lineageTag: 3e125a55-f1ee-5ee1-b8e9-c0142aa87f25
+
+	column City
+		dataType: string
+		isKey
+		lineageTag: 00117c12-f9ba-5a42-b2f9-2dda30a301e2
+		summarizeBy: none
+		sourceColumn: City
+
+		annotation SummarizationSetBy = Automatic
+
+	column State
+		dataType: string
+		lineageTag: c67af099-8419-50d5-8747-ae4381e9e8a1
+		summarizeBy: none
+		sourceColumn: State
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_City = m
+		mode: import
+		source =
+				let
+				    Source = Sales_Raw,
+				    Cities = Table.Distinct(Table.SelectColumns(Source, {"City", "State"}))
+				in
+				    Cities
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "Electronics Sales 2019"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "937da74d-3722-50da-b2b3-97655fa31b75"
+  }
+}

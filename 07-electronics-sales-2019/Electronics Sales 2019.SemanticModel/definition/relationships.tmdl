@@ -1,0 +1,15 @@
+relationship 138c44c3-7d81-51ca-a054-5bc9df5cb5b9
+	fromColumn: Fact_Sales.OrderDate
+	toColumn: Dim_Date.Date
+
+relationship b4738d00-eeb6-5f3d-be56-05bee445a7f7
+	fromColumn: Fact_Sales.Product
+	toColumn: Dim_Product.Product
+
+relationship e450f14b-cc33-5a0c-99f8-df03432222ab
+	fromColumn: Fact_Sales.City
+	toColumn: Dim_City.City
+
+relationship 3006a3bd-590c-5e98-9fd2-8ec794613c3c
+	fromColumn: Fact_Sales.Hour
+	toColumn: Dim_Hour.Hour

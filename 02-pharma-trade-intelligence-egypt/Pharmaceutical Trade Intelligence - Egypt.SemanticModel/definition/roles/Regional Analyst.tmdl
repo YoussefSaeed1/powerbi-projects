@@ -1,0 +1,7 @@
+/// Example row-level security role: limits the report to European supplier countries.
+role 'Regional Analyst'
+	modelPermission: read
+
+	tablePermission Dim_Supplier = Dim_Supplier[Region] = "Europe"
+
+	annotation PBI_Id = 02861cbe5572574781baeb7242bdc20f

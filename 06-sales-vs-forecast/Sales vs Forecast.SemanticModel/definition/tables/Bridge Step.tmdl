@@ -1,0 +1,42 @@
+/// Steps of the year-on-year bridge (the waterfall adds the total bar).
+table 'Bridge Step'
+	lineageTag: 2ae783c9-1a24-5aef-b69d-51c33e546db6
+
+	column Step
+		dataType: string
+		lineageTag: a13aa7b5-d1f9-5538-be51-d4775ae218af
+		summarizeBy: none
+		sourceColumn: Step
+		sortByColumn: 'Step Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Step Order'
+		dataType: int64
+		isHidden
+		lineageTag: 34cbdf4f-49a0-575d-9177-f95436ae028b
+		summarizeBy: none
+		sourceColumn: Step Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Country
+		dataType: string
+		isHidden
+		lineageTag: 28d82f56-79eb-50c3-a550-500565630f96
+		summarizeBy: none
+		sourceColumn: Country
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Bridge Step' = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Step" = text, #"Step Order" = Int64.Type, #"Country" = text], {{"Last year", 1, ""}, {"United States", 2, "United States"}, {"China", 3, "China"}, {"Germany", 4, "Germany"}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

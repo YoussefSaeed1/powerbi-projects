@@ -1,0 +1,15 @@
+relationship d45386b7-b324-5822-b43d-4aa8eb2e3f12
+	fromColumn: Fact_Trade.Date
+	toColumn: Dim_Date.Date
+
+relationship 54f39c6e-7c98-5337-9786-3ac6f22217ae
+	fromColumn: Fact_Trade.ReporterCode
+	toColumn: Dim_Supplier.ReporterCode
+
+relationship 4a2f698a-6656-563c-967c-30564859af1b
+	fromColumn: Fact_Transport.Date
+	toColumn: Dim_Date.Date
+
+relationship 88ae489f-8e46-52cc-b9ef-ae415d2bb9d6
+	fromColumn: Fact_Transport.ReporterCode
+	toColumn: Dim_Supplier.ReporterCode

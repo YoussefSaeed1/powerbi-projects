@@ -1,0 +1,45 @@
+table Warehouses
+	lineageTag: 37d8a6cb-0c2d-5764-ae50-4c5c3b3d6c21
+
+	column WarehouseID
+		dataType: string
+		isKey
+		lineageTag: d532e0e7-6ffb-5c66-a4af-e0646e051650
+		summarizeBy: none
+		sourceColumn: WarehouseID
+
+		annotation SummarizationSetBy = Automatic
+
+	column WarehouseName
+		dataType: string
+		lineageTag: 7a724faf-fe64-50b5-a4d9-2985d8a9113c
+		summarizeBy: none
+		sourceColumn: WarehouseName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		lineageTag: a6d3f68e-080c-5411-8c39-2c66e9b43876
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Warehouses = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="Warehouses",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Selected = Table.SelectColumns(Promoted, {"WarehouseID", "WarehouseName", "Region"}),
+				    NonBlank = Table.SelectRows(Selected, each [WarehouseID] <> null and [WarehouseID] <> ""),
+				    Typed = Table.TransformColumnTypes(NonBlank, {{"WarehouseID", type text}, {"WarehouseName", type text}, {"Region", type text}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

@@ -1,0 +1,433 @@
+table _Measures
+	lineageTag: e7845287-e77e-5c2c-96ea-a5d94e832a2d
+
+	measure 'Latest Data Date' = CALCULATE ( MAX ( Fact_Trade[Date] ), REMOVEFILTERS () )
+		formatString: mmm yyyy
+		displayFolder: Helpers
+		lineageTag: 4285485a-02c7-527c-9386-75de27600346
+
+	/// Year in focus: the year picked in the slicer, or the latest year in the data.
+	measure 'Selected Year' =
+			VAR _maxYear = YEAR ( [Latest Data Date] )
+			RETURN
+			    IF ( ISFILTERED ( Dim_Date[Year] ), MAX ( Dim_Date[Year] ), _maxYear )
+		formatString: 0
+		displayFolder: Helpers
+		lineageTag: 8da401aa-c563-5275-8d33-fa5a2ad0a475
+
+	/// Last month with data in the year in focus (September for 2025).
+	measure 'Selected Year Last Month' =
+			VAR _y = [Selected Year]
+			VAR _end = [Latest Data Date]
+			RETURN
+			    CALCULATE ( MAX ( Dim_Date[MonthNo] ), REMOVEFILTERS ( Dim_Date ), Dim_Date[Year] = _y, Dim_Date[Date] <= _end )
+		formatString: 0
+		displayFolder: Helpers
+		lineageTag: 9111c0dc-3b71-5e75-91fe-ef8be447a9ed
+
+	measure 'Period Label' =
+			VAR _y = [Selected Year]
+			VAR _m = [Selected Year Last Month]
+			RETURN
+			    IF ( _m = 12, "FY" & _y, "Jan–" & FORMAT ( DATE ( _y, _m, 1 ), "mmm" ) & " " & _y )
+		displayFolder: Helpers
+		lineageTag: 86b975f0-94fe-50d9-b5b3-dbafb70acd79
+
+	measure 'Last Refresh' = "Data refreshed " & FORMAT ( MAX ( _Refresh[RefreshedAt] ), "dd mmm yyyy" )
+		displayFolder: Helpers
+		lineageTag: 0590f1e5-251a-5179-9a5b-c30830bde7b5
+
+	/// Value of antibiotic medicaments (HS 300420) exported to Egypt, as reported by the exporting countries (USD).
+	measure 'Import Value' = SUM ( Fact_Trade[Value_USD] )
+		formatString: $#,0
+		displayFolder: Trade
+		lineageTag: 84f1c7b8-bdc5-5baa-b794-1beae80f9254
+
+	/// Value for the year in focus, up to the last month with data.
+	measure 'Value YTD CY' =
+			VAR _y = [Selected Year]
+			VAR _m = [Selected Year Last Month]
+			RETURN
+			    CALCULATE ( [Import Value], Dim_Date[Year] = _y, Dim_Date[MonthNo] <= _m )
+		formatString: $#,0
+		displayFolder: Trade
+		lineageTag: 99657973-6a92-59ab-88ce-d82ed152c12d
+
+	/// Same months of the prior year, so partial years compare fairly.
+	measure 'Value YTD LY' =
+			VAR _y = [Selected Year]
+			VAR _m = [Selected Year Last Month]
+			RETURN
+			    CALCULATE ( [Import Value], Dim_Date[Year] = _y - 1, Dim_Date[MonthNo] <= _m )
+		formatString: $#,0
+		displayFolder: Trade
+		lineageTag: f8c72c8b-f886-5fc5-84fb-92989ba5667c
+
+	measure 'Value YoY %' = DIVIDE ( [Value YTD CY] - [Value YTD LY], [Value YTD LY] )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Trade
+		lineageTag: ab71afaa-a7c2-5098-96bb-82ed6ccfbaec
+
+	measure 'Value CY' = VAR _y = [Selected Year] RETURN CALCULATE ( [Import Value], Dim_Date[Year] = _y )
+		formatString: $#,0
+		displayFolder: Trade
+		lineageTag: aa4fa4eb-df99-5e2d-8f46-d294f38b8f32
+
+	measure 'Value LY' = VAR _y = [Selected Year] RETURN CALCULATE ( [Import Value], Dim_Date[Year] = _y - 1 )
+		formatString: $#,0
+		displayFolder: Trade
+		lineageTag: 1f2fc988-1add-508e-9911-7660415d8bc4
+
+	measure 'Value CY $M' = DIVIDE ( [Value CY], 1000000 )
+		formatString: $#,0.0
+		displayFolder: Trade
+		lineageTag: 313efb51-bedc-569c-b6e1-05cba0811ef1
+
+	measure 'Value LY $M' = DIVIDE ( [Value LY], 1000000 )
+		formatString: $#,0.0
+		displayFolder: Trade
+		lineageTag: 31971a0f-b423-549f-bb48-cb7dd47c196f
+
+	/// Rolling 12 months ending at the last month in context.
+	measure 'Value R12' =
+			VAR _end = MIN ( [Latest Data Date], MAX ( Dim_Date[Date] ) )
+			RETURN
+			    CALCULATE ( [Import Value], REMOVEFILTERS ( Dim_Date ), DATESINPERIOD ( Dim_Date[Date], _end, -12, MONTH ) )
+		formatString: $#,0
+		displayFolder: Trade
+		lineageTag: fca7e52b-c9a3-592d-9b22-2e725baa0903
+
+	/// Annual value for the long-term chart (not filtered by the year slicer).
+	measure 'Value by Trend Year $M' =
+			VAR _yr = SELECTEDVALUE ( 'Trend Year'[Year] )
+			RETURN
+			    DIVIDE ( CALCULATE ( [Import Value], REMOVEFILTERS ( Dim_Date ), Dim_Date[Year] = _yr ), 1000000 )
+		formatString: $#,0.0
+		displayFolder: Trade
+		lineageTag: cb1a444a-2138-559b-9fa4-fe2a11cf59f4
+
+	measure 'Trend Year Color' = IF ( SELECTEDVALUE ( 'Trend Year'[Year] ) = [Selected Year], "#E7A923", "#1F3E8C" )
+		displayFolder: Formatting
+		lineageTag: ea324878-fd37-51c5-a2a8-c1de0d10c681
+
+	measure 'Net Weight Kg' = SUM ( Fact_Trade[NetWeight_Kg] )
+		formatString: #,0
+		displayFolder: Trade
+		lineageTag: 39ed5fa3-820d-5240-b82d-1d479a80c394
+
+	/// Value per kg, using only rows that report a net weight.
+	measure 'Price per Kg' =
+			VAR _y = [Selected Year]
+			VAR _m = [Selected Year Last Month]
+			RETURN
+			    CALCULATE (
+			        DIVIDE ( SUM ( Fact_Trade[Value_USD] ), SUM ( Fact_Trade[NetWeight_Kg] ) ),
+			        Dim_Date[Year] = _y, Dim_Date[MonthNo] <= _m,
+			        Fact_Trade[NetWeight_Kg] > 0
+			    )
+		formatString: $#,0.00
+		displayFolder: Trade
+		lineageTag: 638e0a80-9596-5e44-96af-27d02a0b64d6
+
+	measure 'Price per Kg LY' =
+			VAR _y = [Selected Year]
+			VAR _m = [Selected Year Last Month]
+			RETURN
+			    CALCULATE (
+			        DIVIDE ( SUM ( Fact_Trade[Value_USD] ), SUM ( Fact_Trade[NetWeight_Kg] ) ),
+			        Dim_Date[Year] = _y - 1, Dim_Date[MonthNo] <= _m,
+			        Fact_Trade[NetWeight_Kg] > 0
+			    )
+		formatString: $#,0.00
+		displayFolder: Trade
+		lineageTag: b6c21547-1294-53fa-94d2-009663d3fab6
+
+	measure 'Supplier Countries' = VAR _y = [Selected Year] RETURN CALCULATE ( DISTINCTCOUNT ( Fact_Trade[ReporterCode] ), Fact_Trade[Value_USD] > 0, Dim_Date[Year] = _y )
+		formatString: 0
+		displayFolder: Trade
+		lineageTag: 04ccc885-9ab7-5e35-a568-4d8bb1436020
+
+	measure 'Supplier Countries LY' = VAR _y = [Selected Year] RETURN CALCULATE ( DISTINCTCOUNT ( Fact_Trade[ReporterCode] ), Fact_Trade[Value_USD] > 0, Dim_Date[Year] = _y - 1 )
+		formatString: 0
+		displayFolder: Trade
+		lineageTag: 75cb5391-1b78-5b01-9d5d-5f49f41d3a2f
+
+	/// Share of the import value in the period, by exporting country.
+	measure 'Supplier Share %' = DIVIDE ( [Value YTD CY], CALCULATE ( [Value YTD CY], ALL ( Dim_Supplier ) ) )
+		formatString: 0.0%
+		displayFolder: Suppliers
+		lineageTag: 7011d740-5d9e-5dde-a261-421fd3440c73
+
+	measure 'Top Supplier Share %' = MAXX ( ALL ( Dim_Supplier[Country] ), [Supplier Share %] )
+		formatString: 0.0%
+		displayFolder: Suppliers
+		lineageTag: fd813770-97b7-53d5-a24a-b0f8ac04f7ac
+
+	measure 'Top Supplier' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Supplier[Country] ), [Value YTD CY], DESC )
+			RETURN
+			    MAXX ( _t, Dim_Supplier[Country] )
+		displayFolder: Suppliers
+		lineageTag: 01cfee4d-6867-555a-ab0c-f560de5b03e4
+
+	measure 'Second Supplier' =
+			VAR _t2 = TOPN ( 2, ALL ( Dim_Supplier[Country] ), [Value YTD CY], DESC )
+			VAR _t1 = TOPN ( 1, ALL ( Dim_Supplier[Country] ), [Value YTD CY], DESC )
+			RETURN
+			    MAXX ( EXCEPT ( _t2, _t1 ), Dim_Supplier[Country] )
+		displayFolder: Suppliers
+		lineageTag: ed685a24-62e0-5a9b-8673-98c8dcee2b73
+
+	measure 'Top 2 Share %' =
+			VAR _t = TOPN ( 2, ALL ( Dim_Supplier[Country] ), [Value YTD CY], DESC )
+			RETURN
+			    DIVIDE ( CALCULATE ( [Value YTD CY], _t ), CALCULATE ( [Value YTD CY], ALL ( Dim_Supplier ) ) )
+		formatString: 0.0%
+		displayFolder: Suppliers
+		lineageTag: 0e64af25-1c26-5272-a0fa-816f8924750c
+
+	measure 'Top 3 Share %' =
+			VAR _t = TOPN ( 3, ALL ( Dim_Supplier[Country] ), [Value YTD CY], DESC )
+			RETURN
+			    DIVIDE ( CALCULATE ( [Value YTD CY], _t ), CALCULATE ( [Value YTD CY], ALL ( Dim_Supplier ) ) )
+		formatString: 0.0%
+		displayFolder: Suppliers
+		lineageTag: a5f5e8e1-62ca-5664-b655-5ed96eba2156
+
+	/// Herfindahl-Hirschman index of supplier concentration (0–10,000). Above 2,500 is highly concentrated.
+	measure HHI = ROUND ( SUMX ( ALL ( Dim_Supplier[Country] ), [Supplier Share %] ^ 2 ) * 10000, 0 )
+		formatString: #,0
+		displayFolder: Suppliers
+		lineageTag: 8fd2fbf3-663d-5c2c-9a8b-1279ec611370
+
+	measure 'HHI Label' = VAR _h = [HHI] RETURN IF ( _h > 2500, "highly concentrated", IF ( _h > 1500, "moderately concentrated", "competitive" ) )
+		displayFolder: Suppliers
+		lineageTag: ade84e3d-bb2b-5dee-be24-db7ed9fc54d6
+
+	/// Month-to-month variation over the year in focus and the year before (coefficient of variation). Months with no shipments count as zero.
+	measure 'Volatility %' =
+			VAR _y = [Selected Year]
+			VAR _end = [Latest Data Date]
+			VAR _months =
+			    CALCULATETABLE ( VALUES ( Dim_Date[YearMonthKey] ), REMOVEFILTERS ( Dim_Date ), Dim_Date[Year] >= _y - 1, Dim_Date[Year] <= _y, Dim_Date[Date] <= _end )
+			VAR _vals =
+			    ADDCOLUMNS ( _months, "@v", COALESCE ( CALCULATE ( [Import Value], REMOVEFILTERS ( Dim_Date[Year] ) ), 0 ) )
+			RETURN
+			    IF ( NOT ISBLANK ( [Value YTD CY] ), DIVIDE ( STDEVX.P ( _vals, [@v] ), AVERAGEX ( _vals, [@v] ) ) )
+		formatString: 0%
+		displayFolder: Suppliers
+		lineageTag: 47fd4246-f7e9-5a2f-bf3f-fc80afa71c73
+
+	measure 'Share Rank' =
+			VAR _set = FILTER ( ALLSELECTED ( Dim_Supplier[Country] ), NOT ISBLANK ( [Value YTD CY] ) )
+			RETURN
+			    IF ( NOT ISBLANK ( [Value YTD CY] ), RANKX ( _set, [Value YTD CY], , DESC, DENSE ) )
+		formatString: 0
+		displayFolder: Suppliers
+		lineageTag: 29a85e4b-54cf-5503-8c09-5666a0a5d70a
+
+	/// 0–100 strategic score: 30% share, 30% growth, 20% stability, 20% price (lower price scores higher). Ranks are within the countries in view.
+	measure 'Supplier Score' =
+			VAR _set = FILTER ( ALLSELECTED ( Dim_Supplier[Country] ), NOT ISBLANK ( [Value YTD CY] ) )
+			VAR _n = COUNTROWS ( _set )
+			VAR _rShare = RANKX ( _set, [Value YTD CY], , DESC, DENSE )
+			VAR _rGrowth = RANKX ( _set, [Value YoY %], , DESC, DENSE )
+			VAR _rStable = RANKX ( _set, [Volatility %], , ASC, DENSE )
+			VAR _rPrice = RANKX ( _set, [Price per Kg], , ASC, DENSE )
+			VAR _norm = MAX ( _n - 1, 1 )
+			RETURN
+			    IF (
+			        NOT ISBLANK ( [Value YTD CY] ),
+			        ROUND ( 100 * ( 0.3 * ( 1 - ( _rShare - 1 ) / _norm ) + 0.3 * ( 1 - ( _rGrowth - 1 ) / _norm )
+			            + 0.2 * ( 1 - ( _rStable - 1 ) / _norm ) + 0.2 * ( 1 - ( _rPrice - 1 ) / _norm ) ), 0 )
+			    )
+		formatString: 0
+		displayFolder: Suppliers
+		lineageTag: 054479e5-cd50-527f-8963-062fc718ff8d
+
+	measure 'Supplier Tier' = VAR _s = [Supplier Score] RETURN IF ( ISBLANK ( _s ), BLANK (), IF ( _s >= 65, "Strategic", IF ( _s >= 40, "Develop", "Monitor" ) ) )
+		displayFolder: Suppliers
+		lineageTag: a011e12a-a6bc-5e8f-b80c-ece76ec9b611
+
+	measure 'Supplier Tier Pill' =
+			VAR _t = [Supplier Tier]
+			VAR _bg = SWITCH ( _t, "Strategic", "#2E9E6B", "Develop", "#E7A923", "#667089" )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='70' height='20' viewBox='0 0 70 20'>"
+			        & "<rect x='1' y='2' width='68' height='16' rx='8' fill='" & _bg & "'/>"
+			        & "<text x='35' y='14' text-anchor='middle' font-family='Segoe UI,sans-serif' font-size='10' font-weight='600' fill='#FFFFFF'>" & _t & "</text></svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( _t ),
+			        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( _svg, "%", "%25" ), "#", "%23" ) )
+		displayFolder: Formatting
+		lineageTag: 4c194a14-7df3-50e8-bd87-3904cead63fd
+		dataCategory: ImageUrl
+
+	measure 'Share Color' = IF ( [Share Rank] <= 2, "#1F3E8C", "#A9C1EC" )
+		displayFolder: Formatting
+		lineageTag: 3ff8e57e-30a2-5216-8092-6bcdd6186e0e
+
+	measure 'Mode Value' =
+			VAR _y = [Selected Year]
+			VAR _m = [Selected Year Last Month]
+			RETURN
+			    CALCULATE ( SUM ( Fact_Transport[Value_USD] ), Dim_Date[Year] = _y, Dim_Date[MonthNo] <= _m )
+		formatString: $#,0
+		displayFolder: Transport
+		lineageTag: 5d59a58d-2454-5dfc-9e6f-d4ba5141fe44
+
+	/// Share of the import value whose transport mode is reported.
+	measure 'Mode Coverage %' = DIVIDE ( CALCULATE ( [Mode Value], ALL ( Fact_Transport[Mode] ) ), [Value YTD CY] )
+		formatString: 0%
+		displayFolder: Transport
+		lineageTag: b1e76129-bc3c-5117-973a-95515d1c3aef
+
+	measure 'Air Share %' = DIVIDE ( CALCULATE ( [Mode Value], Fact_Transport[Mode] = "Air" ), CALCULATE ( [Mode Value], ALL ( Fact_Transport[Mode] ) ) )
+		formatString: 0%
+		displayFolder: Transport
+		lineageTag: 1a03bb62-eebf-58ff-96f1-67e17f938324
+
+	measure 'DQ Value' =
+			VAR _o = SELECTEDVALUE ( Dim_DQ[Check Order] )
+			VAR _raw = MAX ( DQ_Source[RawValue] )
+			VAR _tot = MAX ( DQ_Source[TotalValue] )
+			RETURN
+			    SWITCH (
+			        _o,
+			        1, FORMAT ( MAX ( DQ_Source[RawRows] ), "#,0" ),
+			        2, FORMAT ( MAX ( DQ_Source[TotalRows] ), "#,0" ),
+			        3, FORMAT ( _raw / 1000000, "$#,0.0" ) & "M",
+			        4, FORMAT ( _tot / 1000000, "$#,0.0" ) & "M",
+			        5, FORMAT ( DIVIDE ( _raw, _tot ), "0.00" ) & "×",
+			        6, FORMAT ( MAX ( DQ_Source[DuplicateTotals] ), "#,0" ),
+			        7, FORMAT ( MAX ( DQ_Source[NotEgyptPartner] ), "#,0" ),
+			        8, FORMAT ( MAX ( DQ_Source[NotExportFlow] ), "#,0" ),
+			        9, FORMAT ( MAX ( DQ_Source[OtherCommodity] ), "#,0" ),
+			        10, FORMAT ( MAX ( DQ_Source[TotalRowsNoWeight] ), "#,0" ),
+			        11, FORMAT ( MAX ( DQ_Source[MonthsCovered] ), "#,0" ),
+			        12, FORMAT ( MAX ( DQ_Source[LastPeriod] ), "mmm yyyy" )
+			    )
+		displayFolder: Data Quality
+		lineageTag: f01e7275-8526-5c61-81a2-ba5175b48e57
+
+	measure 'DQ Status' =
+			VAR _o = SELECTEDVALUE ( Dim_DQ[Check Order] )
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        ISBLANK ( _o ), BLANK (),
+			        _o IN { 1, 2, 4, 11, 12 }, "Info",
+			        _o IN { 3, 5 }, "Handled",
+			        _o = 10, IF ( MAX ( DQ_Source[TotalRowsNoWeight] ) = 0, "Pass", "Handled" ),
+			        [DQ Value] = "0", "Pass",
+			        "Fail"
+			    )
+		displayFolder: Data Quality
+		lineageTag: 5c03a6eb-aab1-53e7-93d9-4692892e25b3
+
+	measure 'DQ Status Pill' =
+			VAR _t = [DQ Status]
+			VAR _bg = SWITCH ( _t, "Pass", "#2E9E6B", "Info", "#A9C1EC", "Handled", "#E7A923", "#D1495B" )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='66' height='20' viewBox='0 0 66 20'>"
+			        & "<rect x='1' y='2' width='64' height='16' rx='8' fill='" & _bg & "'/>"
+			        & "<text x='33' y='14' text-anchor='middle' font-family='Segoe UI,sans-serif' font-size='10' font-weight='600' fill='#FFFFFF'>" & _t & "</text></svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( _t ),
+			        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( _svg, "%", "%25" ), "#", "%23" ) )
+		displayFolder: Formatting
+		lineageTag: 6f11e81c-9194-5aa7-a8f8-18ad11f3da28
+		dataCategory: ImageUrl
+
+	measure 'Overstatement Factor' = DIVIDE ( MAX ( DQ_Source[RawValue] ), MAX ( DQ_Source[TotalValue] ) )
+		formatString: 0.00
+		displayFolder: Data Quality
+		lineageTag: 331dac79-6eec-5d3e-b9f8-89ba0450673d
+
+	measure 'KPI Market' =
+			VAR _a0 = ( "#1F3E8C" )
+			VAR _n0 = ( "#667089" )
+			VAR _a1 = ( IF ( [Value YoY %] >= 0, "#2E9E6B", "#D1495B" ) )
+			VAR _n1 = ( "#667089" )
+			VAR _a2 = ( "#1F3E8C" )
+			VAR _n2 = ( "#667089" )
+			VAR _a3 = ( "#1F3E8C" )
+			VAR _n3 = ( "#667089" )
+			VAR _a4 = ( "#1F3E8C" )
+			VAR _n4 = ( "#667089" )
+			RETURN
+			    "<div style='display:flex;gap:12px;height:78px;box-sizing:border-box;overflow:hidden;padding-bottom:2px;font-family:Segoe UI,sans-serif'>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(31,62,140,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a0 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#667089;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Import value</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#16213E'>" & ( FORMAT ( DIVIDE ( [Value YTD CY], 1000000 ), "$#,0.0" ) & "M" ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n0 & "'>" & ( [Period Label] ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(31,62,140,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a1 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#667089;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Change vs same months LY</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#16213E'>" & ( FORMAT ( [Value YoY %], "+0.0%;-0.0%;0.0%" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n1 & "'>" & ( "LY: " & FORMAT ( DIVIDE ( [Value YTD LY], 1000000 ), "$#,0.0" ) & "M" ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(31,62,140,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a2 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#667089;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Rolling 12 months</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#16213E'>" & ( FORMAT ( DIVIDE ( [Value R12], 1000000 ), "$#,0.0" ) & "M" ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n2 & "'>" & ( "to " & FORMAT ( [Latest Data Date], "mmm yyyy" ) ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(31,62,140,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a3 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#667089;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Average price per kg</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#16213E'>" & ( FORMAT ( [Price per Kg], "$#,0.00" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n3 & "'>" & ( VAR _d = DIVIDE ( [Price per Kg] - [Price per Kg LY], [Price per Kg LY] ) RETURN IF ( ISBLANK ( [Price per Kg LY] ), "no prior year", IF ( _d >= 0, "▲ ", "▼ " ) & FORMAT ( ABS ( _d ), "0.0%" ) & " vs LY" ) ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(31,62,140,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a4 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#667089;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Supplier countries</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#16213E'>" & ( FORMAT ( [Supplier Countries], "0" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n4 & "'>" & ( VAR _d = [Supplier Countries] - [Supplier Countries LY] RETURN IF ( _d >= 0, "▲ ", "▼ " ) & FORMAT ( ABS ( _d ), "0" ) & " vs LY" ) & "</div></div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 5db19283-5b69-57b5-8f95-b8756e84dde5
+
+	measure 'KPI Suppliers' =
+			VAR _a0 = ( IF ( [Top Supplier Share %] > 0.35, "#E7A923", "#1F3E8C" ) )
+			VAR _n0 = ( "#667089" )
+			VAR _a1 = ( "#1F3E8C" )
+			VAR _n1 = ( "#667089" )
+			VAR _a2 = ( IF ( [HHI] > 2500, "#D1495B", IF ( [HHI] > 1500, "#E7A923", "#2E9E6B" ) ) )
+			VAR _n2 = ( "#667089" )
+			VAR _a3 = ( "#1F3E8C" )
+			VAR _n3 = ( "#667089" )
+			RETURN
+			    "<div style='display:flex;gap:12px;height:78px;box-sizing:border-box;overflow:hidden;padding-bottom:2px;font-family:Segoe UI,sans-serif'>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(31,62,140,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a0 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#667089;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Top supplier share</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#16213E'>" & ( FORMAT ( [Top Supplier Share %], "0.0%" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n0 & "'>" & ( [Top Supplier] ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(31,62,140,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a1 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#667089;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Top 3 share</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#16213E'>" & ( FORMAT ( [Top 3 Share %], "0.0%" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n1 & "'>" & ( "of import value" ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(31,62,140,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a2 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#667089;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Concentration (HHI)</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#16213E'>" & ( FORMAT ( [HHI], "#,0" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n2 & "'>" & ( [HHI Label] ) & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:10px;padding:8px 14px 7px;box-shadow:0 1px 3px rgba(31,62,140,.10);display:flex;flex-direction:column;justify-content:space-between;border-top:3px solid " & _a3 & "'><div style='font-size:10.5px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:#667089;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>Transport mode reported</div><div style='font-size:24px;font-weight:700;line-height:1.1;white-space:nowrap;color:#16213E'>" & ( FORMAT ( [Mode Coverage %], "0%" ) ) & "</div><div style='font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n3 & "'>" & ( FORMAT ( [Air Share %], "0%" ) & " of it by air" ) & "</div></div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 62700270-72d8-51d1-92b1-2251213c28d0
+
+	measure 'Insight Market' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#1F3E8C;color:#E3E9F8;border-radius:10px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>What the data says</div>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "Egypt imported " & "<b style='color:#F3C14B'>" & FORMAT ( DIVIDE ( [Value YTD CY], 1000000 ), "$#,0.0" ) & "M" & "</b>" & " of antibiotic medicaments (HS 300420) in " & [Period Label] & ", " & IF ( [Value YoY %] >= 0, "up ", "down " ) & "<b style='color:#F3C14B'>" & FORMAT ( ABS ( [Value YoY %] ), "0.0%" ) & "</b>" & " on the same months last year." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b style='color:#F3C14B'>" & [Top Supplier] & "</b>" & " and " & "<b style='color:#F3C14B'>" & [Second Supplier] & "</b>" & " supply " & "<b style='color:#F3C14B'>" & FORMAT ( [Top 2 Share %], "0%" ) & "</b>" & " of the value. The market is " & [HHI Label] & " (HHI " & FORMAT ( [HHI], "#,0" ) & ")." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "The average price is " & "<b style='color:#F3C14B'>" & FORMAT ( [Price per Kg], "$#,0.00" ) & "</b>" & " per kg. Rolling 12-month value is " & "<b style='color:#F3C14B'>" & FORMAT ( DIVIDE ( [Value R12], 1000000 ), "$#,0.0" ) & "M" & "</b>" & "." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: 5bbd4cf0-e10d-5665-89b3-467d4f5ec74a
+
+	measure 'Insight Suppliers' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#1F3E8C;color:#E3E9F8;border-radius:10px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>Concentration risk</div>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "If " & [Top Supplier] & " stopped shipping, " & FORMAT ( [Top Supplier Share %], "0%" ) & " of supply would need a new source. Tiers: <b>Strategic</b> 65+, <b>Develop</b> 40–64, <b>Monitor</b> below 40." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: 085dc37f-b8a5-5bcb-a356-4e71b4a27003
+
+	measure 'DQ Summary' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#1F3E8C;color:#E3E9F8;border-radius:10px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>Why the totals were fixed</div>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "The Comtrade file holds <b>total rows and breakdown rows</b> (by customs procedure, transport mode and partner area) for the same country and month." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "Adding up every row gives " & "<b style='color:#F3C14B'>" & FORMAT ( MAX ( DQ_Source[RawValue] ) / 1000000, "$#,0" ) & "M" & "</b>" & ", which is " & "<b style='color:#F3C14B'>" & FORMAT ( [Overstatement Factor], "0.0" ) & "×" & "</b>" & " the real value of " & "<b style='color:#F3C14B'>" & FORMAT ( MAX ( DQ_Source[TotalValue] ) / 1000000, "$#,0" ) & "M" & "</b>" & ". This report keeps only the total rows." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "Transport-mode detail is kept in its own table, so it can never be added to the totals by mistake." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Freshness:</b> " & [Last Refresh] & ". Latest month in the file: " & FORMAT ( MAX ( DQ_Source[LastPeriod] ), "mmmm yyyy" ) & "." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: 4e6a27a2-cf1f-59bf-9424-40b100ec039d
+
+	column Placeholder
+		dataType: string
+		isHidden
+		lineageTag: 473fb9bf-fc61-5ed2-b3cb-7ebad2168da8
+		summarizeBy: none
+		sourceColumn: Placeholder
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Measures = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Placeholder = text], {})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

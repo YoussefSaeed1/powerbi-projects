@@ -1,0 +1,50 @@
+/// Counts of rows removed during cleaning.
+table DQ_Source
+	lineageTag: 030fdcbe-43f3-5f5b-8e49-23d414696a40
+	isHidden
+
+	column RawRows
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 67c8e307-9132-5937-98b5-b62ce5ea8a87
+		summarizeBy: none
+		sourceColumn: RawRows
+
+		annotation SummarizationSetBy = Automatic
+
+	column DuplicateIDs
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: be67ff79-261b-54dc-a10a-7c4022f3c663
+		summarizeBy: none
+		sourceColumn: DuplicateIDs
+
+		annotation SummarizationSetBy = Automatic
+
+	column InvalidAreaOrPrice
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 4d97cdd7-4cee-5d1f-92ee-bb7db4df9f99
+		summarizeBy: none
+		sourceColumn: InvalidAreaOrPrice
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DQ_Source = m
+		mode: import
+		source =
+				let
+				    Source = Listings_Raw,
+				    Dedup = Table.Distinct(Source, {"ListingID"}),
+				    Result = #table(type table [RawRows = Int64.Type, DuplicateIDs = Int64.Type, InvalidAreaOrPrice = Int64.Type],
+				        {{ Table.RowCount(Source), Table.RowCount(Source) - Table.RowCount(Dedup),
+				           Table.RowCount(Table.SelectRows(Dedup, each [Area_m2] = null or [Area_m2] <= 0 or [Price_EGP] = null or [Price_EGP] <= 0)) }})
+				in
+				    Result
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

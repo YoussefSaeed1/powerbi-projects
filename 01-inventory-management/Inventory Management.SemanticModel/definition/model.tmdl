@@ -1,0 +1,37 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["DataFilePath","_Measures","Fact_Sales","Fact_Inventory","Fact_PurchaseOrders","Products","Suppliers","Warehouses","Dim_Date","Breakdown","Trend Metric","Contribution Metric","Top N","Ops Metric","Supplier Metric","Warehouse Metric","Health View","_Refresh","Security_WarehouseAccess","Dim_DQ"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table _Measures
+ref table Fact_Sales
+ref table Fact_Inventory
+ref table Fact_PurchaseOrders
+ref table Products
+ref table Suppliers
+ref table Warehouses
+ref table Dim_Date
+ref table Breakdown
+ref table 'Trend Metric'
+ref table 'Contribution Metric'
+ref table 'Top N'
+ref table 'Ops Metric'
+ref table 'Supplier Metric'
+ref table 'Warehouse Metric'
+ref table 'Health View'
+ref table _Refresh
+ref table Security_WarehouseAccess
+ref table Dim_DQ
+
+ref cultureInfo en-US
+

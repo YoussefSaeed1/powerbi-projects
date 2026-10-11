@@ -1,0 +1,33 @@
+/// The four stages of the process, for the 'where the days go' chart.
+table Dim_Stage
+	lineageTag: 5ec981d9-509b-5d1b-8ac4-fbf448f5e697
+
+	column Stage
+		dataType: string
+		lineageTag: 37a27dc0-766e-5438-b111-6daf77f21627
+		summarizeBy: none
+		sourceColumn: Stage
+		sortByColumn: 'Stage Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Stage Order'
+		dataType: int64
+		isHidden
+		lineageTag: adf37863-94e5-5aa9-a7ae-d6e6ef6daabf
+		summarizeBy: none
+		sourceColumn: Stage Order
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Stage = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Stage" = text, #"Stage Order" = Int64.Type], {{"PR → PO", 1}, {"PO → receipt", 2}, {"Receipt → invoice", 3}, {"Invoice → payment", 4}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

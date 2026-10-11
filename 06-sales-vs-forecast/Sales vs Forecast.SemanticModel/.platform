@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "Sales vs Forecast"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "8112bd64-261b-5dcc-ad9f-cd87128bd603"
+  }
+}

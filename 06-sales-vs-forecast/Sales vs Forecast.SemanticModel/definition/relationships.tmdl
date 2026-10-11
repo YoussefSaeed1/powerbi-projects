@@ -1,0 +1,27 @@
+relationship 87c5a7a5-e538-516a-b4ab-93c37bdb0bf0
+	fromColumn: Fact_Sales.MonthStart
+	toColumn: Dim_Date.Date
+
+relationship d79da75c-fd0c-56c8-bab9-e87c421c7056
+	fromColumn: Fact_Sales.ProductKey
+	toColumn: Dim_Product.ProductKey
+
+relationship 322c0654-3b3f-589a-b74e-8a070c845f0d
+	fromColumn: Fact_Sales.Country
+	toColumn: Dim_Geography.Country
+
+relationship ccc074c7-4cd7-5d50-8651-20b3205603e0
+	fromColumn: Fact_Forecast.MonthStart
+	toColumn: Dim_Date.Date
+
+relationship 94fde430-dee5-5af1-8a52-48d5a97c55ff
+	fromColumn: Fact_Forecast.Country
+	toColumn: Dim_Geography.Country
+
+relationship 61a74f06-0bd9-5ee4-ab60-7e7a504b710a
+	fromColumn: Fact_Forecast.Category
+	toColumn: Dim_Category.Category
+
+relationship 2343ce94-a8f6-5ca5-9f7a-73c9fd758811
+	fromColumn: Dim_Product.Category
+	toColumn: Dim_Category.Category

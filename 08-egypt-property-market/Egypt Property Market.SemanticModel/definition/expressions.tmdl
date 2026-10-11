@@ -1,0 +1,23 @@
+/// Full path of the data file. Change it here once if you move the folder.
+expression DataFilePath = "C:\Users\RTX\Desktop\Portfolio Dashboards\Egypt Property Market\Egypt_Listings_Sample.xlsx" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 76883bc4-a0d3-572c-bfea-2eaed0383a73
+
+	annotation PBI_ResultType = Text
+
+	annotation PBI_NavigationStepName = Navigation
+
+/// Raw listings sheet (not loaded). Cleaning happens in Fact_Listings.
+expression Listings_Raw =
+		let
+		    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+		    Sheet = Source{[Item="Listings",Kind="Sheet"]}[Data],
+		    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+		    Typed = Table.TransformColumnTypes(Promoted, {{"ListingID", type text}, {"City", type text}, {"District", type text}, {"PropertyType", type text}, {"Bedrooms", Int64.Type}, {"Bathrooms", Int64.Type}, {"Area_m2", type number}, {"Price_EGP", type number}, {"Furnished", type logical}, {"Compound", type logical}, {"ListedOn", type date}})
+		in
+		    Typed
+	lineageTag: b43e4ee3-3a67-5e40-bdaf-a0e10e1dec11
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

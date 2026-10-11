@@ -1,0 +1,46 @@
+table Breakdown
+	lineageTag: fa969bd3-2917-5c16-a1ca-b0c86b48ca5b
+
+	column Item
+		dataType: string
+		lineageTag: 8127a20f-05c8-50e3-bb1a-c6c179d3cf77
+		summarizeBy: none
+		sourceColumn: Item
+
+		annotation SummarizationSetBy = Automatic
+
+	column Type
+		dataType: string
+		lineageTag: 78c5d787-e3bf-59e5-9583-5498fea412d0
+		summarizeBy: none
+		sourceColumn: Type
+		sortByColumn: 'Type Sort'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Type Sort'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 0b56e5f9-ade3-5903-9b96-63b9d7adaf48
+		summarizeBy: none
+		sourceColumn: Type Sort
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Breakdown = m
+		mode: import
+		source =
+				let
+				    Cats = Table.RenameColumns(Table.Distinct(Table.SelectColumns(Products, {"Category"})), {{"Category", "Item"}}),
+				    CatRows = Table.AddColumn(Cats, "Type", each "Category", type text),
+				    Chans = Table.RenameColumns(Table.Distinct(Table.SelectColumns(Fact_Sales, {"Channel"})), {{"Channel", "Item"}}),
+				    ChanRows = Table.AddColumn(Chans, "Type", each "Channel", type text),
+				    Combined = Table.Combine({CatRows, ChanRows}),
+				    WithSort = Table.AddColumn(Combined, "Type Sort", each if [Type] = "Category" then 1 else 2, Int64.Type),
+				    Typed = Table.TransformColumnTypes(WithSort, {{"Item", type text}, {"Type", type text}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "Pharmaceutical Trade Intelligence - Egypt"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "2615ce85-62aa-54fc-9b23-ec5f2132708d"
+  }
+}

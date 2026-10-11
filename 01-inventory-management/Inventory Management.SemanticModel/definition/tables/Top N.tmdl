@@ -1,0 +1,32 @@
+table 'Top N'
+	lineageTag: b0ac1289-3268-5968-a595-e2155b3b468d
+
+	column Top
+		dataType: string
+		lineageTag: 691f8001-9f24-5acf-8e08-dd5448ec078f
+		summarizeBy: none
+		sourceColumn: Top
+		sortByColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	column Value
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 0774b244-64e7-5d1d-bd60-61bc10cd62da
+		summarizeBy: none
+		sourceColumn: Value
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'Top N' = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Top" = text, #"Value" = Int64.Type], {{"5", 5}, {"10", 10}, {"15", 15}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
