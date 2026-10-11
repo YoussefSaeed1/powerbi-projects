@@ -6,7 +6,7 @@
 
 ![E‑Commerce Sales & Profit](images/ecommerce.jpg)
 
-> **Data:** the original training workbook, included as `E-commerce project.xlsx`.
+> **Data:** the training workbook, included as `E-commerce project.xlsx`.
 
 ## Key findings
 
@@ -16,7 +16,7 @@
 
 ## About the report
 
-Rebuilt from the original workbook. Pages: Overview, Profit drivers (discount bands, region × category heatmap, customer segments) and Data Quality & Governance. Fixed measures (orders, discount), one staging query instead of copied queries, row-level security by area manager.
+Built on the training workbook. Pages: Overview, Profit drivers (discount bands, region × category heatmap, customer segments) and Data Quality & Governance. One staging query feeds every table, with row-level security by area manager.
 
 ## Report pages
 
@@ -44,19 +44,18 @@ This folder is a Power BI Project (PBIP): the report and semantic model are save
 
 **Business question:** which regions sell well but don't make money?
 
-A rebuild of my 2024 E-Commerce report as a documented Power BI project, using the original workbook (`E-commerce project.xlsx`, January to June 2015).
+My 2024 E-Commerce report as a documented Power BI project, built on the training workbook (`E-commerce project.xlsx`, January to June 2015).
 
 ### Headline figures
 - Sales **$1.92M**, profit **$224.1K**, margin **11.6%**, 1,365 orders from 1,130 customers.
 - South sold $357K but lost $14.4K; its discounts match the other regions, the loss comes from technology.
 - Lines discounted 9% or more run at a -5.0% margin.
 
-### What changed from the first version
-- **Number of Orders** returned the returned-order IDs from the Returns sheet; it is now distinct invoice orders.
-- **Total Discount** added discount rates together and showed them as dollars; it is now **Average Discount**.
-- **Profit Loss Due To Returns** subtracted all other profit from returned-order profit; removed. Only a handful of the returned orders exist in the invoices, so returns are a data quality check now.
-- The INVOICES query was copied in full for the customer table; now one staging query feeds every table, and the hard-coded `E:\` path is the `DataFilePath` parameter.
-- 8 exact duplicate rows removed, order priority trimmed, blanks set to *Not Specified*, a proper marked date table.
+### How the data is handled
+- **Orders** are distinct invoice orders, and **Average Discount** is the mean discount rate.
+- Only a handful of the returned orders exist in the invoices, so returns are a data quality check.
+- One staging query feeds every table, and the file path is the `DataFilePath` parameter.
+- 8 exact duplicate rows removed, order priority trimmed, blanks set to *Not Specified*, a marked date table.
 
 ### Pages
 1. **Overview**: KPIs, sales and profit by month, profit by region (with the area manager), best and worst sub-categories, insights.

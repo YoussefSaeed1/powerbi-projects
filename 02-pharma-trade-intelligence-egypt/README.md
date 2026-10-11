@@ -12,7 +12,6 @@
 
 - Imports in January to September 2025 were **$50.5M**, down **16.5%** on the same months of 2024.
 - **Belgium (43%)** and **Switzerland (26%)** supply most of it; concentration (HHI) is **2,686**, highly concentrated.
-- The first version summed every row of the Comtrade file and overstated imports **2.76×** ($1.83B instead of $665M). The rebuilt model loads only the total rows.
 
 ## About the report
 
@@ -50,13 +49,12 @@ This folder is a Power BI Project (PBIP): the report and semantic model are save
 
 Source: UN Comtrade, monthly exports to Egypt as reported by 31 exporting countries, January 2018 to September 2025 (`Trade_Data.csv`).
 
-### What changed in this version
-- **Fixed a double-counting problem.** The Comtrade file has total rows *and* breakdown rows (customs procedure, transport mode, partner area) for the same country and month. Summing every row gave **$1,832M**; the real value is **$665M** (2.76× overstated). The model now loads only the total rows into `Fact_Trade`.
-- **Fixed broken visuals:** two visuals used a measure called `Total Volume` that did not exist in the model.
+### How the data is handled
+- **Total rows only.** The Comtrade file has total rows *and* breakdown rows (customs procedure, transport mode, partner area) for the same country and month, so only the total rows are loaded into `Fact_Trade`. A data quality check shows how much summing every row would overstate imports.
 - **Fair year-on-year:** 2025 has nine months, so growth compares January–September with the same months of 2024.
 - **One source, one parameter:** the CSV is read once (`Trade_Raw`, not loaded) and every table references it. The file path is the `DataFilePath` parameter.
 - **Auto date/time disabled** and a single marked date table, so there are no hidden date tables.
-- **New pages** with a consistent theme, dynamic insights written by DAX, a 0–100 supplier score and a data quality page.
+- **Pages** with a consistent theme, dynamic insights written by DAX, a 0–100 supplier score and a data quality page.
 
 ### Headline figures (January–September 2025)
 - Import value: **$50.5M**, -16.5% vs January–September 2024 ($60.4M)

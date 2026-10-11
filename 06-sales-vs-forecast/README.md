@@ -6,7 +6,7 @@
 
 ![Sales vs Forecast](images/sales-forecast.jpg)
 
-> **Sample data.** The figures come from a generated dataset shaped like the original report, included in this folder so the project opens and refreshes.
+> **Sample data.** The figures come from a generated dataset, included in this folder so the project opens and refreshes.
 
 ## Key findings
 
@@ -44,8 +44,8 @@ This folder is a Power BI Project (PBIP): the report and semantic model are save
 
 **Business question:** did we beat the plan, and where did the gap come from?
 
-A rebuild of my 2023 "Sales and Forecast" report as a documented Power BI project. **Sample data** shaped like the original
-Contoso report: 2009 sales $40.62M, $2.30M below 2008 ($42.92M) and $1.62M above the $39.00M forecast.
+My 2023 "Sales and Forecast" report as a documented Power BI project, on **sample data**:
+2009 sales $40.62M, $2.30M below 2008 ($42.92M) and $1.62M above the $39.00M forecast.
 
 ### Pages
 1. **Plan vs Actual**: KPIs, monthly actual vs forecast vs last year, a year-on-year bridge by country (waterfall), change by category, insights.

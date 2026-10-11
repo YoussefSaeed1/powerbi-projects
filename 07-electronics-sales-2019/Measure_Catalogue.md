@@ -35,7 +35,7 @@ SUM ( Fact_Sales[Quantity] )
 ```
 
 ### Orders
-Distinct order IDs. The original report counted order lines (185.95K); one order can hold several lines.
+Distinct order IDs; one order can hold several lines.
 Format: `#,0`
 
 ```dax

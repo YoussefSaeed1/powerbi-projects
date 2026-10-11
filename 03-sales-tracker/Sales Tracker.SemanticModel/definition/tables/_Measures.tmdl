@@ -261,7 +261,7 @@ table _Measures
 		displayFolder: Data Quality
 		lineageTag: ea7402aa-daca-5874-b354-ecadcc21ca9d
 
-	/// Units sold vs units returned and the return rate, for the HTML Content visual. Replaces the old funnel that mixed counts with dollars.
+	/// Units sold vs units returned and the return rate, for the HTML Content visual.
 	measure 'Units Sold vs Returned' =
 			VAR _sold = [Total Quantity]
 			VAR _ret = [Total Returns]

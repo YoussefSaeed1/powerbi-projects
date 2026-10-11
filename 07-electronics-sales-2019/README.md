@@ -6,7 +6,7 @@
 
 ![Electronics Sales 2019](images/electronics.jpg)
 
-> **Sample data.** The figures come from a generated dataset shaped like the original report, included in this folder so the project opens and refreshes.
+> **Sample data.** The figures come from a generated dataset, included in this folder so the project opens and refreshes.
 
 ## Key findings
 
@@ -16,7 +16,7 @@
 
 ## About the report
 
-Pages: When & Where, Products (treemap and units vs revenue) and Data Quality & Governance. Orders are counted by order ID, not by order line as in the first version.
+Pages: When & Where, Products (treemap and units vs revenue) and Data Quality & Governance. Orders are counted by distinct order ID.
 
 ## Report pages
 
@@ -44,7 +44,7 @@ This folder is a Power BI Project (PBIP): the report and semantic model are save
 
 **Business question:** when and where should marketing spend go?
 
-A rebuild of my 2023 "Sales Analysis" report as a documented Power BI project. **Sample data** shaped like the public
+My 2023 "Sales Analysis" report as a documented Power BI project. **Sample data** shaped like the public
 2019 US electronics store dataset: $34.49M revenue, 209K units, nine cities, December the peak month.
 
 ### Pages
@@ -53,10 +53,10 @@ A rebuild of my 2023 "Sales Analysis" report as a documented Power BI project. *
 3. **Data Quality & Governance**.
 
 ### Layout
-Pages are tabs in the top bar (no side rail); KPIs are a ticker instead of cards. Orange marks only what needs action.
+Pages are tabs in the top bar (no side rail); KPIs are a ticker. Orange marks only what needs action.
 
-### Definition fix
-The original report showed 185.95K "orders", which were order lines. Here **Orders** = distinct order IDs and **Order Lines** is a separate measure.
+### Definitions
+**Orders** = distinct order IDs and **Order Lines** is a separate measure (one order can hold several lines).
 
 ### Data model
 

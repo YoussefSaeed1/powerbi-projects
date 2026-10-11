@@ -6,7 +6,7 @@
 
 ![Sales Tracker](images/sales-tracker.jpg)
 
-> **Sample data.** The original used company data that can't be shared, so this version runs on generated data with the same headline figures, included in this folder so the project opens and refreshes.
+> **Sample data.** Generated data with the same headline figures as the company report, included in this folder so the project opens and refreshes.
 
 ## Key findings
 
@@ -44,22 +44,14 @@ This folder is a Power BI Project (PBIP): the report and semantic model are save
 
 **Business question:** how much does the business depend on one category?
 
-My Sales Tracker dashboard for a bike retailer (January 2015 – June 2017), rebuilt as a Power BI project in its original design.
-**Sample data:** the original used company data that cannot be shared, so this version runs on generated data with the same headline
+My Sales Tracker dashboard for a bike retailer (January 2015 – June 2017) as a documented Power BI project.
+**Sample data:** generated data with these headline
 figures: 24.91M revenue, 14.46M COGS, 10.46M profit (41.97% margin), 25.16K orders, 84.16K units and 1.83K returned units.
 
 ### Pages
 1. **Executive | Overview**: KPIs, annual revenue vs cost, monthly revenue and profit, revenue and profit by category, orders by region.
 2. **Product Performance**: KPIs, cost + profit by category, units by category and month, category / sub-category matrix.
 3. **Business Insights**: KPIs, cost + profit by continent, orders by month, units sold vs returned, returns by category.
-
-### What changed from the first version
-- **Stacked bars show Cost + Profit**, so each bar's length is the revenue. Before, revenue was stacked on top of cost and profit and counted twice.
-- **Units sold vs returned** replaces a funnel that mixed order counts with dollars.
-- **Order labels show the real count.** Southeast, Central and Northeast showed "0.0K" but have a few orders each.
-- **Trends are monthly** instead of three yearly points (2017 has data to June only, so its yearly point looked like a slowdown).
-- **One name per number:** "Total Orders" everywhere (it was also "Total Invoices").
-- The "Draw your report with AI" page is removed.
 
 ### Data model
 

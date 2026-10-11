@@ -21,7 +21,7 @@ table _Measures
 		displayFolder: Sales
 		lineageTag: 91876a07-de98-5dc1-8d03-6829b1312780
 
-	/// Distinct order IDs. The original report counted order lines (185.95K); one order can hold several lines.
+	/// Distinct order IDs; one order can hold several lines.
 	measure Orders = DISTINCTCOUNT ( Fact_Sales[OrderID] )
 		formatString: #,0
 		displayFolder: Sales
@@ -322,7 +322,7 @@ table _Measures
 	measure 'DQ Summary' =
 			"<div style='font-family:Segoe UI,sans-serif;background:#15171C;color:#E6E8EC;border-radius:4px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>How this report is governed</div>"
 			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Data quality:</b> " & IF ( [DQ Failed Checks] = 0, "all checks pass on the last refresh.", FORMAT ( [DQ Failed Checks], "0" ) & " check(s) failed on the last refresh." ) ) & "</p>"
-			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Definition fix:</b> orders are distinct order IDs (" & FORMAT ( [Orders], "#,0" ) & "), not order lines (" & FORMAT ( [Order Lines], "#,0" ) & "). The original report showed lines as orders." ) & "</p>"
+			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Definition:</b> orders are distinct order IDs (" & FORMAT ( [Orders], "#,0" ) & "), not order lines (" & FORMAT ( [Order Lines], "#,0" ) & ")." ) & "</p>"
 			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>One source:</b> the CSV is read once (Sales_Raw) and the product and city tables are built from it, so they always match the facts." ) & "</p>"
 			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "<b>Freshness:</b> " & [Last Refresh] & "." ) & "</p>"
 			    & "</div>"

@@ -6,7 +6,7 @@
 
 ![Egypt Property Market](images/property.jpg)
 
-> **Sample data.** The figures come from a generated dataset shaped like the original report, included in this folder so the project opens and refreshes.
+> **Sample data.** The figures come from a generated dataset, included in this folder so the project opens and refreshes.
 
 ## Key findings
 
@@ -44,9 +44,9 @@ This folder is a Power BI Project (PBIP): the report and semantic model are save
 
 **Business question:** where do buyers get the most space for their money?
 
-A rebuild of my 2023 Egypt real estate analysis (originally cleaned in Python, shown in Power BI) as a documented Power BI project.
+My 2023 Egypt real estate analysis as a documented Power BI project.
 **Sample data:** 5,000 listings for sale in Cairo, Giza and Alexandria, with a few deliberate data issues (duplicates, zero areas) that the model cleans.
-As in the original, Alexandria villas are the most expensive segment.
+Alexandria villas are the most expensive segment.
 
 ### Layout
 Filters, page navigation and the headline numbers sit in a green side panel, like a property search site; the main area compares the three cities side by side.

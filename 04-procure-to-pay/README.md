@@ -6,7 +6,7 @@
 
 ![Procure-to-Pay Performance](images/p2p.jpg)
 
-> **Sample data.** The figures come from a generated dataset shaped like the original report, included in this folder so the project opens and refreshes.
+> **Sample data.** The figures come from a generated dataset, included in this folder so the project opens and refreshes.
 
 ## Key findings
 

@@ -354,7 +354,7 @@ Format: `$#,0`
 ## Visuals
 
 ### Units Sold vs Returned
-Units sold vs units returned and the return rate, for the HTML Content visual. Replaces the old funnel that mixed counts with dollars.
+Units sold vs units returned and the return rate, for the HTML Content visual.
 
 ```dax
 VAR _sold = [Total Quantity]
