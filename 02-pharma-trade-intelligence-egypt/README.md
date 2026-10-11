@@ -1,6 +1,6 @@
 # Pharmaceutical Trade Intelligence, Egypt
 
-> **Business question:** Who supplies Egypt's antibiotic medicines, and how concentrated is that supply?
+> **Decision:** Should Egypt diversify its antibiotic sourcing beyond two supplier countries?
 
 `Market` · Feb 2026 · `Power BI` · `Power Query` · `DAX` · `Data quality`
 
@@ -45,7 +45,7 @@ This folder is a Power BI Project (PBIP): the report and semantic model are save
 
 ## Under the hood
 
-**Business question:** who supplies Egypt's antibiotic medicines (HS 300420), and how risky is that supply?
+**Decision:** Should Egypt diversify its antibiotic sourcing beyond two supplier countries?
 
 Source: UN Comtrade, monthly exports to Egypt as reported by 31 exporting countries, January 2018 to September 2025 (`Trade_Data.csv`).
 

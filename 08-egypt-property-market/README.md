@@ -1,6 +1,6 @@
 # Egypt Property Market
 
-> **Business question:** Where do buyers get the most space for their money?
+> **Decision:** Where does a buyer get the most space for their budget?
 
 `Market` · May 2023 · `Power BI` · `Power Query` · `DAX`
 
@@ -42,7 +42,7 @@ This folder is a Power BI Project (PBIP): the report and semantic model are save
 
 ## Under the hood
 
-**Business question:** where do buyers get the most space for their money?
+**Decision:** Where does a buyer get the most space for their budget?
 
 My 2023 Egypt real estate analysis as a documented Power BI project.
 **Sample data:** 5,000 listings for sale in Cairo, Giza and Alexandria, with a few deliberate data issues (duplicates, zero areas) that the model cleans.

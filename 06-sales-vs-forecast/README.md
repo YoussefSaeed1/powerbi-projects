@@ -1,6 +1,6 @@
 # Sales vs Forecast
 
-> **Business question:** Did 2009 beat the plan, and where did the gap come from?
+> **Decision:** How should next year's forecast be corrected, and for which countries?
 
 `Sales` · Oct 2023 · `Power BI` · `DAX` · `Forecasting`
 
@@ -42,7 +42,7 @@ This folder is a Power BI Project (PBIP): the report and semantic model are save
 
 ## Under the hood
 
-**Business question:** did we beat the plan, and where did the gap come from?
+**Decision:** How should next year's forecast be corrected, and for which countries?
 
 My 2023 "Sales and Forecast" report as a documented Power BI project, on **sample data**:
 2009 sales $40.62M, $2.30M below 2008 ($42.92M) and $1.62M above the $39.00M forecast.

@@ -1,6 +1,6 @@
 # Inventory Management
 
-> **Business question:** Revenue is up 21.8%, so why are stockouts rising?
+> **Decision:** Revenue is up 21.8% but stockouts are rising: which products need higher reorder points?
 
 `Operations` · Oct 2026 · `Power BI` · `DAX` · `Data modeling` · `Power Query` · `RLS`
 
@@ -48,7 +48,7 @@ This folder is a Power BI Project (PBIP): the report and semantic model are save
 
 ## Under the hood
 
-**Business question:** revenue is up 21.8%, so why are stockouts rising?
+**Decision:** Revenue is up 21.8% but stockouts are rising: which products need higher reorder points?
 
 UI inspired by Arbaz Ahmad's Inventory Management Dashboard (Microsoft Fabric Community); the data model, DAX and visuals were built independently.
 

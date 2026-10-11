@@ -1,6 +1,6 @@
 # Motor Insurance Portfolio
 
-> **Business question:** Is the motor book still profitable as claims get more expensive, and which customers are priced below their risk?
+> **Decision:** Which customer segments should be repriced, and by how much?
 
 `Insurance` · Jan 2026 · `Power BI` · `Power Query` · `DAX` · `RLS`
 
@@ -51,7 +51,7 @@ This folder is a Power BI Project (PBIP): the report and semantic model are save
 
 ## Under the hood
 
-**Business question:** is the motor book still profitable as claims get more expensive, and which customers are priced below their risk?
+**Decision:** Which customer segments should be repriced, and by how much?
 
 A motor insurance dashboard for a fictional insurer: 41,248 annual policies and their claims, 2023 to 2025, valued at 31 December 2025, in EGP.
 **Sample data:** generated with a fixed seed (`gen_data.py`), so every figure can be reproduced.

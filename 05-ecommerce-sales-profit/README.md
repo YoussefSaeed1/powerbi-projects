@@ -1,6 +1,6 @@
 # E‑Commerce Sales & Profit
 
-> **Business question:** Which regions sell well but don't make money?
+> **Decision:** Where should discounts be capped and pricing fixed to stop losing money?
 
 `Sales` · Aug 2024 · `Power BI` · `Power Query` · `DAX` · `RLS`
 
@@ -42,7 +42,7 @@ This folder is a Power BI Project (PBIP): the report and semantic model are save
 
 ## Under the hood
 
-**Business question:** which regions sell well but don't make money?
+**Decision:** Where should discounts be capped and pricing fixed to stop losing money?
 
 My 2024 E-Commerce report as a documented Power BI project, built on the training workbook (`E-commerce project.xlsx`, January to June 2015).
 

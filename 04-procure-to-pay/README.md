@@ -1,6 +1,6 @@
 # Procure-to-Pay Performance
 
-> **Business question:** Where does the procurement cycle lose time, and who buys off-contract?
+> **Decision:** Which suppliers and plants should we fix first to cut delays and off-contract buying?
 
 `Operations` · Jun 2025 · `Power BI` · `DAX` · `Governance` · `RLS`
 
@@ -50,7 +50,7 @@ This folder is a Power BI Project (PBIP): the report and semantic model are save
 
 ## Under the hood
 
-**Business question:** where does the procurement cycle lose time and money?
+**Decision:** Which suppliers and plants should we fix first to cut delays and off-contract buying?
 
 A five-page Power BI report that follows every purchase from requisition to payment for a fictional mid-size pharma
 manufacturer with four plants in Egypt. **All data is sample data** generated for this portfolio (seeded, reproducible).

@@ -1,6 +1,6 @@
 # Sales Tracker
 
-> **Business question:** How much does the business depend on one category?
+> **Decision:** Keep relying on bikes, or grow higher-margin accessories?
 
 `Sales` · Sep 2025 · `Power BI` · `DAX`
 
@@ -42,7 +42,7 @@ This folder is a Power BI Project (PBIP): the report and semantic model are save
 
 ## Under the hood
 
-**Business question:** how much does the business depend on one category?
+**Decision:** Keep relying on bikes, or grow higher-margin accessories?
 
 My Sales Tracker dashboard for a bike retailer (January 2015 – June 2017) as a documented Power BI project.
 **Sample data:** generated data with these headline

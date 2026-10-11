@@ -1,6 +1,6 @@
 # Electronics Sales 2019
 
-> **Business question:** When and where should marketing spend go?
+> **Decision:** When and where should marketing spend go?
 
 `Sales` · Sep 2023 · `Power BI` · `Power Query` · `DAX`
 
@@ -42,7 +42,7 @@ This folder is a Power BI Project (PBIP): the report and semantic model are save
 
 ## Under the hood
 
-**Business question:** when and where should marketing spend go?
+**Decision:** When and where should marketing spend go?
 
 My 2023 "Sales Analysis" report as a documented Power BI project. **Sample data** shaped like the public
 2019 US electronics store dataset: $34.49M revenue, 209K units, nine cities, December the peak month.
