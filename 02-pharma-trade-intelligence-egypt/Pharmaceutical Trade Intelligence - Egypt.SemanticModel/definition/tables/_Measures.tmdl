@@ -402,7 +402,7 @@ table _Measures
 		lineageTag: 085dc37f-b8a5-5bcb-a356-4e71b4a27003
 
 	measure 'DQ Summary' =
-			"<div style='font-family:Segoe UI,sans-serif;background:#1F3E8C;color:#E3E9F8;border-radius:10px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>Why the totals were fixed</div>"
+			"<div style='font-family:Segoe UI,sans-serif;background:#1F3E8C;color:#E3E9F8;border-radius:10px;padding:12px 16px;box-sizing:border-box;height:100%;'><div style='font-size:12.5px;font-weight:700;margin:0 0 8px;color:#FFFFFF'>Why only the total rows are used</div>"
 			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "The Comtrade file holds <b>total rows and breakdown rows</b> (by customs procedure, transport mode and partner area) for the same country and month." ) & "</p>"
 			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "Adding up every row gives " & "<b style='color:#F3C14B'>" & FORMAT ( MAX ( DQ_Source[RawValue] ) / 1000000, "$#,0" ) & "M" & "</b>" & ", which is " & "<b style='color:#F3C14B'>" & FORMAT ( [Overstatement Factor], "0.0" ) & "×" & "</b>" & " the real value of " & "<b style='color:#F3C14B'>" & FORMAT ( MAX ( DQ_Source[TotalValue] ) / 1000000, "$#,0" ) & "M" & "</b>" & ". This report keeps only the total rows." ) & "</p>"
 			    & "<p style='font-size:12px;line-height:1.45;margin:0 0 7px'>" & ( "Transport-mode detail is kept in its own table, so it can never be added to the totals by mistake." ) & "</p>"
