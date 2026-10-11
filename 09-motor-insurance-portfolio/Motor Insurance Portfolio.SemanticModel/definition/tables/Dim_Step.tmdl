@@ -1,0 +1,33 @@
+/// Steps of the premium-to-result waterfall.
+table Dim_Step
+	lineageTag: d18c0ed5-2946-577b-872c-f98a063f62fb
+
+	column Step
+		dataType: string
+		lineageTag: 0ad7f178-5602-5500-bf3a-d71df7a70af6
+		summarizeBy: none
+		sourceColumn: Step
+		sortByColumn: 'Step Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Step Order'
+		dataType: int64
+		isHidden
+		lineageTag: c3926e69-15bd-5c89-ab6f-50af77206293
+		summarizeBy: none
+		sourceColumn: Step Order
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Step = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Step" = text, #"Step Order" = Int64.Type], {{"Earned premium", 1}, {"Claims", 2}, {"Commission", 3}, {"Admin costs", 4}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

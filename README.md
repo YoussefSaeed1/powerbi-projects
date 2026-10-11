@@ -8,6 +8,7 @@ Every project is saved as a **Power BI Project (PBIP)**: the semantic model (TMD
 |---|---|---|---|
 | <img src="01-inventory-management/images/inventory.jpg" width="220"> | **[Inventory Management](01-inventory-management)** · 5 pages | Revenue is up 21.8%, so why are stockouts rising? | Power BI, DAX, RLS, Data quality |
 | <img src="02-pharma-trade-intelligence-egypt/images/pharma.jpg" width="220"> | **[Pharmaceutical Trade Intelligence, Egypt](02-pharma-trade-intelligence-egypt)** · 4 pages | Who supplies Egypt's antibiotic medicines, and how concentrated is that supply? | Power BI, Power Query, Data quality |
+| <img src="09-motor-insurance-portfolio/images/insurance.jpg" width="220"> | **[Motor Insurance Portfolio](09-motor-insurance-portfolio)** · 5 pages | Is the motor book still profitable, and which customers are priced below their risk? | Power BI, Power Query, DAX, RLS |
 | <img src="03-sales-tracker/images/sales-tracker.jpg" width="220"> | **[Sales Tracker](03-sales-tracker)** · 3 pages | How much does the business depend on one category? | Power BI, DAX |
 | <img src="04-procure-to-pay/images/p2p.jpg" width="220"> | **[Procure-to-Pay Performance](04-procure-to-pay)** · 5 pages | Where does the procurement cycle lose time, and who buys off-contract? | Power BI, DAX, RLS, Governance |
 | <img src="05-ecommerce-sales-profit/images/ecommerce.jpg" width="220"> | **[E‑Commerce Sales & Profit](05-ecommerce-sales-profit)** · 3 pages | Which regions sell well but don't make money? | Power BI, Power Query, DAX, RLS |

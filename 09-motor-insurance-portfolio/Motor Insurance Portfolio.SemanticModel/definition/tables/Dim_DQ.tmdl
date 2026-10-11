@@ -1,0 +1,41 @@
+/// Data quality rules.
+table Dim_DQ
+	lineageTag: 56d0c523-283c-5ceb-91b9-3e7a961fee59
+
+	column Check
+		dataType: string
+		lineageTag: ddc63b51-8784-5c65-98b1-eaf7413774db
+		summarizeBy: none
+		sourceColumn: Check
+		sortByColumn: 'Check Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Check Order'
+		dataType: int64
+		isHidden
+		lineageTag: 39013dce-883a-55a8-9e7d-9d494de42f16
+		summarizeBy: none
+		sourceColumn: Check Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rule
+		dataType: string
+		lineageTag: 0b81f457-2d10-5da0-a003-070528e22fa7
+		summarizeBy: none
+		sourceColumn: Rule
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_DQ = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Check" = text, #"Check Order" = Int64.Type, #"Rule" = text], {{"Policy rows loaded", 1, "Row count of the Policies sheet"}, {"Claim rows loaded", 2, "Row count of the Claims sheet"}, {"Duplicate claim rows", 3, "Same claim loaded twice: removed"}, {"Claims outside the policy period", 4, "Loss date between start and end: excluded"}, {"Region written differently", 5, "e.g. CAIRO vs Cairo: trimmed and capitalised"}, {"Missing driver birth year", 6, "Shown as the Unknown age band"}, {"Claims with unknown policy", 7, "Every claim matches a policy"}, {"Negative paid amounts", 8, "Paid ≥ 0"}, {"Renewals of unknown policies", 9, "RenewalOf exists in Policies"}, {"Latest loss date", 10, "Freshness"}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

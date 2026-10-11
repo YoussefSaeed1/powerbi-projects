@@ -1,0 +1,54 @@
+/// Full path of the data file. Change it here once if you move the folder.
+expression DataFilePath = "C:\Users\RTX\Desktop\Portfolio Dashboards\Motor Insurance Portfolio\Motor_Insurance_Sample.xlsx" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 5ecdb53f-924b-54e1-b385-3006c88b74cb
+
+	annotation PBI_ResultType = Text
+
+	annotation PBI_NavigationStepName = Navigation
+
+/// Policies as they are in the workbook (not loaded).
+expression Policies_Raw =
+		let
+		    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+		    Sheet = Source{[Item="Policies",Kind="Sheet"]}[Data],
+		    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+		    Typed = Table.TransformColumnTypes(Promoted, {{"PolicyID", type text}, {"CustomerID", Int64.Type}, {"RenewalOf", type text}, {"StartDate", type date}, {"EndDate", type date}, {"Product", type text}, {"Channel", type text}, {"Region", type text}, {"VehicleType", type text}, {"VehicleYear", Int64.Type}, {"DriverBirthYear", Int64.Type}, {"SumInsured", type number}, {"GrossPremium", type number}, {"Commission", type number}})
+		in
+		    Typed
+	lineageTag: 130177e6-ad85-5db8-a12a-723256d1852e
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+/// Claims as they are in the workbook (not loaded).
+expression Claims_Raw =
+		let
+		    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+		    Sheet = Source{[Item="Claims",Kind="Sheet"]}[Data],
+		    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+		    Typed = Table.TransformColumnTypes(Promoted, {{"ClaimID", type text}, {"PolicyID", type text}, {"LossDate", type date}, {"ReportDate", type date}, {"ClaimType", type text}, {"Status", type text}, {"Paid", type number}, {"Reserve", type number}})
+		in
+		    Typed
+	lineageTag: 4b024f9e-bea9-5d40-8ed2-f31f55a6bfdb
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+/// Claims with exact duplicates removed and a flag for loss dates inside the policy period (not loaded).
+expression Claims_Checked =
+		let
+		    Source = Table.Distinct(Claims_Raw),
+		    Cover = Table.SelectColumns(Policies_Raw, {"PolicyID", "StartDate", "EndDate"}),
+		    Joined = Table.NestedJoin(Source, {"PolicyID"}, Cover, {"PolicyID"}, "P", JoinKind.LeftOuter),
+		    Expanded = Table.ExpandTableColumn(Joined, "P", {"StartDate", "EndDate"}, {"CoverStart", "CoverEnd"}),
+		    Flagged = Table.AddColumn(Expanded, "InCover", each [CoverStart] <> null and [LossDate] >= [CoverStart] and [LossDate] <= [CoverEnd], type logical)
+		in
+		    Flagged
+	lineageTag: 31a92aee-26ef-5140-8417-fed7e0d551b3
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

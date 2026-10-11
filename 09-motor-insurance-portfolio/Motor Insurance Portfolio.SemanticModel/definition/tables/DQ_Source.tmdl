@@ -1,0 +1,117 @@
+/// Counts used by the data quality page.
+table DQ_Source
+	lineageTag: c0c5153a-8fd6-5da1-9439-1f43654407e3
+	isHidden
+
+	column PolicyRows
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 828e82c5-16c4-5636-aea7-d82a2839adbf
+		summarizeBy: none
+		sourceColumn: PolicyRows
+
+		annotation SummarizationSetBy = Automatic
+
+	column ClaimRows
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 0655c267-09bc-57b2-96a8-fe7d1c985ae5
+		summarizeBy: none
+		sourceColumn: ClaimRows
+
+		annotation SummarizationSetBy = Automatic
+
+	column DuplicateClaims
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 9a16c613-0b98-5d7c-b57d-7318f0839875
+		summarizeBy: none
+		sourceColumn: DuplicateClaims
+
+		annotation SummarizationSetBy = Automatic
+
+	column OutsideCover
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 6313f7be-38b4-5b22-9944-77906da63e2f
+		summarizeBy: none
+		sourceColumn: OutsideCover
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnknownPolicy
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 4c782e25-cc25-5dd8-afab-bafcff580727
+		summarizeBy: none
+		sourceColumn: UnknownPolicy
+
+		annotation SummarizationSetBy = Automatic
+
+	column MessyRegion
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: dcec127d-550d-5ff6-9316-cc56818a6664
+		summarizeBy: none
+		sourceColumn: MessyRegion
+
+		annotation SummarizationSetBy = Automatic
+
+	column MissingBirthYear
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: c85e27c2-b195-577c-904c-67098fdfec47
+		summarizeBy: none
+		sourceColumn: MissingBirthYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column NegativePaid
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: dfd759de-4410-5694-826b-03be7db0765e
+		summarizeBy: none
+		sourceColumn: NegativePaid
+
+		annotation SummarizationSetBy = Automatic
+
+	column UnknownRenewal
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 8774d64d-94fb-5140-b45d-d63f0ab713cf
+		summarizeBy: none
+		sourceColumn: UnknownRenewal
+
+		annotation SummarizationSetBy = Automatic
+
+	partition DQ_Source = m
+		mode: import
+		source =
+				let
+				    P = Policies_Raw,
+				    C = Claims_Raw,
+				    Checked = Claims_Checked,
+				    Ids = List.Buffer(P[PolicyID]),
+				    Result = #table(type table [PolicyRows = Int64.Type, ClaimRows = Int64.Type, DuplicateClaims = Int64.Type, OutsideCover = Int64.Type, UnknownPolicy = Int64.Type, MessyRegion = Int64.Type, MissingBirthYear = Int64.Type, NegativePaid = Int64.Type, UnknownRenewal = Int64.Type],
+				        {{ Table.RowCount(P), Table.RowCount(C), Table.RowCount(C) - Table.RowCount(Table.Distinct(C)),
+				           Table.RowCount(Table.SelectRows(Checked, each [CoverStart] <> null and not [InCover])),
+				           Table.RowCount(Table.SelectRows(Checked, each [CoverStart] = null)),
+				           Table.RowCount(Table.SelectRows(P, each [Region] <> Text.Proper(Text.Trim([Region])))),
+				           Table.RowCount(Table.SelectRows(P, each [DriverBirthYear] = null)),
+				           Table.RowCount(Table.SelectRows(C, each [Paid] < 0)),
+				           Table.RowCount(Table.SelectRows(P, each [RenewalOf] <> null and not List.Contains(Ids, [RenewalOf]))) }})
+				in
+				    Result
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

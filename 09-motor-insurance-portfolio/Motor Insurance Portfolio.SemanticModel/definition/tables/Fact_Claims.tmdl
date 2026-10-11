@@ -1,0 +1,105 @@
+/// One row per claim inside its policy period. Incurred = paid + reserve.
+table Fact_Claims
+	lineageTag: 76fc9444-e8e8-5c9b-95b0-3d13186a2aa6
+
+	column ClaimID
+		dataType: string
+		isKey
+		lineageTag: d8aa3955-5381-5685-98f0-aa15468e5b27
+		summarizeBy: none
+		sourceColumn: ClaimID
+
+		annotation SummarizationSetBy = Automatic
+
+	column PolicyID
+		dataType: string
+		isHidden
+		lineageTag: 3e9001a9-7dd7-5280-bb0f-1c9869613488
+		summarizeBy: none
+		sourceColumn: PolicyID
+
+		annotation SummarizationSetBy = Automatic
+
+	column LossDate
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: cb77f640-b09c-5969-827a-2a725c64551b
+		summarizeBy: none
+		sourceColumn: LossDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column ReportDate
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: 6dea6829-d1b2-5ea2-b32a-d228e295d309
+		summarizeBy: none
+		sourceColumn: ReportDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column ClaimType
+		dataType: string
+		lineageTag: 8265a29a-d453-578c-87b0-339746948c06
+		summarizeBy: none
+		sourceColumn: ClaimType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Status
+		dataType: string
+		lineageTag: 1d5ae27d-5419-53f9-a5ee-b51ab8f7f051
+		summarizeBy: none
+		sourceColumn: Status
+
+		annotation SummarizationSetBy = Automatic
+
+	column Paid
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: 86d20c99-607d-52ca-9516-f42464b01348
+		summarizeBy: none
+		sourceColumn: Paid
+
+		annotation SummarizationSetBy = Automatic
+
+	column Reserve
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: 10d22d5f-3a1d-5c1d-b0dd-d93c24c55acb
+		summarizeBy: none
+		sourceColumn: Reserve
+
+		annotation SummarizationSetBy = Automatic
+
+	column Incurred
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: 903cfe4d-45e3-588b-bada-d68b71d990be
+		summarizeBy: none
+		sourceColumn: Incurred
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Claims = m
+		mode: import
+		source =
+				let
+				    Source = Table.SelectRows(Claims_Checked, each [InCover] = true),
+				    Incurred = Table.AddColumn(Source, "Incurred", each [Paid] + [Reserve], type number),
+				    Kept = Table.SelectColumns(Incurred, {"ClaimID", "PolicyID", "LossDate", "ReportDate", "ClaimType", "Status", "Paid", "Reserve", "Incurred"})
+				in
+				    Kept
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

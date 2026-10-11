@@ -1,0 +1,73 @@
+{
+  "name": "Motor Insurance Portfolio",
+  "dataColors": [
+    "#14213D",
+    "#B8B0A0",
+    "#E76F51",
+    "#2A9D8F",
+    "#F4A261",
+    "#6B7280",
+    "#8DA9C4",
+    "#E9C46A"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#14213D",
+  "tableAccent": "#14213D",
+  "textClasses": {
+    "label": {
+      "fontSize": 9,
+      "color": "#14213D"
+    },
+    "callout": {
+      "fontSize": 26,
+      "color": "#14213D"
+    },
+    "title": {
+      "fontFace": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif",
+      "fontSize": 11,
+      "color": "#14213D"
+    },
+    "header": {
+      "color": "#14213D"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "show": false
+          }
+        ],
+        "border": [
+          {
+            "show": false
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": false
+          }
+        ],
+        "visualHeader": [
+          {
+            "show": false
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#F4F1EA"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

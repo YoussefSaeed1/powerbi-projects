@@ -1,0 +1,34 @@
+/// Regions and the branch manager sign-in used by row-level security. Replace the example addresses with real sign-ins.
+table Dim_Region
+	lineageTag: ddf1eddf-a1ad-5b9f-a2f5-30f64f4c069f
+
+	column Region
+		dataType: string
+		isKey
+		lineageTag: 138cc761-8420-5a0a-90c2-ba123f0ddf75
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column ManagerEmail
+		dataType: string
+		isHidden
+		lineageTag: 2fe27537-debe-5110-abc7-b8806f1f84a0
+		summarizeBy: none
+		sourceColumn: ManagerEmail
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Region = m
+		mode: import
+		source =
+				let
+				    Source = Table.Distinct(Table.SelectColumns(Fact_Policy, {"Region"})),
+				    Email = Table.AddColumn(Source, "ManagerEmail", each Text.Lower(Text.Replace([Region], " ", ".")) & ".manager@example.com", type text)
+				in
+				    Email
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

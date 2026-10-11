@@ -1,0 +1,21 @@
+relationship ade2e8f8-8e1b-508d-88f6-a5677f802922
+	fromColumn: Fact_Claims.PolicyID
+	toColumn: Fact_Policy.PolicyID
+
+relationship f80beeb5-7ba1-5193-935f-8b91b0a78538
+	fromColumn: Fact_Claims.LossDate
+	toColumn: Dim_Date.Date
+
+relationship 14f52340-87a9-528d-9baf-9d500116f2b0
+	isActive: false
+	fromColumn: Fact_Policy.StartDate
+	toColumn: Dim_Date.Date
+
+relationship 3a7a9082-d652-58dc-81cc-3c51985bd105
+	isActive: false
+	fromColumn: Fact_Policy.EndDate
+	toColumn: Dim_Date.Date
+
+relationship 0e15655f-b4c2-581d-875e-e8b383c8ca4e
+	fromColumn: Fact_Policy.Region
+	toColumn: Dim_Region.Region

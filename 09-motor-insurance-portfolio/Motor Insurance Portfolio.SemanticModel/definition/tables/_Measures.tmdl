@@ -1,0 +1,704 @@
+table _Measures
+	lineageTag: 0c74bf2f-b2fe-56e9-9250-ffe67242dafa
+
+	measure 'Last Refresh' = "Data refreshed " & FORMAT ( MAX ( _Refresh[RefreshedAt] ), "dd mmm yyyy" )
+		displayFolder: Helpers
+		lineageTag: 16fef19b-c450-51a3-a9ac-d2fead300eff
+
+	/// Figures are valued at this date: the last day of the calendar.
+	measure 'Valuation Date' = CALCULATE ( MAX ( Dim_Date[Date] ), REMOVEFILTERS () )
+		formatString: dd mmm yyyy
+		displayFolder: Helpers
+		lineageTag: 8ecc70bc-7f2d-5945-a591-680aa4dc80a7
+
+	/// Assumed admin cost as a share of premium. The sample data has no expense ledger.
+	measure 'Admin Expense Ratio' = 0.14
+		formatString: 0%
+		displayFolder: Assumptions
+		lineageTag: a8434e78-1c30-5426-8369-73b819e23706
+
+	/// Profit margin the price should leave after claims and expenses.
+	measure 'Profit Margin Target' = 0.05
+		formatString: 0%
+		displayFolder: Assumptions
+		lineageTag: 1236ccf9-49a2-59f0-8691-d7682fb84d45
+
+	/// Premium of policies that start in the period.
+	measure 'Gross Written Premium' = CALCULATE ( SUM ( Fact_Policy[GrossPremium] ), USERELATIONSHIP ( Fact_Policy[StartDate], Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Premium
+		lineageTag: a6dabd1d-e4c7-54d8-a74a-c1f6d106c8fe
+
+	measure 'Policies Written' = CALCULATE ( COUNTROWS ( Fact_Policy ), USERELATIONSHIP ( Fact_Policy[StartDate], Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Premium
+		lineageTag: 7d535665-adcd-5552-82d7-5ee1c524106b
+
+	measure 'Average Premium' = DIVIDE ( [Gross Written Premium], [Policies Written] )
+		formatString: #,0
+		displayFolder: Premium
+		lineageTag: 1c7c27c3-bd55-5ba6-a673-b0a60a1239ca
+
+	measure Commission = CALCULATE ( SUM ( Fact_Policy[Commission] ), USERELATIONSHIP ( Fact_Policy[StartDate], Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Premium
+		lineageTag: 7f2f70e1-95e7-53c0-8a21-33827d6cdbe6
+
+	measure 'Commission Ratio' = DIVIDE ( [Commission], [Gross Written Premium] )
+		formatString: 0.0%
+		displayFolder: Premium
+		lineageTag: 08746bba-fe64-5c17-898b-64f5a72c3a5e
+
+	/// Commission ratio plus the admin cost assumption.
+	measure 'Expense Ratio' = [Commission Ratio] + [Admin Expense Ratio]
+		formatString: 0.0%
+		displayFolder: Premium
+		lineageTag: d9d6f43b-fabe-5f33-9497-24b32339aab8
+
+	/// Each policy's premium spread over the days it covers inside the period.
+	measure 'Earned Premium' =
+			VAR _s = MIN ( Dim_Date[Date] )
+			VAR _e = MAX ( Dim_Date[Date] )
+			RETURN
+			    SUMX (
+			        Fact_Policy,
+			        VAR _days = INT ( MIN ( Fact_Policy[EndDate], _e ) - MAX ( Fact_Policy[StartDate], _s ) ) + 1
+			        RETURN IF ( _days > 0, Fact_Policy[GrossPremium] * _days / Fact_Policy[TermDays] )
+			    )
+		formatString: #,0
+		displayFolder: Premium
+		lineageTag: 09f336a0-6700-56e9-bd07-a7a34180f23d
+
+	/// Vehicle-years insured in the period.
+	measure Exposure =
+			VAR _s = MIN ( Dim_Date[Date] )
+			VAR _e = MAX ( Dim_Date[Date] )
+			RETURN
+			    SUMX (
+			        Fact_Policy,
+			        VAR _days = INT ( MIN ( Fact_Policy[EndDate], _e ) - MAX ( Fact_Policy[StartDate], _s ) ) + 1
+			        RETURN IF ( _days > 0, _days / 365.25 )
+			    )
+		formatString: #,0
+		displayFolder: Premium
+		lineageTag: c41d4080-abc4-5260-9cad-1c54eb016c10
+
+	/// Claims by loss date, inside the policy period.
+	measure 'Claims Reported' = 0 + COUNTROWS ( Fact_Claims )
+		formatString: #,0
+		displayFolder: Claims
+		lineageTag: a5fda1ac-42d1-5b7e-9aad-5aa46e3031a3
+
+	measure 'Claims Paid' = SUM ( Fact_Claims[Paid] )
+		formatString: #,0
+		displayFolder: Claims
+		lineageTag: c9a3d84b-1371-5ebe-8038-ed08021fe3f4
+
+	/// Amount still expected to be paid on open claims.
+	measure Reserves = SUM ( Fact_Claims[Reserve] )
+		formatString: #,0
+		displayFolder: Claims
+		lineageTag: 5051fa66-e30c-5713-a9b5-b4f33285b017
+
+	/// Paid plus reserves.
+	measure 'Claims Incurred' = SUM ( Fact_Claims[Incurred] )
+		formatString: #,0
+		displayFolder: Claims
+		lineageTag: 5850dbd1-64aa-5f8a-b1be-31ea73024c12
+
+	measure 'Open Claims' = CALCULATE ( 0 + COUNTROWS ( Fact_Claims ), Fact_Claims[Status] = "Open" )
+		formatString: #,0
+		displayFolder: Claims
+		lineageTag: 3ec996d1-7ec6-5375-8826-67b61fb81478
+
+	measure 'Average Claim Cost' = DIVIDE ( [Claims Incurred], [Claims Reported] )
+		formatString: #,0
+		displayFolder: Claims
+		lineageTag: f0388a47-84cd-572a-8157-c9ce3c04ffe4
+
+	/// Claims per vehicle-year.
+	measure 'Claim Frequency' = DIVIDE ( [Claims Reported], [Exposure] )
+		formatString: 0.0%
+		displayFolder: Claims
+		lineageTag: ab53fcd8-8018-5420-a4ae-1a7c144914f1
+
+	/// Claims incurred ÷ earned premium.
+	measure 'Loss Ratio' = DIVIDE ( [Claims Incurred], [Earned Premium] )
+		formatString: 0.0%
+		displayFolder: Ratios
+		lineageTag: 2af00321-1728-52ed-af1f-3c400fa31666
+
+	/// Below 100% the book makes an underwriting profit.
+	measure 'Combined Ratio' = [Loss Ratio] + [Expense Ratio]
+		formatString: 0.0%
+		displayFolder: Ratios
+		lineageTag: b4c78f27-ad65-5d1e-87ae-22f353357afc
+
+	/// The highest loss ratio that still leaves the target margin after expenses.
+	measure 'Target Loss Ratio' = 1 - [Expense Ratio] - [Profit Margin Target]
+		formatString: 0.0%
+		displayFolder: Ratios
+		lineageTag: e0b0b149-8e33-5216-8c5b-6469c5fb231b
+
+	/// Target loss ratio for the whole year, used as a flat line on monthly charts.
+	measure 'Target Loss Ratio (Year)' = CALCULATE ( [Target Loss Ratio], REMOVEFILTERS ( Dim_Date[Month], Dim_Date[MonthNo], Dim_Date[Year-Month], Dim_Date[YearMonthKey] ) )
+		formatString: 0.0%
+		displayFolder: Ratios
+		lineageTag: e9d85034-d651-50ee-a05d-97c9a1e11a92
+
+	/// Price change that would bring the loss ratio to the target.
+	measure 'Rate Change Needed' = IF ( NOT ISBLANK ( [Loss Ratio] ), DIVIDE ( [Loss Ratio], [Target Loss Ratio] ) - 1 )
+		formatString: +0%;-0%;0%
+		displayFolder: Ratios
+		lineageTag: 78983eaa-2a63-5fc2-b3af-1c2a4a230c37
+
+	measure 'Underwriting Result' = [Earned Premium] - [Claims Incurred] - [Earned Premium] * [Expense Ratio]
+		formatString: #,0
+		displayFolder: Ratios
+		lineageTag: b1a24223-5741-5128-8148-3fb9245aa93b
+
+	/// EGP millions for the premium-to-result waterfall.
+	measure 'Waterfall Value' =
+			VAR _o = SELECTEDVALUE ( Dim_Step[Step Order] )
+			VAR _ep = [Earned Premium]
+			RETURN
+			    DIVIDE (
+			        SWITCH ( _o, 1, _ep, 2, - [Claims Incurred], 3, - _ep * [Commission Ratio], 4, - _ep * [Admin Expense Ratio] ),
+			        1000000
+			    )
+		formatString: #,0.0
+		displayFolder: Ratios
+		lineageTag: 1fa843b6-805d-5751-bd68-6276f5c8be31
+
+	measure 'Gross Written Premium LY' = CALCULATE ( [Gross Written Premium], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Last Year
+		lineageTag: b2d864a9-5653-5e74-8c02-cb1bb4e0a69c
+
+	measure 'Earned Premium LY' = CALCULATE ( [Earned Premium], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Last Year
+		lineageTag: c2dd1cee-39b5-5ee0-9887-b0140373562b
+
+	measure 'Claims Incurred LY' = CALCULATE ( [Claims Incurred], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Last Year
+		lineageTag: 28a0926d-b96c-56b4-aacf-60a515ca652f
+
+	measure 'Loss Ratio LY' = CALCULATE ( [Loss Ratio], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: 0.0%
+		displayFolder: Last Year
+		lineageTag: a49018ba-b9bc-5b38-931b-e0dce38d3674
+
+	measure 'Combined Ratio LY' = CALCULATE ( [Combined Ratio], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: 0.0%
+		displayFolder: Last Year
+		lineageTag: 1bf7c921-d986-5af8-8dfe-a97836803a52
+
+	measure 'Policies Written LY' = CALCULATE ( [Policies Written], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Last Year
+		lineageTag: e5a34465-0a03-5118-be1e-a51323758195
+
+	measure 'Claims Reported LY' = CALCULATE ( [Claims Reported], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Last Year
+		lineageTag: 1783bec6-4109-518d-95fa-3eb30d753140
+
+	measure 'Claim Frequency LY' = CALCULATE ( [Claim Frequency], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: 0.0%
+		displayFolder: Last Year
+		lineageTag: c35bbd26-04eb-5b79-9712-d9059e92f5ca
+
+	measure 'Average Claim Cost LY' = CALCULATE ( [Average Claim Cost], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Last Year
+		lineageTag: 22dd35aa-1320-5313-a858-7755b35b83f1
+
+	measure 'Average Premium LY' = CALCULATE ( [Average Premium], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Last Year
+		lineageTag: 2f3f02e0-c9fb-5ffd-938d-14c385e12233
+
+	/// Policies that expired in the period.
+	measure 'Policies Due' = CALCULATE ( COUNTROWS ( Fact_Policy ), USERELATIONSHIP ( Fact_Policy[EndDate], Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Retention
+		lineageTag: eaeacf63-283b-55fd-951f-fcb12ce00942
+
+	measure 'Policies Renewed' = CALCULATE ( 0 + SUM ( Fact_Policy[Renewed] ), USERELATIONSHIP ( Fact_Policy[EndDate], Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Retention
+		lineageTag: f494e000-d579-53dd-bd08-6f2ac457f291
+
+	measure 'Policies Lost' = [Policies Due] - [Policies Renewed]
+		formatString: #,0
+		displayFolder: Retention
+		lineageTag: 5bf57178-985e-59e3-baa4-4b551d362e99
+
+	/// Expired policies replaced by a new policy for the same customer.
+	measure 'Renewal Rate' = DIVIDE ( [Policies Renewed], [Policies Due] )
+		formatString: 0.0%
+		displayFolder: Retention
+		lineageTag: c3f57767-ecac-55ef-b59c-b6054a6b0acd
+
+	measure 'Renewal Rate LY' = CALCULATE ( [Renewal Rate], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: 0.0%
+		displayFolder: Last Year
+		lineageTag: e21cd551-59bf-5c34-9b07-76a53f283686
+
+	/// Last premium of the customers who did not renew.
+	measure 'Premium Lost' = CALCULATE ( SUM ( Fact_Policy[GrossPremium] ), USERELATIONSHIP ( Fact_Policy[EndDate], Dim_Date[Date] ), Fact_Policy[Renewed] = 0 )
+		formatString: #,0
+		displayFolder: Retention
+		lineageTag: 0b441ebd-a714-5914-85f1-6e13eed06c21
+
+	measure 'Renewal Rate After Claim' = CALCULATE ( [Renewal Rate], Fact_Policy[Claim History] = "Had a claim" )
+		formatString: 0.0%
+		displayFolder: Retention
+		lineageTag: 2c6ffbb9-a22e-544f-91ad-1cc139bad0fc
+
+	measure 'Renewal Rate No Claim' = CALCULATE ( [Renewal Rate], Fact_Policy[Claim History] = "No claim" )
+		formatString: 0.0%
+		displayFolder: Retention
+		lineageTag: b7d374dd-968a-5177-9d69-82b4f767c850
+
+	measure 'Loss Ratio Color' = IF ( [Loss Ratio] > [Target Loss Ratio], "#E76F51", "#2A9D8F" )
+		displayFolder: Formatting
+		lineageTag: cd51b53f-3bad-5cc2-9c6d-685619db9565
+
+	measure 'Rate Change Color' = IF ( [Rate Change Needed] > 0, "#E76F51", "#2A9D8F" )
+		displayFolder: Formatting
+		lineageTag: 7201b928-d6a7-5b1f-8c81-6a745c370972
+
+	measure 'Renewal Color' =
+			VAR _all = CALCULATE ( [Renewal Rate], REMOVEFILTERS ( Fact_Policy[Age Band] ), REMOVEFILTERS ( Fact_Policy[Claim History] ) )
+			RETURN
+			    IF ( [Renewal Rate] < _all - 0.05, "#E76F51", "#14213D" )
+		displayFolder: Formatting
+		lineageTag: e9067f38-8057-5cc1-b16f-0daa8446e35d
+
+	measure 'KPI Overview' =
+			VAR _a0 = "#2A9D8F"
+			VAR _n0 = IF ( [Gross Written Premium] >= [Gross Written Premium LY], "#2A9D8F", "#E76F51" )
+			VAR _v0 = ( "EGP " & FORMAT ( DIVIDE ( [Gross Written Premium], 1000000 ), "#,0.0" ) & "M" )
+			VAR _t0 = ( VAR _c = [Gross Written Premium] VAR _l = [Gross Written Premium LY] RETURN IF ( ISBLANK ( _l ) || _l = 0, "no prior year", IF ( _c >= _l, "▲ ", "▼ " ) & FORMAT ( ABS ( _c / _l - 1 ), "0.0%" ) & " vs last year" ) )
+			VAR _a1 = "#14213D"
+			VAR _n1 = "#6B7280"
+			VAR _v1 = ( "EGP " & FORMAT ( DIVIDE ( [Earned Premium], 1000000 ), "#,0.0" ) & "M" )
+			VAR _t1 = ( VAR _c = [Earned Premium] VAR _l = [Earned Premium LY] RETURN IF ( ISBLANK ( _l ) || _l = 0, "no prior year", IF ( _c >= _l, "▲ ", "▼ " ) & FORMAT ( ABS ( _c / _l - 1 ), "0.0%" ) & " vs last year" ) )
+			VAR _a2 = "#E76F51"
+			VAR _n2 = IF ( [Claims Incurred] > [Claims Incurred LY], "#E76F51", "#2A9D8F" )
+			VAR _v2 = ( "EGP " & FORMAT ( DIVIDE ( [Claims Incurred], 1000000 ), "#,0.0" ) & "M" )
+			VAR _t2 = ( VAR _c = [Claims Incurred] VAR _l = [Claims Incurred LY] RETURN IF ( ISBLANK ( _l ) || _l = 0, "no prior year", IF ( _c >= _l, "▲ ", "▼ " ) & FORMAT ( ABS ( _c / _l - 1 ), "0.0%" ) & " vs last year" ) )
+			VAR _a3 = IF ( [Loss Ratio] > [Target Loss Ratio], "#E76F51", "#2A9D8F" )
+			VAR _n3 = IF ( [Loss Ratio] > [Loss Ratio LY], "#E76F51", "#2A9D8F" )
+			VAR _v3 = ( FORMAT ( [Loss Ratio], "0.0%" ) )
+			VAR _t3 = ( VAR _c = [Loss Ratio] VAR _l = [Loss Ratio LY] RETURN IF ( ISBLANK ( _l ), "no prior year", IF ( _c >= _l, "▲ ", "▼ " ) & FORMAT ( ABS ( _c - _l ) * 100, "0.0" ) & " pts vs last year" ) )
+			VAR _a4 = IF ( [Combined Ratio] > 1, "#E76F51", "#F4A261" )
+			VAR _n4 = "#6B7280"
+			VAR _v4 = ( FORMAT ( [Combined Ratio], "0.0%" ) )
+			VAR _t4 = ( VAR _c = [Combined Ratio] VAR _l = [Combined Ratio LY] RETURN IF ( ISBLANK ( _l ), "no prior year", IF ( _c >= _l, "▲ ", "▼ " ) & FORMAT ( ABS ( _c - _l ) * 100, "0.0" ) & " pts" ) & " · under 100% = profit" )
+			VAR _a5 = "#2A9D8F"
+			VAR _n5 = IF ( [Policies Written] >= [Policies Written LY], "#2A9D8F", "#E76F51" )
+			VAR _v5 = ( FORMAT ( [Policies Written], "#,0" ) )
+			VAR _t5 = ( VAR _c = [Policies Written] VAR _l = [Policies Written LY] RETURN IF ( ISBLANK ( _l ) || _l = 0, "no prior year", IF ( _c >= _l, "▲ ", "▼ " ) & FORMAT ( ABS ( _c / _l - 1 ), "0.0%" ) & " vs last year" ) )
+			RETURN
+			    "<div style='display:flex;gap:10px;height:84px;font-family:Segoe UI,sans-serif;color:#14213D;overflow:hidden'>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a0 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Gross written premium</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v0 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n0 & "'>" & _t0 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a1 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Earned premium</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v1 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n1 & "'>" & _t1 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a2 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Claims incurred</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v2 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n2 & "'>" & _t2 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a3 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Loss ratio</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v3 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n3 & "'>" & _t3 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a4 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Combined ratio</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v4 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n4 & "'>" & _t4 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a5 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Policies written</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v5 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n5 & "'>" & _t5 & "</div></div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 3fcb8d3c-4004-59b4-ae73-39e298e0e46a
+
+	measure 'KPI Claims' =
+			VAR _a0 = "#14213D"
+			VAR _n0 = "#6B7280"
+			VAR _v0 = ( FORMAT ( [Claims Reported], "#,0" ) )
+			VAR _t0 = ( VAR _c = [Claims Reported] VAR _l = [Claims Reported LY] RETURN IF ( ISBLANK ( _l ) || _l = 0, "no prior year", IF ( _c >= _l, "▲ ", "▼ " ) & FORMAT ( ABS ( _c / _l - 1 ), "0.0%" ) & " vs last year" ) )
+			VAR _a1 = "#2A9D8F"
+			VAR _n1 = IF ( [Claim Frequency] > [Claim Frequency LY], "#E76F51", "#2A9D8F" )
+			VAR _v1 = ( FORMAT ( [Claim Frequency], "0.0%" ) )
+			VAR _t1 = ( VAR _c = [Claim Frequency] VAR _l = [Claim Frequency LY] RETURN IF ( ISBLANK ( _l ), "no prior year", IF ( _c >= _l, "▲ ", "▼ " ) & FORMAT ( ABS ( _c - _l ) * 100, "0.0" ) & " pts per vehicle-year" ) )
+			VAR _a2 = "#E76F51"
+			VAR _n2 = IF ( [Average Claim Cost] > [Average Claim Cost LY], "#E76F51", "#2A9D8F" )
+			VAR _v2 = ( "EGP " & FORMAT ( DIVIDE ( [Average Claim Cost], 1000 ), "#,0.0" ) & "K" )
+			VAR _t2 = ( VAR _c = [Average Claim Cost] VAR _l = [Average Claim Cost LY] RETURN IF ( ISBLANK ( _l ) || _l = 0, "no prior year", IF ( _c >= _l, "▲ ", "▼ " ) & FORMAT ( ABS ( _c / _l - 1 ), "0.0%" ) & " vs last year" ) )
+			VAR _a3 = "#14213D"
+			VAR _n3 = "#6B7280"
+			VAR _v3 = ( "EGP " & FORMAT ( DIVIDE ( [Claims Paid], 1000000 ), "#,0.0" ) & "M" )
+			VAR _t3 = ( "cash already paid" )
+			VAR _a4 = "#F4A261"
+			VAR _n4 = "#6B7280"
+			VAR _v4 = ( FORMAT ( [Open Claims], "#,0" ) )
+			VAR _t4 = ( "still being settled" )
+			VAR _a5 = "#F4A261"
+			VAR _n5 = "#6B7280"
+			VAR _v5 = ( "EGP " & FORMAT ( DIVIDE ( [Reserves], 1000000 ), "#,0.0" ) & "M" )
+			VAR _t5 = ( "expected to pay on open claims" )
+			RETURN
+			    "<div style='display:flex;gap:10px;height:84px;font-family:Segoe UI,sans-serif;color:#14213D;overflow:hidden'>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a0 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Claims reported</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v0 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n0 & "'>" & _t0 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a1 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Claim frequency</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v1 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n1 & "'>" & _t1 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a2 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Average claim cost</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v2 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n2 & "'>" & _t2 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a3 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Claims paid</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v3 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n3 & "'>" & _t3 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a4 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Open claims</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v4 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n4 & "'>" & _t4 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a5 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Reserves</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v5 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n5 & "'>" & _t5 & "</div></div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 2b5c7970-882d-5036-93f8-efd4d645a16c
+
+	measure 'Segments Above Target' =
+			VAR _cells =
+			    FILTER (
+			        CROSSJOIN ( VALUES ( Fact_Policy[Age Band] ), VALUES ( Fact_Policy[Vehicle Type] ) ),
+			        Fact_Policy[Age Band] <> "Unknown" && NOT ISBLANK ( [Loss Ratio] )
+			    )
+			RETURN
+			    COUNTROWS ( FILTER ( _cells, [Loss Ratio] > [Target Loss Ratio] ) ) & " of " & COUNTROWS ( _cells )
+		displayFolder: Pricing
+		lineageTag: ecef673f-7c17-5fdd-8a4c-9ab9b392cc34
+
+	measure 'Worst Age Band' =
+			VAR _t = TOPN ( 1, FILTER ( ALL ( Fact_Policy[Age Band] ), Fact_Policy[Age Band] <> "Unknown" ), [Loss Ratio], DESC )
+			RETURN
+			    MAXX ( _t, Fact_Policy[Age Band] )
+		displayFolder: Pricing
+		lineageTag: d7a29ae0-d3ff-539a-8bbb-21f8cf422ad7
+
+	measure 'Worst Age Band LR' = VAR _b = [Worst Age Band] RETURN CALCULATE ( [Loss Ratio], Fact_Policy[Age Band] = _b )
+		formatString: 0.0%
+		displayFolder: Pricing
+		lineageTag: b21ee09e-4427-5ec3-a028-56a9828ee8ac
+
+	measure 'Worst Age Band Change' = VAR _b = [Worst Age Band] RETURN CALCULATE ( [Rate Change Needed], Fact_Policy[Age Band] = _b )
+		formatString: +0%;-0%
+		displayFolder: Pricing
+		lineageTag: af9fa3c5-451d-59ee-9a98-89647335ef04
+
+	measure 'Worst Vehicle' =
+			VAR _t = TOPN ( 1, ALL ( Fact_Policy[Vehicle Type] ), [Loss Ratio], DESC )
+			RETURN
+			    MAXX ( _t, Fact_Policy[Vehicle Type] )
+		displayFolder: Pricing
+		lineageTag: 41741502-bf6a-5833-8078-8b7a0be509b2
+
+	measure 'Worst Vehicle LR' = VAR _v = [Worst Vehicle] RETURN CALCULATE ( [Loss Ratio], Fact_Policy[Vehicle Type] = _v )
+		formatString: 0.0%
+		displayFolder: Pricing
+		lineageTag: 4f0a271a-7326-53c8-a751-322f24cca86e
+
+	measure 'KPI Pricing' =
+			VAR _a0 = "#14213D"
+			VAR _n0 = "#6B7280"
+			VAR _v0 = ( "EGP " & FORMAT ( DIVIDE ( [Average Premium], 1000 ), "#,0.0" ) & "K" )
+			VAR _t0 = ( VAR _c = [Average Premium] VAR _l = [Average Premium LY] RETURN IF ( ISBLANK ( _l ) || _l = 0, "no prior year", IF ( _c >= _l, "▲ ", "▼ " ) & FORMAT ( ABS ( _c / _l - 1 ), "0.0%" ) & " vs last year" ) )
+			VAR _a1 = "#E76F51"
+			VAR _n1 = IF ( [Average Claim Cost] > [Average Claim Cost LY], "#E76F51", "#2A9D8F" )
+			VAR _v1 = ( "EGP " & FORMAT ( DIVIDE ( [Average Claim Cost], 1000 ), "#,0.0" ) & "K" )
+			VAR _t1 = ( VAR _c = [Average Claim Cost] VAR _l = [Average Claim Cost LY] RETURN IF ( ISBLANK ( _l ) || _l = 0, "no prior year", IF ( _c >= _l, "▲ ", "▼ " ) & FORMAT ( ABS ( _c / _l - 1 ), "0.0%" ) & " vs last year" ) )
+			VAR _a2 = "#F4A261"
+			VAR _n2 = IF ( [Loss Ratio] > [Loss Ratio LY], "#E76F51", "#2A9D8F" )
+			VAR _v2 = ( FORMAT ( [Loss Ratio], "0.0%" ) )
+			VAR _t2 = ( VAR _c = [Loss Ratio] VAR _l = [Loss Ratio LY] RETURN IF ( ISBLANK ( _l ), "no prior year", IF ( _c >= _l, "▲ ", "▼ " ) & FORMAT ( ABS ( _c - _l ) * 100, "0.0" ) & " pts vs last year" ) )
+			VAR _a3 = "#14213D"
+			VAR _n3 = "#6B7280"
+			VAR _v3 = ( FORMAT ( [Target Loss Ratio], "0.0%" ) )
+			VAR _t3 = ( "100% − expenses − 5% margin" )
+			VAR _a4 = "#E76F51"
+			VAR _n4 = "#E76F51"
+			VAR _v4 = ( [Segments Above Target] )
+			VAR _t4 = ( "driver age × vehicle type" )
+			VAR _a5 = "#E76F51"
+			VAR _n5 = "#E76F51"
+			VAR _v5 = ( [Worst Age Band] )
+			VAR _t5 = ( "loss ratio " & FORMAT ( [Worst Age Band LR], "0.0%" ) )
+			RETURN
+			    "<div style='display:flex;gap:10px;height:84px;font-family:Segoe UI,sans-serif;color:#14213D;overflow:hidden'>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a0 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Average premium</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v0 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n0 & "'>" & _t0 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a1 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Average claim cost</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v1 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n1 & "'>" & _t1 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a2 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Loss ratio</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v2 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n2 & "'>" & _t2 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a3 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Target loss ratio</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v3 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n3 & "'>" & _t3 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a4 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Segments above target</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v4 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n4 & "'>" & _t4 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a5 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Riskiest age band</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v5 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n5 & "'>" & _t5 & "</div></div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 2c08bd68-cb4a-5afc-b2bc-0806c7185b75
+
+	measure 'KPI Retention' =
+			VAR _a0 = "#14213D"
+			VAR _n0 = IF ( [Renewal Rate] >= [Renewal Rate LY], "#2A9D8F", "#E76F51" )
+			VAR _v0 = ( FORMAT ( [Renewal Rate], "0.0%" ) )
+			VAR _t0 = ( VAR _c = [Renewal Rate] VAR _l = [Renewal Rate LY] RETURN IF ( ISBLANK ( _l ), "no prior year", IF ( _c >= _l, "▲ ", "▼ " ) & FORMAT ( ABS ( _c - _l ) * 100, "0.0" ) & " pts vs last year" ) )
+			VAR _a1 = "#14213D"
+			VAR _n1 = "#6B7280"
+			VAR _v1 = ( FORMAT ( [Policies Due], "#,0" ) )
+			VAR _t1 = ( "expired in the period" )
+			VAR _a2 = "#14213D"
+			VAR _n2 = "#6B7280"
+			VAR _v2 = ( FORMAT ( [Policies Renewed], "#,0" ) )
+			VAR _t2 = ( "new policy for the same customer" )
+			VAR _a3 = "#E76F51"
+			VAR _n3 = "#E76F51"
+			VAR _v3 = ( FORMAT ( [Policies Lost], "#,0" ) )
+			VAR _t3 = ( "did not renew" )
+			VAR _a4 = "#E76F51"
+			VAR _n4 = "#E76F51"
+			VAR _v4 = ( "EGP " & FORMAT ( DIVIDE ( [Premium Lost], 1000000 ), "#,0.0" ) & "M" )
+			VAR _t4 = ( "last premium of lost customers" )
+			VAR _a5 = "#F4A261"
+			VAR _n5 = "#6B7280"
+			VAR _v5 = ( FORMAT ( [Renewal Rate After Claim], "0.0%" ) )
+			VAR _t5 = ( "vs " & FORMAT ( [Renewal Rate No Claim], "0.0%" ) & " with no claim" )
+			RETURN
+			    "<div style='display:flex;gap:10px;height:84px;font-family:Segoe UI,sans-serif;color:#14213D;overflow:hidden'>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a0 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Renewal rate</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v0 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n0 & "'>" & _t0 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a1 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Policies due</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v1 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n1 & "'>" & _t1 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a2 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Renewed</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v2 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n2 & "'>" & _t2 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a3 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Lost customers</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v3 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n3 & "'>" & _t3 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a4 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Premium lost</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v4 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n4 & "'>" & _t4 & "</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border:1px solid #E2DDD3;border-top:3px solid " & _a5 & ";border-radius:6px;padding:8px 12px;box-sizing:border-box'><div style='font-size:10px;font-weight:700;letter-spacing:.6px;color:#6B7280;text-transform:uppercase;white-space:nowrap'>Renewal after a claim</div><div style='font-family:Georgia,serif;font-size:24px;line-height:1.25;margin-top:2px;white-space:nowrap'>" & _v5 & "</div><div style='font-size:10.5px;font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _n5 & "'>" & _t5 & "</div></div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 07c70b96-764c-5205-bd3f-a6cfee1438d2
+
+	/// Written premium by channel, coloured by whether the channel's loss ratio is above target.
+	measure 'Channel Bars' =
+			VAR _rows = ADDCOLUMNS ( ALL ( Fact_Policy[Channel] ), "@g", [Gross Written Premium], "@lr", [Loss Ratio], "@t", [Target Loss Ratio] )
+			VAR _max = MAXX ( _rows, [@g] )
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#14213D'>"
+			        & CONCATENATEX (
+			            _rows,
+			            "<div style='display:flex;align-items:center;height:30px;font-size:11.5px'><div style='width:80px;text-align:right;padding-right:10px;font-weight:600'>" & Fact_Policy[Channel] & "</div>"
+			                & "<div style='height:20px;border-radius:2px;width:" & FORMAT ( DIVIDE ( [@g], _max ) * 340, "0" ) & "px;background:" & IF ( [@lr] > [@t], "#E76F51", "#2A9D8F" ) & "'></div>"
+			                & "<div style='padding-left:8px;font-weight:700'>" & FORMAT ( [@g] / 1000000, "#,0" ) & "M <span style='font-weight:600;color:#6B7280'>· LR " & FORMAT ( [@lr], "0.0%" ) & "</span></div></div>",
+			            "", [@g], DESC )
+			        & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 5a48ed2c-33a7-5f56-89bd-24d26f461e34
+
+	/// Incurred cost by claim type; coral when a type's share of cost is at least three times its share of claims.
+	measure 'Claim Type Bars' =
+			VAR _n = [Claims Reported]
+			VAR _c = [Claims Incurred]
+			VAR _rows = ADDCOLUMNS ( ALL ( Fact_Claims[ClaimType] ), "@i", [Claims Incurred], "@k", [Claims Reported] )
+			VAR _max = MAXX ( _rows, [@i] )
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#14213D'>"
+			        & CONCATENATEX (
+			            _rows,
+			            VAR _hot = DIVIDE ( [@i], _c ) >= 3 * DIVIDE ( [@k], _n )
+			            RETURN
+			                "<div style='display:flex;align-items:center;height:43px;font-size:11.5px'><div style='width:140px;text-align:right;padding-right:10px;font-weight:600'>" & Fact_Claims[ClaimType] & "</div>"
+			                    & "<div style='height:30px;border-radius:2px;width:" & FORMAT ( DIVIDE ( [@i], _max ) * 270, "0" ) & "px;background:" & IF ( _hot, "#E76F51", "#14213D" ) & "'></div>"
+			                    & "<div style='padding-left:8px;font-weight:700;white-space:nowrap'>" & FORMAT ( [@i] / 1000000, "#,0.0" ) & "M <span style='font-weight:600;color:#6B7280'>· " & FORMAT ( DIVIDE ( [@k], _n ), "0%" ) & " of claims</span></div></div>",
+			            "", [@i], DESC )
+			        & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: a45a0469-a526-586d-87a4-10ab7d6486d0
+
+	/// Claim frequency, average cost and loss ratio by region.
+	measure 'Region Table' =
+			VAR _rows = ADDCOLUMNS ( ALL ( Dim_Region[Region] ), "@f", [Claim Frequency], "@s", [Average Claim Cost], "@lr", [Loss Ratio], "@t", [Target Loss Ratio] )
+			VAR _g = "display:grid;grid-template-columns:100px 1fr 80px 80px;align-items:center"
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#14213D;font-size:11.5px'>"
+			        & "<div style='" & _g & ";color:#6B7280;font-weight:700;font-size:10px;border-bottom:1px solid #E2DDD3;padding-bottom:4px'><span>Region</span><span>Frequency</span><span style='text-align:right'>Avg cost</span><span style='text-align:right'>Loss ratio</span></div>"
+			        & CONCATENATEX (
+			            _rows,
+			            "<div style='" & _g & ";height:19px'><b>" & Dim_Region[Region] & "</b><span><span style='display:inline-block;height:8px;width:" & FORMAT ( [@f] * 900, "0" ) & "px;background:#14213D;border-radius:2px'></span> " & FORMAT ( [@f], "0.0%" ) & "</span>"
+			                & "<span style='text-align:right'>" & FORMAT ( [@s] / 1000, "#,0.0" ) & "K</span><span style='text-align:right;font-weight:700;color:" & IF ( [@lr] > [@t], "#E76F51", "#2A9D8F" ) & "'>" & FORMAT ( [@lr], "0.0%" ) & "</span></div>",
+			            "", [@f], DESC )
+			        & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: d98ee644-3f65-5d67-8910-f29ef884f212
+
+	/// Loss ratio by driver age band and vehicle type; coral above the target loss ratio, teal below.
+	measure 'Pricing Heatmap' =
+			VAR _target = [Target Loss Ratio]
+			VAR _bands = FILTER ( ALL ( Fact_Policy[Age Band], Fact_Policy[Age Band Order] ), Fact_Policy[Age Band] <> "Unknown" )
+			VAR _veh = ALL ( Fact_Policy[Vehicle Type] )
+			VAR _cell = "height:58px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:Georgia,serif;font-size:17px"
+			VAR _head =
+			    "<div style='display:grid;grid-template-columns:90px repeat(5,1fr) 80px;gap:6px;font-size:11.5px;font-weight:700;text-align:center'><span></span>"
+			        & CONCATENATEX ( _veh, "<span>" & Fact_Policy[Vehicle Type] & "</span>", "", Fact_Policy[Vehicle Type], ASC )
+			        & "<span style='color:#6B7280'>All</span></div>"
+			VAR _rows =
+			    CONCATENATEX (
+			        _bands,
+			        VAR _b = Fact_Policy[Age Band]
+			        VAR _all = CALCULATE ( [Loss Ratio], Fact_Policy[Age Band] = _b )
+			        RETURN
+			            "<div style='display:grid;grid-template-columns:90px repeat(5,1fr) 80px;gap:6px;margin-top:6px'><div style='display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:11.5px;font-weight:700'>" & _b & "</div>"
+			                & CONCATENATEX (
+			                    _veh,
+			                    VAR _v = CALCULATE ( [Loss Ratio], Fact_Policy[Age Band] = _b )
+			                    VAR _over = _v > _target
+			                    VAR _a = IF ( _over, 0.25 + 0.75 * MIN ( 1, ( _v - _target ) / 0.6 ), 0.2 + 0.6 * MIN ( 1, ( _target - _v ) / 0.3 ) )
+			                    RETURN
+			                        "<div style='" & _cell & ";background:" & IF ( _over, "rgba(231,111,81,", "rgba(42,157,143," ) & FORMAT ( _a, "0.00" ) & ");color:" & IF ( _v > 1, "#FFFFFF", "#14213D" ) & "'>" & IF ( ISBLANK ( _v ), "–", FORMAT ( _v, "0.0%" ) ) & "</div>",
+			                    "", Fact_Policy[Vehicle Type], ASC )
+			                & "<div style='" & _cell & ";font-size:15px;font-weight:700;color:" & IF ( _all > _target, "#E76F51", "#2A9D8F" ) & "'>" & FORMAT ( _all, "0.0%" ) & "</div></div>",
+			        "", Fact_Policy[Age Band Order], ASC )
+			VAR _foot =
+			    "<div style='display:grid;grid-template-columns:90px repeat(5,1fr) 80px;gap:6px;margin-top:8px;font-family:Georgia,serif;font-size:15px;font-weight:700;text-align:center'><span style='font-family:Segoe UI,sans-serif;font-size:11px;color:#6B7280;text-align:right;padding-right:6px'>All</span>"
+			        & CONCATENATEX ( _veh, VAR _v = [Loss Ratio] RETURN "<span style='color:" & IF ( _v > _target, "#E76F51", "#2A9D8F" ) & "'>" & FORMAT ( _v, "0.0%" ) & "</span>", "", Fact_Policy[Vehicle Type], ASC )
+			        & "<span></span></div>"
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#14213D'>" & _head & _rows & _foot & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 4975b778-02b6-5c62-b0e1-0db3570837d9
+
+	measure 'Best Channel' = MAXX ( TOPN ( 1, ALL ( Fact_Policy[Channel] ), [Loss Ratio], ASC ), Fact_Policy[Channel] )
+		displayFolder: Insights
+		lineageTag: ba348531-a55e-5ab0-b40e-7d2e4bd60ebf
+
+	measure 'Worst Channel' = MAXX ( TOPN ( 1, ALL ( Fact_Policy[Channel] ), [Loss Ratio], DESC ), Fact_Policy[Channel] )
+		displayFolder: Insights
+		lineageTag: 1cde0b7b-7705-50db-afb8-cc38f0b9bf09
+
+	measure 'Best Channel LR' = VAR _c = [Best Channel] RETURN CALCULATE ( [Loss Ratio], Fact_Policy[Channel] = _c )
+		formatString: 0.0%
+		displayFolder: Insights
+		lineageTag: a083c70b-6616-52d1-9511-da761328a305
+
+	measure 'Worst Channel LR' = VAR _c = [Worst Channel] RETURN CALCULATE ( [Loss Ratio], Fact_Policy[Channel] = _c )
+		formatString: 0.0%
+		displayFolder: Insights
+		lineageTag: 0218bf1a-40ae-56ca-88c1-d5d160cca300
+
+	measure 'Best Channel Renewal' = VAR _c = [Best Channel] RETURN CALCULATE ( [Renewal Rate], Fact_Policy[Channel] = _c )
+		formatString: 0.0%
+		displayFolder: Insights
+		lineageTag: 72cb341c-e069-50c0-b64d-f42b6d9a5349
+
+	measure 'Theft Claim Share' = DIVIDE ( CALCULATE ( [Claims Reported], Fact_Claims[ClaimType] = "Theft" ), [Claims Reported] )
+		formatString: 0%
+		displayFolder: Insights
+		lineageTag: 7fb86c40-6523-5899-a99d-fe8c84268ffb
+
+	measure 'Theft Cost Share' = DIVIDE ( CALCULATE ( [Claims Incurred], Fact_Claims[ClaimType] = "Theft" ), [Claims Incurred] )
+		formatString: 0%
+		displayFolder: Insights
+		lineageTag: 58071443-c31e-5453-9e2f-fb745f980acf
+
+	measure 'Insight Overview' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#14213D;color:#E4E9F2;border-radius:6px;padding:14px 18px;box-sizing:border-box;height:100%;font-size:12px;line-height:1.5'><div style='font-weight:700;color:#FFFFFF;margin-bottom:8px;font-size:13px'>What the data says</div>"
+			    & "<p style='margin:0 0 7px'>" & ( "The loss ratio is " & "<b style='color:#F4A261'>" & FORMAT ( [Loss Ratio], "0.0%" ) & "</b>" & " against " & FORMAT ( [Loss Ratio LY], "0.0%" ) & " last year: the average claim cost " & ( VAR _d = DIVIDE ( [Average Claim Cost], [Average Claim Cost LY] ) - 1 RETURN IF ( _d >= 0, "rose ", "fell " ) & "<b style='color:#F4A261'>" & FORMAT ( ABS ( _d ), "0.0%" ) & "</b>" ) & " while the average premium " & ( VAR _d = DIVIDE ( [Average Premium], [Average Premium LY] ) - 1 RETURN IF ( _d >= 0, "rose ", "fell " ) & FORMAT ( ABS ( _d ), "0.0%" ) ) & "." ) & "</p>"
+			    & "<p style='margin:0 0 7px'>" & ( "Combined ratio " & "<b style='color:#F4A261'>" & FORMAT ( [Combined Ratio], "0.0%" ) & "</b>" & ", an underwriting result of " & "EGP " & FORMAT ( DIVIDE ( [Underwriting Result], 1000000 ), "#,0.0" ) & "M" & ". " & IF ( [Combined Ratio] < 1, "The book still makes money, but the margin is " & FORMAT ( 1 - [Combined Ratio], "0.0%" ) & " of earned premium.", "The book is losing money on underwriting." ) ) & "</p>"
+			    & "<p style='margin:0 0 7px'>" & ( [Best Channel] & " policies have the best loss ratio (" & FORMAT ( [Best Channel LR], "0.0%" ) & "); " & LOWER ( [Worst Channel] ) & " policies the worst (" & FORMAT ( [Worst Channel LR], "0.0%" ) & ")." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: 36d4f7ac-7993-5e95-b9f6-2a60757d8c0d
+
+	measure 'Insight Claims' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#14213D;color:#E4E9F2;border-radius:6px;padding:14px 18px;box-sizing:border-box;height:100%;font-size:12px;line-height:1.5'><div style='font-weight:700;color:#FFFFFF;margin-bottom:8px;font-size:13px'>What the data says</div>"
+			    & "<p style='margin:0 0 7px'>" & ( "Customers claim " & IF ( [Claim Frequency] <= [Claim Frequency LY], "<b style='color:#F4A261'>less</b>", "<b style='color:#F4A261'>more</b>" ) & " often than last year (" & FORMAT ( [Claim Frequency], "0.0%" ) & " vs " & FORMAT ( [Claim Frequency LY], "0.0%" ) & " per vehicle-year), and each claim costs " & "EGP " & FORMAT ( DIVIDE ( [Average Claim Cost], 1000 ), "#,0.0" ) & "K" & " on average." ) & "</p>"
+			    & "<p style='margin:0 0 7px'>" & ( "Theft is " & FORMAT ( [Theft Claim Share], "0%" ) & " of claims but " & "<b style='color:#F4A261'>" & FORMAT ( [Theft Cost Share], "0%" ) & "</b>" & " of the cost." ) & "</p>"
+			    & "<p style='margin:0 0 7px'>" & ( FORMAT ( [Open Claims], "#,0" ) & " claims are still open with " & "EGP " & FORMAT ( DIVIDE ( [Reserves], 1000000 ), "#,0.0" ) & "M" & " reserved, so this cost can still move." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: 2069fb0a-9224-5d02-9a7d-8fe388eea1c7
+
+	measure 'Insight Pricing' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#14213D;color:#E4E9F2;border-radius:6px;padding:14px 18px;box-sizing:border-box;height:100%;font-size:12px;line-height:1.5'><div style='font-weight:700;color:#FFFFFF;margin-bottom:8px;font-size:13px'>What the data says</div>"
+			    & "<p style='margin:0 0 7px'>" & ( "Drivers aged " & [Worst Age Band] & " have a " & "<b style='color:#F4A261'>" & FORMAT ( [Worst Age Band LR], "0.0%" ) & "</b>" & " loss ratio: every EGP 100 of premium pays EGP " & FORMAT ( [Worst Age Band LR] * 100, "0" ) & " in claims. Their price would need to change by about " & "<b style='color:#F4A261'>" & FORMAT ( [Worst Age Band Change], "+0%;-0%" ) & "</b>" & "." ) & "</p>"
+			    & "<p style='margin:0 0 7px'>" & ( [Worst Vehicle] & " is the vehicle type with the highest loss ratio (" & "<b style='color:#F4A261'>" & FORMAT ( [Worst Vehicle LR], "0.0%" ) & "</b>" & ")." & IF ( [Worst Vehicle] = "Hatchback", " Premium follows the car's value, but repair costs don't, so cheaper cars are underpriced.", "" ) ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: 67cd0961-8ffa-529e-94dd-dda8404ca603
+
+	measure 'Insight Retention' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#14213D;color:#E4E9F2;border-radius:6px;padding:14px 18px;box-sizing:border-box;height:100%;font-size:12px;line-height:1.5'><div style='font-weight:700;color:#FFFFFF;margin-bottom:8px;font-size:13px'>What the data says</div>"
+			    & "<p style='margin:0 0 7px'>" & ( "<b style='color:#F4A261'>" & FORMAT ( [Renewal Rate], "0.0%" ) & "</b>" & " of customers renewed. The " & FORMAT ( [Policies Lost], "#,0" ) & " who left took " & "<b style='color:#F4A261'>" & "EGP " & FORMAT ( DIVIDE ( [Premium Lost], 1000000 ), "#,0.0" ) & "M" & "</b>" & " of premium with them." ) & "</p>"
+			    & "<p style='margin:0 0 7px'>" & ( [Best Channel] & " customers are the most profitable (loss ratio " & FORMAT ( [Best Channel LR], "0.0%" ) & ") and renew at " & "<b style='color:#F4A261'>" & FORMAT ( [Best Channel Renewal], "0.0%" ) & "</b>" & " against " & FORMAT ( [Renewal Rate], "0.0%" ) & " overall." ) & "</p>"
+			    & "<p style='margin:0 0 7px'>" & ( "After a claim, " & FORMAT ( [Renewal Rate After Claim], "0.0%" ) & " renew, against " & FORMAT ( [Renewal Rate No Claim], "0.0%" ) & " with no claim: the claims experience is a retention issue too." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: 87dc441a-0f1d-5c27-b222-db84505c0a69
+
+	measure 'DQ Value' =
+			VAR _o = SELECTEDVALUE ( Dim_DQ[Check Order] )
+			RETURN
+			    SWITCH (
+			        _o,
+			        1, FORMAT ( MAX ( DQ_Source[PolicyRows] ), "#,0" ),
+			        2, FORMAT ( MAX ( DQ_Source[ClaimRows] ), "#,0" ),
+			        3, FORMAT ( MAX ( DQ_Source[DuplicateClaims] ), "#,0" ),
+			        4, FORMAT ( MAX ( DQ_Source[OutsideCover] ), "#,0" ),
+			        5, FORMAT ( MAX ( DQ_Source[MessyRegion] ), "#,0" ),
+			        6, FORMAT ( MAX ( DQ_Source[MissingBirthYear] ), "#,0" ),
+			        7, FORMAT ( MAX ( DQ_Source[UnknownPolicy] ), "#,0" ),
+			        8, FORMAT ( MAX ( DQ_Source[NegativePaid] ), "#,0" ),
+			        9, FORMAT ( MAX ( DQ_Source[UnknownRenewal] ), "#,0" ),
+			        10, FORMAT ( CALCULATE ( MAX ( Fact_Claims[LossDate] ), REMOVEFILTERS () ), "dd mmm yyyy" )
+			    )
+		displayFolder: Data Quality
+		lineageTag: 5993db56-37ae-5fb3-988e-e6b15c029c7d
+
+	measure 'DQ Status' =
+			VAR _o = SELECTEDVALUE ( Dim_DQ[Check Order] )
+			VAR _v = [DQ Value]
+			RETURN
+			    SWITCH (
+			        TRUE (),
+			        ISBLANK ( _o ), BLANK (),
+			        _o IN { 1, 2, 10 }, "Info",
+			        _v = "0", "Pass",
+			        _o IN { 3, 4, 5, 6 }, "Handled",
+			        "Fail"
+			    )
+		displayFolder: Data Quality
+		lineageTag: 5909fa25-7f3e-51e1-8031-89be6d8ed917
+
+	measure 'DQ Status Pill' =
+			VAR _t = [DQ Status]
+			VAR _bg = SWITCH ( _t, "Pass", "#2A9D8F", "Info", "#A8B0BD", "Handled", "#F4A261", "#E76F51" )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='66' height='20' viewBox='0 0 66 20'>"
+			        & "<rect x='1' y='2' width='64' height='16' rx='8' fill='" & _bg & "'/>"
+			        & "<text x='33' y='14' text-anchor='middle' font-family='Segoe UI,sans-serif' font-size='10' font-weight='600' fill='#FFFFFF'>" & _t & "</text></svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( _t ),
+			        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( _svg, "%", "%25" ), "#", "%23" ) )
+		displayFolder: Formatting
+		lineageTag: afdf14a7-cfc8-5289-893d-356fc65fa09e
+		dataCategory: ImageUrl
+
+	measure 'DQ Summary' =
+			"<div style='font-family:Segoe UI,sans-serif;background:#14213D;color:#E4E9F2;border-radius:6px;padding:14px 18px;box-sizing:border-box;height:100%;font-size:12px;line-height:1.5'><div style='font-weight:700;color:#FFFFFF;margin-bottom:8px;font-size:13px'>How this report is built</div>"
+			    & "<p style='margin:0 0 7px'>" & ( "<b>Earned premium</b> spreads each policy's premium over the days it covers, so a policy written in December adds only a few days to that year." ) & "</p>"
+			    & "<p style='margin:0 0 7px'>" & ( "<b>Loss ratio</b> = claims incurred (paid + reserves) ÷ earned premium, by loss date. <b>Combined ratio</b> adds commission and a " & FORMAT ( [Admin Expense Ratio], "0%" ) & " admin cost assumption." ) & "</p>"
+			    & "<p style='margin:0 0 7px'>" & ( "<b>Target loss ratio</b> = 100% − expense ratio − " & FORMAT ( [Profit Margin Target], "0%" ) & " profit margin." ) & "</p>"
+			    & "<p style='margin:0 0 7px'>" & ( "<b>Renewal rate</b> counts policies that expired in the period and were replaced by a new policy for the same customer." ) & "</p>"
+			    & "<p style='margin:0 0 7px'>" & ( "<b>Security:</b> the Branch Manager role shows each manager only their region (ManagerEmail in Dim_Region = USERPRINCIPALNAME)." ) & "</p>"
+			    & "<p style='margin:0 0 7px'>" & ( "<b>Sample data:</b> a fictional insurer, generated with a fixed seed. Valued " & FORMAT ( [Valuation Date], "dd mmm yyyy" ) & ". " & [Last Refresh] & "." ) & "</p>"
+			    & "</div>"
+		displayFolder: Insights
+		lineageTag: 9e0f484a-4fd6-5afb-b6f5-a7a5539cfe44
+
+	column Placeholder
+		dataType: string
+		isHidden
+		lineageTag: 1de4d81e-a9a8-5efd-a4f6-e92ca3022d9f
+		summarizeBy: none
+		sourceColumn: Placeholder
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Measures = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Placeholder = text], {})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

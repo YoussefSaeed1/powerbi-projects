@@ -1,0 +1,198 @@
+/// One row per annual policy. Region names are trimmed and capitalised; the age band comes from the driver's birth year.
+table Fact_Policy
+	lineageTag: fcd9db7b-2b00-5385-acaf-43d1ce23155b
+
+	column PolicyID
+		dataType: string
+		isKey
+		lineageTag: 3094b166-9bbe-5563-bd7f-922f687e0bae
+		summarizeBy: none
+		sourceColumn: PolicyID
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomerID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: b0b5ba7d-3061-5e4a-bd1d-5fd05e909eaa
+		summarizeBy: none
+		sourceColumn: CustomerID
+
+		annotation SummarizationSetBy = Automatic
+
+	column RenewalOf
+		dataType: string
+		isHidden
+		lineageTag: d135046c-4ce4-5d7e-a3a7-e17dc6cdae6a
+		summarizeBy: none
+		sourceColumn: RenewalOf
+
+		annotation SummarizationSetBy = Automatic
+
+	column StartDate
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: 0eb1b519-4008-5fda-b881-567cc9b7daad
+		summarizeBy: none
+		sourceColumn: StartDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column EndDate
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: cf689d2e-3c25-5e5b-9e19-c1427ecc726b
+		summarizeBy: none
+		sourceColumn: EndDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Product
+		dataType: string
+		lineageTag: bc51fdaf-c7b0-5070-80a7-e143862739b3
+		summarizeBy: none
+		sourceColumn: Product
+
+		annotation SummarizationSetBy = Automatic
+
+	column Channel
+		dataType: string
+		lineageTag: 46b42e22-228a-5b62-a460-1710dfd4d7b5
+		summarizeBy: none
+		sourceColumn: Channel
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		isHidden
+		lineageTag: 359d346b-cfce-5b46-b5ba-37670a866b6f
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Vehicle Type'
+		dataType: string
+		lineageTag: 39b0ebfe-94c5-51ff-a609-e596e7db75ad
+		summarizeBy: none
+		sourceColumn: Vehicle Type
+
+		annotation SummarizationSetBy = Automatic
+
+	column VehicleYear
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 42b980bb-0377-5f80-8c28-697524662502
+		summarizeBy: none
+		sourceColumn: VehicleYear
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Age Band'
+		dataType: string
+		lineageTag: 120f7ec4-005c-57b9-8ef2-5d9504993bbe
+		summarizeBy: none
+		sourceColumn: Age Band
+		sortByColumn: 'Age Band Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Age Band Order'
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: e051b059-7cb2-5c7b-b288-6f22a1a9b420
+		summarizeBy: none
+		sourceColumn: Age Band Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column SumInsured
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: d8c92730-ce95-5853-aef2-af1464fa67cc
+		summarizeBy: none
+		sourceColumn: SumInsured
+
+		annotation SummarizationSetBy = Automatic
+
+	column GrossPremium
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: c1fa9e1e-edd5-5587-9405-d96cf02eab9b
+		summarizeBy: none
+		sourceColumn: GrossPremium
+
+		annotation SummarizationSetBy = Automatic
+
+	column Commission
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: ec69b3c6-88b7-5144-b01c-1e78ec4836c7
+		summarizeBy: none
+		sourceColumn: Commission
+
+		annotation SummarizationSetBy = Automatic
+
+	column TermDays
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 419b9bf3-fe5a-5036-a4a2-93d489b6a6b0
+		summarizeBy: none
+		sourceColumn: TermDays
+
+		annotation SummarizationSetBy = Automatic
+
+	column Renewed
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 80f1278e-bd81-5474-8b74-a29fd6a20bd8
+		summarizeBy: none
+		sourceColumn: Renewed
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Claim History'
+		dataType: string
+		lineageTag: 4768d6cb-ccb8-5ccf-9ec1-ce98a440f8b3
+		summarizeBy: none
+		sourceColumn: Claim History
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Policy = m
+		mode: import
+		source =
+				let
+				    Source = Policies_Raw,
+				    Region = Table.TransformColumns(Source, {{"Region", each Text.Proper(Text.Trim(_)), type text}}),
+				    Age = Table.AddColumn(Region, "DriverAge", each if [DriverBirthYear] = null then null else Date.Year([StartDate]) - [DriverBirthYear], Int64.Type),
+				    Band = Table.AddColumn(Age, "Age Band", each if [DriverAge] = null then "Unknown" else if [DriverAge] <= 25 then "18-25" else if [DriverAge] <= 35 then "26-35" else if [DriverAge] <= 50 then "36-50" else if [DriverAge] <= 65 then "51-65" else "65+", type text),
+				    BandOrder = Table.AddColumn(Band, "Age Band Order", each List.PositionOf({"18-25", "26-35", "36-50", "51-65", "65+", "Unknown"}, [Age Band]) + 1, Int64.Type),
+				    Term = Table.AddColumn(BandOrder, "TermDays", each Duration.Days([EndDate] - [StartDate]) + 1, Int64.Type),
+				    RenewedIds = List.Buffer(List.RemoveNulls(Source[RenewalOf])),
+				    Renewed = Table.AddColumn(Term, "Renewed", each if List.Contains(RenewedIds, [PolicyID]) then 1 else 0, Int64.Type),
+				    ClaimIds = List.Buffer(List.Distinct(Table.SelectRows(Claims_Checked, each [InCover] = true)[PolicyID])),
+				    History = Table.AddColumn(Renewed, "Claim History", each if List.Contains(ClaimIds, [PolicyID]) then "Had a claim" else "No claim", type text),
+				    Renamed = Table.RenameColumns(History, {{"VehicleType", "Vehicle Type"}}),
+				    Kept = Table.SelectColumns(Renamed, {"PolicyID", "CustomerID", "RenewalOf", "StartDate", "EndDate", "Product", "Channel", "Region", "Vehicle Type", "VehicleYear", "Age Band", "Age Band Order", "SumInsured", "GrossPremium", "Commission", "TermDays", "Renewed", "Claim History"})
+				in
+				    Kept
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

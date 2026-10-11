@@ -1,0 +1,7 @@
+/// Each branch manager sees only their region's policies and claims.
+role 'Branch Manager'
+	modelPermission: read
+
+	tablePermission Dim_Region = Dim_Region[ManagerEmail] = USERPRINCIPALNAME ()
+
+	annotation PBI_Id = d142970fbfc25a729a105baec1a30444
