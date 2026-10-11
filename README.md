@@ -2,7 +2,7 @@
 
 Dashboards by **[Youssef Saeed](https://youssefsaeed-portfolio.vercel.app/)**. Each one starts from a business question and ends with findings someone can act on.
 
-Every project except Sales Tracker is saved as a **Power BI Project (PBIP)**: the semantic model (TMDL) and report (PBIR) are plain text, with documented measures, row-level security, and a data quality page that runs on every refresh.
+Every project is saved as a **Power BI Project (PBIP)**: the semantic model (TMDL) and report (PBIR) are plain text, with documented measures, row-level security and data quality checks.
 
 | | Project | Business question | Tools |
 |---|---|---|---|

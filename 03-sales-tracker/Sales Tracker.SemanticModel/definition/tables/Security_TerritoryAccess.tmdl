@@ -1,0 +1,32 @@
+/// Row-level security mapping: which sales manager sees which continent.
+table Security_TerritoryAccess
+	lineageTag: 9fab27b7-abff-5c02-a9ab-16b80ac47296
+	isHidden
+
+	column UserEmail
+		dataType: string
+		lineageTag: 0ab5f2d8-c445-514e-aa38-1dfb907da453
+		summarizeBy: none
+		sourceColumn: UserEmail
+
+		annotation SummarizationSetBy = Automatic
+
+	column Continent
+		dataType: string
+		lineageTag: 5f255503-9828-52f2-87ed-672fd8348ec8
+		summarizeBy: none
+		sourceColumn: Continent
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Security_TerritoryAccess = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"UserEmail" = text, #"Continent" = text], {{"na.sales@sample.local", "North America"}, {"eu.sales@sample.local", "Europe"}, {"pacific.sales@sample.local", "Pacific"}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

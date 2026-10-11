@@ -1,0 +1,41 @@
+/// Data quality rules checked on every refresh.
+table Dim_DQ
+	lineageTag: 563a68cc-cbdd-5c05-b016-9cccbaa9a37d
+
+	column Check
+		dataType: string
+		lineageTag: 4007df3b-5d13-5bd9-a947-6da58c4c1fee
+		summarizeBy: none
+		sourceColumn: Check
+		sortByColumn: 'Check Order'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Check Order'
+		dataType: int64
+		isHidden
+		lineageTag: adfa4ff1-be7a-590e-86d7-eef59d900f52
+		summarizeBy: none
+		sourceColumn: Check Order
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rule
+		dataType: string
+		lineageTag: e40eb65d-e8a1-50f5-9b78-d4993443c91e
+		summarizeBy: none
+		sourceColumn: Rule
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_DQ = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Check" = text, #"Check Order" = Int64.Type, #"Rule" = text], {{"Order lines loaded", 1, "Row count of the Sales sheet"}, {"Return rows loaded", 2, "Row count of the Returns sheet"}, {"Duplicate order lines", 3, "OrderNumber + OrderLineItem is unique"}, {"Lines with unknown product", 4, "Every ProductKey exists in Dim_Product"}, {"Lines with unknown territory", 5, "Every TerritoryKey exists in Dim_Territory"}, {"Zero or negative quantity", 6, "OrderQuantity > 0"}, {"Products priced below cost", 7, "ProductPrice >= ProductCost"}, {"Returns above units sold", 8, "Returned units <= sold units per product"}, {"Latest order date", 9, "Freshness"}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

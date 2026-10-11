@@ -1,0 +1,331 @@
+table _Measures
+	lineageTag: 728b4232-5ca7-55f0-ad56-71aaf571f43e
+
+	measure 'Latest Order Date' = CALCULATE ( MAX ( Fact_Sales[OrderDate] ), REMOVEFILTERS () )
+		formatString: dd-mmm-yyyy
+		displayFolder: Helpers
+		lineageTag: 164746de-702e-516c-b7ce-98026da17f07
+
+	measure 'Selected Year' =
+			VAR _maxYear = YEAR ( [Latest Order Date] )
+			RETURN
+			    IF ( ISFILTERED ( Dim_Date[Year] ), MAX ( Dim_Date[Year] ), _maxYear )
+		formatString: 0
+		displayFolder: Helpers
+		lineageTag: 7bde64e1-d625-555c-b8a5-12d0ff028967
+
+	measure 'Selected Year Last Month' =
+			VAR _y = [Selected Year]
+			VAR _end = [Latest Order Date]
+			RETURN
+			    CALCULATE ( MAX ( Dim_Date[MonthNo] ), REMOVEFILTERS ( Dim_Date ), Dim_Date[Year] = _y, Dim_Date[Date] <= _end )
+		formatString: 0
+		displayFolder: Helpers
+		lineageTag: a78638a4-6d79-581b-9734-a8d2e01f8614
+
+	measure 'Period Label' =
+			IF (
+			    ISFILTERED ( Dim_Date[Year] ),
+			    VAR _y = [Selected Year] VAR _m = [Selected Year Last Month] RETURN IF ( _m = 12, "FY" & _y, "Jan–" & FORMAT ( DATE ( _y, _m, 1 ), "mmm" ) & " " & _y ),
+			    "Jan 2015 – " & FORMAT ( [Latest Order Date], "mmm yyyy" )
+			)
+		displayFolder: Helpers
+		lineageTag: 29983f3b-4c9f-5b92-9079-b069bfb02503
+
+	measure 'Last Refresh' = "Data refreshed " & FORMAT ( MAX ( _Refresh[RefreshedAt] ), "dd mmm yyyy" )
+		displayFolder: Helpers
+		lineageTag: 2f8c4bb1-7104-5645-a1c0-2a5ef0c8f910
+
+	/// Units × list price.
+	measure 'Total Revenue' = SUMX ( Fact_Sales, Fact_Sales[OrderQuantity] * RELATED ( Dim_Product[ProductPrice] ) )
+		formatString: #,0.00
+		displayFolder: Sales
+		lineageTag: ad00d811-9d11-504a-8c11-9036e692aed8
+
+	/// Units × product cost.
+	measure COGS = SUMX ( Fact_Sales, Fact_Sales[OrderQuantity] * RELATED ( Dim_Product[ProductCost] ) )
+		formatString: #,0.00
+		displayFolder: Sales
+		lineageTag: aa6c8fb0-c37e-5407-b718-aa1ff2701715
+
+	measure 'Total Profit' = [Total Revenue] - [COGS]
+		formatString: #,0.00
+		displayFolder: Sales
+		lineageTag: 3bfb8169-2b4c-5bb7-9a37-b5daef23f315
+
+	measure 'Profit Margin %' = DIVIDE ( [Total Profit], [Total Revenue] )
+		formatString: 0.00%
+		displayFolder: Sales
+		lineageTag: 4e944e6a-6425-50ca-92ea-bc9cc462b243
+
+	measure 'Total Revenue $M' = DIVIDE ( [Total Revenue], 1000000 )
+		formatString: $#,0.00
+		displayFolder: Sales
+		lineageTag: 0b9ac4a9-2495-59e2-a7b1-192f14c8a53d
+
+	measure 'COGS $M' = DIVIDE ( [COGS], 1000000 )
+		formatString: $#,0.00
+		displayFolder: Sales
+		lineageTag: 8e8db2d1-aa64-5d24-bc26-92f11be20661
+
+	measure 'Total Profit $M' = DIVIDE ( [Total Profit], 1000000 )
+		formatString: $#,0.00
+		displayFolder: Sales
+		lineageTag: efb917a2-86b7-5254-bee7-19df595c0b31
+
+	measure 'Total Orders' = DISTINCTCOUNT ( Fact_Sales[OrderNumber] )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: 4989254d-97e3-50cd-bb5b-83c843f6f69e
+
+	measure 'Total Quantity' = SUM ( Fact_Sales[OrderQuantity] )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: c014d93b-c2e7-56d1-806e-06f9bda2157f
+
+	measure 'Total Customers' = DISTINCTCOUNT ( Fact_Sales[CustomerKey] )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: 3127efc5-c980-5b5b-b45b-269ab06a17b4
+
+	measure 'Products Sold' = DISTINCTCOUNT ( Fact_Sales[ProductKey] )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: 47075c59-90fd-5f61-a1be-b058ab63d37f
+
+	measure 'Average Order Value' = DIVIDE ( [Total Revenue], [Total Orders] )
+		formatString: #,0.0
+		displayFolder: Sales
+		lineageTag: d92c29c7-86ab-5d8c-891a-4dfc21ed6fde
+
+	/// Revenue for the same months of the prior year (2017 has data to June only).
+	measure 'Revenue Same Months LY' =
+			VAR _y = [Selected Year]
+			VAR _m = [Selected Year Last Month]
+			RETURN
+			    CALCULATE ( [Total Revenue], REMOVEFILTERS ( Dim_Date ), Dim_Date[Year] = _y - 1, Dim_Date[MonthNo] <= _m )
+		formatString: $#,0
+		displayFolder: Sales
+		lineageTag: bb59427e-b0af-5e19-826c-15d8fadb366f
+
+	measure 'Revenue YTD' =
+			VAR _y = [Selected Year]
+			VAR _m = [Selected Year Last Month]
+			RETURN
+			    CALCULATE ( [Total Revenue], REMOVEFILTERS ( Dim_Date ), Dim_Date[Year] = _y, Dim_Date[MonthNo] <= _m )
+		formatString: $#,0
+		displayFolder: Sales
+		lineageTag: 20f29f48-b913-5fcd-9a26-a8819858b300
+
+	measure 'Revenue YoY %' = DIVIDE ( [Revenue YTD] - [Revenue Same Months LY], [Revenue Same Months LY] )
+		formatString: +0.0%;-0.0%;0.0%
+		displayFolder: Sales
+		lineageTag: 4b2e1bcc-1813-5a8b-9ae5-32a749813b23
+
+	measure 'Category Share %' = DIVIDE ( [Total Revenue], CALCULATE ( [Total Revenue], ALL ( Dim_Product[Category] ) ) )
+		formatString: 0.0%
+		displayFolder: Sales
+		lineageTag: 44a6281d-5007-58fa-a386-fd7b10fce2df
+
+	/// Share of revenue from bikes: the dependence on one category.
+	measure 'Bikes Share %' = DIVIDE ( CALCULATE ( [Total Revenue], Dim_Product[Category] = "Bikes" ), CALCULATE ( [Total Revenue], ALL ( Dim_Product[Category] ) ) )
+		formatString: 0.0%
+		displayFolder: Sales
+		lineageTag: e6b8af03-9ae9-53ce-9913-06684e619994
+
+	measure 'Top Territory' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Territory[Region] ), [Total Orders], DESC )
+			RETURN
+			    MAXX ( _t, Dim_Territory[Region] )
+		displayFolder: Insights
+		lineageTag: b0cc2a49-cc54-54f2-b3c4-b0cb0e0352c8
+
+	measure 'Top Territory Orders' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Territory[Region] ), [Total Orders], DESC )
+			RETURN
+			    MAXX ( _t, [Total Orders] )
+		formatString: #,0
+		displayFolder: Insights
+		lineageTag: 361466d3-124f-5d2f-854f-ac490a4f1283
+
+	measure 'Top Subcategory' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Product[Subcategory] ), [Total Revenue], DESC )
+			RETURN
+			    MAXX ( _t, Dim_Product[Subcategory] )
+		displayFolder: Insights
+		lineageTag: 149fb648-2aac-5cf7-a753-2849cb95d165
+
+	measure 'Top Subcategory Share' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Product[Subcategory] ), [Total Revenue], DESC )
+			RETURN
+			    DIVIDE ( MAXX ( _t, [Total Revenue] ), CALCULATE ( [Total Revenue], ALL ( Dim_Product ) ) )
+		formatString: 0%
+		displayFolder: Insights
+		lineageTag: 5e53e8c4-05b4-52c6-bf57-2e9744532538
+
+	measure 'Accessory Margin %' = CALCULATE ( [Profit Margin %], Dim_Product[Category] = "Accessories" )
+		formatString: 0.0%
+		displayFolder: Insights
+		lineageTag: f78f46f4-3c21-5f6d-930c-4b605d6acdeb
+
+	measure 'Bike Margin %' = CALCULATE ( [Profit Margin %], Dim_Product[Category] = "Bikes" )
+		formatString: 0.0%
+		displayFolder: Insights
+		lineageTag: c2b4a580-2dd4-550e-a982-0a5c9a5901c5
+
+	/// Returned units.
+	measure 'Total Returns' = SUM ( Fact_Returns[ReturnQuantity] )
+		formatString: #,0
+		displayFolder: Returns
+		lineageTag: 77cbda40-c13b-5272-8b3c-3db953032f06
+
+	/// Returned units ÷ units sold.
+	measure 'Return Rate %' = DIVIDE ( [Total Returns], [Total Quantity] )
+		formatString: 0.00%
+		displayFolder: Returns
+		lineageTag: a8494e6f-3f99-52b5-92cc-d47b56d2c72a
+
+	measure 'Return Value' = SUMX ( Fact_Returns, Fact_Returns[ReturnQuantity] * RELATED ( Dim_Product[ProductPrice] ) )
+		formatString: $#,0
+		displayFolder: Returns
+		lineageTag: 1d2228b2-2967-59c0-9f87-e3a918269d02
+
+	measure 'Net Revenue After Returns' = [Total Revenue] - [Return Value]
+		formatString: $#,0
+		displayFolder: Returns
+		lineageTag: 52ebdee2-18d9-54a9-b0d6-ac76bd4639b6
+
+	measure 'Highest Return Category' =
+			VAR _t = TOPN ( 1, ALL ( Dim_Product[Category] ), [Return Rate %], DESC )
+			RETURN
+			    MAXX ( _t, Dim_Product[Category] )
+		displayFolder: Insights
+		lineageTag: 3ac2531b-3816-522e-a942-ef2b006006a1
+
+	measure 'Highest Return Rate' = MAXX ( ALL ( Dim_Product[Category] ), [Return Rate %] )
+		formatString: 0.00%
+		displayFolder: Insights
+		lineageTag: 1d24fe12-c427-5967-88ba-1ce6cfff67d9
+
+	/// Customers with more than one order.
+	measure 'Repeat Customer %' =
+			VAR _c = ADDCOLUMNS ( VALUES ( Fact_Sales[CustomerKey] ), "@o", CALCULATE ( DISTINCTCOUNT ( Fact_Sales[OrderNumber] ) ) )
+			RETURN
+			    DIVIDE ( COUNTROWS ( FILTER ( _c, [@o] > 1 ) ), COUNTROWS ( _c ) )
+		formatString: 0.0%
+		displayFolder: Sales
+		lineageTag: c63459cf-8d22-5d86-b4e4-d64d90b9437a
+
+	measure 'DQ Value' =
+			VAR _o = SELECTEDVALUE ( Dim_DQ[Check Order] )
+			RETURN
+			    SWITCH (
+			        _o,
+			        1, FORMAT ( 0 + COUNTROWS ( ALL ( Fact_Sales ) ), "#,0" ),
+			        2, FORMAT ( 0 + COUNTROWS ( ALL ( Fact_Returns ) ), "#,0" ),
+			        3, FORMAT ( 0 + COUNTROWS ( ALL ( Fact_Sales ) ) - COUNTROWS ( SUMMARIZE ( ALL ( Fact_Sales ), Fact_Sales[OrderNumber], Fact_Sales[OrderLineItem] ) ), "#,0" ),
+			        4, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_Sales ), ISBLANK ( RELATED ( Dim_Product[ProductName] ) ) ) ), "#,0" ),
+			        5, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_Sales ), ISBLANK ( RELATED ( Dim_Territory[Region] ) ) ) ), "#,0" ),
+			        6, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Fact_Sales ), Fact_Sales[OrderQuantity] <= 0 ) ), "#,0" ),
+			        7, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Dim_Product ), Dim_Product[ProductPrice] < Dim_Product[ProductCost] ) ), "#,0" ),
+			        8, FORMAT ( 0 + COUNTROWS ( FILTER ( ALL ( Dim_Product[ProductKey] ), CALCULATE ( SUM ( Fact_Returns[ReturnQuantity] ) ) > CALCULATE ( SUM ( Fact_Sales[OrderQuantity] ) ) ) ), "#,0" ),
+			        9, FORMAT ( [Latest Order Date], "dd mmm yyyy" )
+			    )
+		displayFolder: Data Quality
+		lineageTag: 7cb46b61-b85c-5928-b603-c6a59ab95314
+
+	measure 'DQ Status' =
+			VAR _o = SELECTEDVALUE ( Dim_DQ[Check Order] )
+			VAR _v = [DQ Value]
+			RETURN
+			    SWITCH ( TRUE (), ISBLANK ( _o ), BLANK (), _o IN { 1, 2, 9 }, "Info", _v = "0", "Pass", "Fail" )
+		displayFolder: Data Quality
+		lineageTag: 7cba4c3e-ed59-5dfd-91a3-adc46ab9e7b9
+
+	measure 'DQ Status Pill' =
+			VAR _t = [DQ Status]
+			VAR _bg = SWITCH ( _t, "Pass", "#2E9E6B", "Info", "#A9BCD0", "#C0504D" )
+			VAR _svg =
+			    "<svg xmlns='http://www.w3.org/2000/svg' width='56' height='20' viewBox='0 0 56 20'>"
+			        & "<rect x='1' y='2' width='54' height='16' rx='8' fill='" & _bg & "'/>"
+			        & "<text x='28' y='14' text-anchor='middle' font-family='Segoe UI,sans-serif' font-size='10' font-weight='600' fill='#FFFFFF'>" & _t & "</text></svg>"
+			RETURN
+			    IF ( NOT ISBLANK ( _t ),
+			        "data:image/svg+xml;utf8," & SUBSTITUTE ( SUBSTITUTE ( _svg, "%", "%25" ), "#", "%23" ) )
+		displayFolder: Formatting
+		lineageTag: 8c4f99c2-a868-5d7d-856f-f32b23bcb12b
+		dataCategory: ImageUrl
+
+	measure 'DQ Failed Checks' = COUNTROWS ( FILTER ( ALL ( Dim_DQ ), [DQ Status] = "Fail" ) )
+		formatString: 0
+		displayFolder: Data Quality
+		lineageTag: ea7402aa-daca-5874-b354-ecadcc21ca9d
+
+	/// Units sold vs units returned and the return rate, for the HTML Content visual. Replaces the old funnel that mixed counts with dollars.
+	measure 'Units Sold vs Returned' =
+			VAR _sold = [Total Quantity]
+			VAR _ret = [Total Returns]
+			VAR _rate = DIVIDE ( _ret, _sold )
+			VAR _w = IF ( _sold > 0, ROUND ( 100 * DIVIDE ( _ret, _sold ), 1 ), 0 )
+			VAR _row = "display:flex;align-items:center;gap:10px;margin:0 0 14px"
+			VAR _lab = "width:118px;font-size:13px;font-weight:700;color:#1F2D3D"
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;padding:6px 18px 0 14px;box-sizing:border-box'>"
+			    & "<div style='" & _row & "'><div style='" & _lab & "'>Units sold</div><div style='flex:1;height:40px;background:#4D6F95;color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:flex-end;padding-right:10px'>" & FORMAT ( _sold, "#,0" ) & "</div></div>"
+			    & "<div style='" & _row & "'><div style='" & _lab & "'>Units returned</div><div style='flex:1;display:flex;align-items:center;gap:8px'><div style='width:" & FORMAT ( MAX ( _w, 1.5 ), "0.0" ) & "%;height:40px;background:#C0504D'></div><div style='font-size:14px;font-weight:700;color:#1F2D3D'>" & FORMAT ( _ret, "#,0" ) & "</div></div></div>"
+			    & "<div style='font-size:12.5px;color:#1F2D3D;margin-top:4px'><b style='font-size:20px;color:#C0504D'>" & FORMAT ( _rate, "0.00%" ) & "</b>&nbsp; of units sold came back</div>"
+			    & "</div>"
+		displayFolder: Visuals
+		lineageTag: ea510046-63c6-5b1f-a69a-cb221cd1597e
+
+	measure 'KPI Executive' =
+			"<div style='display:flex;gap:9px;height:83px;overflow:hidden;font-family:Segoe UI,sans-serif'>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:8px;padding:19px 14px 0;box-sizing:border-box;height:83px'><div style='font-size:22px;color:#1F2D3D;line-height:1.15;white-space:nowrap'>" & ( FORMAT ( DIVIDE ( [Total Revenue], 1000000 ), "0.00" ) & "M" ) & "</div><div style='font-size:12px;font-weight:700;color:#4A6F98;margin-top:8px;white-space:nowrap'>Total Revenue</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:8px;padding:19px 14px 0;box-sizing:border-box;height:83px'><div style='font-size:22px;color:#1F2D3D;line-height:1.15;white-space:nowrap'>" & ( FORMAT ( DIVIDE ( [COGS], 1000000 ), "0.00" ) & "M" ) & "</div><div style='font-size:12px;font-weight:700;color:#4A6F98;margin-top:8px;white-space:nowrap'>COGS</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:8px;padding:19px 14px 0;box-sizing:border-box;height:83px'><div style='font-size:22px;color:#1F2D3D;line-height:1.15;white-space:nowrap'>" & ( FORMAT ( DIVIDE ( [Total Profit], 1000000 ), "0.00" ) & "M" ) & "</div><div style='font-size:12px;font-weight:700;color:#4A6F98;margin-top:8px;white-space:nowrap'>Total Profit</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:8px;padding:19px 14px 0;box-sizing:border-box;height:83px'><div style='font-size:22px;color:#1F2D3D;line-height:1.15;white-space:nowrap'>" & ( FORMAT ( [Profit Margin %], "0.00%" ) ) & "</div><div style='font-size:12px;font-weight:700;color:#4A6F98;margin-top:8px;white-space:nowrap'>Profit Margin %</div></div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: d6ed4c05-26dd-53d0-983a-3efce72879b0
+
+	measure 'KPI Product' =
+			"<div style='display:flex;gap:9px;height:83px;overflow:hidden;font-family:Segoe UI,sans-serif'>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:8px;padding:19px 14px 0;box-sizing:border-box;height:83px'><div style='font-size:22px;color:#1F2D3D;line-height:1.15;white-space:nowrap'>" & ( FORMAT ( DIVIDE ( [Total Orders], 1000 ), "0.00" ) & "K" ) & "</div><div style='font-size:12px;font-weight:700;color:#4A6F98;margin-top:8px;white-space:nowrap'>Total Orders</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:8px;padding:19px 14px 0;box-sizing:border-box;height:83px'><div style='font-size:22px;color:#1F2D3D;line-height:1.15;white-space:nowrap'>" & ( FORMAT ( [Products Sold], "#,0" ) ) & "</div><div style='font-size:12px;font-weight:700;color:#4A6F98;margin-top:8px;white-space:nowrap'>Total Products</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:8px;padding:19px 14px 0;box-sizing:border-box;height:83px'><div style='font-size:22px;color:#1F2D3D;line-height:1.15;white-space:nowrap'>" & ( FORMAT ( DIVIDE ( [Total Quantity], 1000 ), "0.00" ) & "K" ) & "</div><div style='font-size:12px;font-weight:700;color:#4A6F98;margin-top:8px;white-space:nowrap'>Total Quantity</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:8px;padding:19px 14px 0;box-sizing:border-box;height:83px'><div style='font-size:22px;color:#1F2D3D;line-height:1.15;white-space:nowrap'>" & ( FORMAT ( DIVIDE ( [COGS], 1000000 ), "0.00" ) & "M" ) & "</div><div style='font-size:12px;font-weight:700;color:#4A6F98;margin-top:8px;white-space:nowrap'>COGS</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:8px;padding:19px 14px 0;box-sizing:border-box;height:83px'><div style='font-size:22px;color:#1F2D3D;line-height:1.15;white-space:nowrap'>" & ( FORMAT ( DIVIDE ( [Total Revenue], 1000000 ), "0.00" ) & "M" ) & "</div><div style='font-size:12px;font-weight:700;color:#4A6F98;margin-top:8px;white-space:nowrap'>Total Revenue</div></div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 2bda0929-cea1-5119-a664-5ba189c36b1a
+
+	measure 'KPI Business' =
+			"<div style='display:flex;gap:9px;height:83px;overflow:hidden;font-family:Segoe UI,sans-serif'>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:8px;padding:19px 14px 0;box-sizing:border-box;height:83px'><div style='font-size:22px;color:#1F2D3D;line-height:1.15;white-space:nowrap'>" & ( FORMAT ( DIVIDE ( [Total Orders], 1000 ), "0.00" ) & "K" ) & "</div><div style='font-size:12px;font-weight:700;color:#4A6F98;margin-top:8px;white-space:nowrap'>Orders</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:8px;padding:19px 14px 0;box-sizing:border-box;height:83px'><div style='font-size:22px;color:#1F2D3D;line-height:1.15;white-space:nowrap'>" & ( FORMAT ( [Average Order Value], "0.0" ) ) & "</div><div style='font-size:12px;font-weight:700;color:#4A6F98;margin-top:8px;white-space:nowrap'>AOV</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:8px;padding:19px 14px 0;box-sizing:border-box;height:83px'><div style='font-size:22px;color:#1F2D3D;line-height:1.15;white-space:nowrap'>" & ( FORMAT ( DIVIDE ( [Total Returns], 1000 ), "0.00" ) & "K" ) & "</div><div style='font-size:12px;font-weight:700;color:#4A6F98;margin-top:8px;white-space:nowrap'>Returns</div></div>"
+			    & "<div style='flex:1;min-width:0;background:#FFFFFF;border-radius:8px;padding:19px 14px 0;box-sizing:border-box;height:83px'><div style='font-size:22px;color:#1F2D3D;line-height:1.15;white-space:nowrap'>" & ( FORMAT ( [Return Rate %], "0.00%" ) ) & "</div><div style='font-size:12px;font-weight:700;color:#4A6F98;margin-top:8px;white-space:nowrap'>Return Rate %</div></div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: be7dbaf9-990d-5ee6-99df-6cc80fcb77d0
+
+	column Placeholder
+		dataType: string
+		isHidden
+		lineageTag: be07f334-a8d0-5fa1-938d-990b8ee57a44
+		summarizeBy: none
+		sourceColumn: Placeholder
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Measures = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Placeholder = text], {})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

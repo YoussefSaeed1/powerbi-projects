@@ -1,0 +1,73 @@
+{
+  "name": "Sales Tracker",
+  "dataColors": [
+    "#4D6F95",
+    "#1E90FF",
+    "#1B2F8A",
+    "#7F9DBD",
+    "#C0504D",
+    "#A9BCD0",
+    "#2E9E6B",
+    "#F2A93B"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#1F2D3D",
+  "tableAccent": "#4D6F95",
+  "textClasses": {
+    "label": {
+      "fontSize": 9,
+      "color": "#1F2D3D"
+    },
+    "callout": {
+      "fontSize": 26,
+      "color": "#1F2D3D"
+    },
+    "title": {
+      "fontFace": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif",
+      "fontSize": 11,
+      "color": "#1F2D3D"
+    },
+    "header": {
+      "color": "#1F2D3D"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "show": false
+          }
+        ],
+        "border": [
+          {
+            "show": false
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": false
+          }
+        ],
+        "visualHeader": [
+          {
+            "show": false
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#FFFFFF"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

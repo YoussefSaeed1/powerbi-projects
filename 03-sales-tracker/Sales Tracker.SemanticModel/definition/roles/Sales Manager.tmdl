@@ -1,0 +1,7 @@
+/// Dynamic row-level security: each sales manager sees the continents mapped to their sign-in.
+role 'Sales Manager'
+	modelPermission: read
+
+	tablePermission Dim_Territory = Dim_Territory[Continent] IN CALCULATETABLE ( VALUES ( Security_TerritoryAccess[Continent] ), Security_TerritoryAccess[UserEmail] = USERPRINCIPALNAME () )
+
+	annotation PBI_Id = 5530e709f4625fd1b489ad4ef68e5862

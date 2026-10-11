@@ -1,0 +1,95 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/3.3.0/schema.json",
+  "themeCollection": {
+    "baseTheme": {
+      "name": "CY24SU10",
+      "reportVersionAtImport": {
+        "visual": "1.8.97",
+        "report": "2.0.97",
+        "page": "1.3.97"
+      },
+      "type": "SharedResources"
+    },
+    "customTheme": {
+      "name": "SalesTrackerTheme.json",
+      "reportVersionAtImport": {
+        "visual": "1.8.97",
+        "report": "2.0.97",
+        "page": "1.3.97"
+      },
+      "type": "RegisteredResources"
+    }
+  },
+  "objects": {
+    "outspacePane": [
+      {
+        "properties": {
+          "expanded": {
+            "expr": {
+              "Literal": {
+                "Value": "false"
+              }
+            }
+          },
+          "visible": {
+            "expr": {
+              "Literal": {
+                "Value": "true"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "resourcePackages": [
+    {
+      "name": "SharedResources",
+      "type": "SharedResources",
+      "items": [
+        {
+          "name": "CY24SU10",
+          "path": "BaseThemes/CY24SU10.json",
+          "type": "BaseTheme"
+        }
+      ]
+    },
+    {
+      "name": "RegisteredResources",
+      "type": "RegisteredResources",
+      "items": [
+        {
+          "name": "bg_overview58698758396799.png",
+          "path": "bg_overview58698758396799.png",
+          "type": "Image"
+        },
+        {
+          "name": "bg_products62517306911036.png",
+          "path": "bg_products62517306911036.png",
+          "type": "Image"
+        },
+        {
+          "name": "bg_insights65103852425201.png",
+          "path": "bg_insights65103852425201.png",
+          "type": "Image"
+        },
+        {
+          "name": "SalesTrackerTheme.json",
+          "path": "SalesTrackerTheme.json",
+          "type": "CustomTheme"
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "useStylableVisualContainerHeader": true,
+    "exportDataMode": "AllowSummarized",
+    "defaultFilterActionIsDataFilter": true,
+    "defaultDrillFilterOtherVisuals": true,
+    "allowChangeFilterTypes": true,
+    "useEnhancedTooltips": true
+  },
+  "publicCustomVisuals": [
+    "htmlContent443BE3AD55E043BF878BED274D3A6865"
+  ]
+}

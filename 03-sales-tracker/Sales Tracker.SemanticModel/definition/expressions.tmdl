@@ -1,0 +1,8 @@
+/// Full path of the data file. Change it here once if you move the folder.
+expression DataFilePath = "C:\Users\RTX\Desktop\Portfolio Dashboards\Sales Tracker\Sales_Sample_Data.xlsx" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 15c0f1c0-1d85-5824-8e3e-9a081d82a0a3
+
+	annotation PBI_ResultType = Text
+
+	annotation PBI_NavigationStepName = Navigation
+

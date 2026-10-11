@@ -1,0 +1,72 @@
+table Dim_Product
+	lineageTag: 75de883f-9464-5a1f-8ade-6bf99b480172
+
+	column ProductKey
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		lineageTag: e852fa13-b70d-57f7-b887-1d9e6ec04cc3
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductName
+		dataType: string
+		lineageTag: 70115f02-76d4-5f31-8266-8f58c46e13a5
+		summarizeBy: none
+		sourceColumn: ProductName
+
+		annotation SummarizationSetBy = Automatic
+
+	column Subcategory
+		dataType: string
+		lineageTag: 03839e22-bca0-5d22-a1e0-d0c3fb2b5c3c
+		summarizeBy: none
+		sourceColumn: Subcategory
+
+		annotation SummarizationSetBy = Automatic
+
+	column Category
+		dataType: string
+		lineageTag: 4e99149b-ff04-5806-85b1-f9a81cba3e95
+		summarizeBy: none
+		sourceColumn: Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductCost
+		dataType: double
+		formatString: $#,0.00
+		lineageTag: 110ba715-ccc5-5836-98d6-5c2dd412c3b7
+		summarizeBy: none
+		sourceColumn: ProductCost
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductPrice
+		dataType: double
+		formatString: $#,0.00
+		lineageTag: dab94693-7edc-53f4-b52c-f9688d394b50
+		summarizeBy: none
+		sourceColumn: ProductPrice
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Product = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="Products",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Selected = Table.SelectColumns(Promoted, {"ProductKey", "ProductName", "Subcategory", "Category", "ProductCost", "ProductPrice"}),
+				    NonBlank = Table.SelectRows(Selected, each [ProductKey] <> null and [ProductKey] <> ""),
+				    Typed = Table.TransformColumnTypes(NonBlank, {{"ProductKey", Int64.Type}, {"ProductName", type text}, {"Subcategory", type text}, {"Category", type text}, {"ProductCost", type number}, {"ProductPrice", type number}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

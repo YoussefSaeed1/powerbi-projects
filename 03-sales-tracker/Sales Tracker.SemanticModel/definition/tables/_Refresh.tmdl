@@ -1,0 +1,28 @@
+/// Time of the last data refresh (shown in the report footer and the data quality page).
+table _Refresh
+	lineageTag: 22b45c7d-9fb9-5232-9f6d-877ae89e3d05
+	isHidden
+
+	column RefreshedAt
+		dataType: dateTime
+		isHidden
+		formatString: dd-mmm-yyyy hh:nn
+		lineageTag: 16e97fe7-a721-5d94-b8d9-fa3b64d76c91
+		summarizeBy: none
+		sourceColumn: RefreshedAt
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition _Refresh = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [RefreshedAt = datetime], {{DateTime.LocalNow()}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

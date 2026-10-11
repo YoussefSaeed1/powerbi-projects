@@ -1,0 +1,90 @@
+/// One row per order line.
+table Fact_Sales
+	lineageTag: 47f19705-2db9-5511-9a0d-1bd3fcce93dc
+
+	column OrderDate
+		dataType: dateTime
+		formatString: yyyy-mm-dd
+		lineageTag: eaffa5bb-88ff-58b1-a6fd-101902a3d769
+		summarizeBy: none
+		sourceColumn: OrderDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column OrderNumber
+		dataType: int64
+		formatString: 0
+		lineageTag: 945b47a2-25f3-50ac-b097-f02e13c31647
+		summarizeBy: none
+		sourceColumn: OrderNumber
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrderLineItem
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 23ff5617-e15e-5ca7-a30b-4a90e125d14c
+		summarizeBy: none
+		sourceColumn: OrderLineItem
+
+		annotation SummarizationSetBy = Automatic
+
+	column ProductKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: a90a4547-f8d5-5d32-a7b7-f19038a8da17
+		summarizeBy: none
+		sourceColumn: ProductKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomerKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: f38f9e9d-8871-5bda-956a-6b713fe70925
+		summarizeBy: none
+		sourceColumn: CustomerKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column TerritoryKey
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: d385e50d-bf98-537a-b715-0cb86258452d
+		summarizeBy: none
+		sourceColumn: TerritoryKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrderQuantity
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: 40e91fbb-f5c3-5a2b-83b5-661c05c46d32
+		summarizeBy: none
+		sourceColumn: OrderQuantity
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Sales = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="Sales",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Selected = Table.SelectColumns(Promoted, {"OrderDate", "OrderNumber", "OrderLineItem", "ProductKey", "CustomerKey", "TerritoryKey", "OrderQuantity"}),
+				    NonBlank = Table.SelectRows(Selected, each [OrderDate] <> null and [OrderDate] <> ""),
+				    Typed = Table.TransformColumnTypes(NonBlank, {{"OrderDate", type date}, {"OrderNumber", Int64.Type}, {"OrderLineItem", Int64.Type}, {"ProductKey", Int64.Type}, {"CustomerKey", Int64.Type}, {"TerritoryKey", Int64.Type}, {"OrderQuantity", Int64.Type}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

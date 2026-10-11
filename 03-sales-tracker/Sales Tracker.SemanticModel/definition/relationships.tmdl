@@ -1,0 +1,27 @@
+relationship 0a653e75-c9f6-504d-b6e5-5f2834a94d41
+	fromColumn: Fact_Sales.OrderDate
+	toColumn: Dim_Date.Date
+
+relationship ddf70f62-b901-5889-b479-59ae7197417b
+	fromColumn: Fact_Sales.ProductKey
+	toColumn: Dim_Product.ProductKey
+
+relationship 057dc681-2b0b-5309-ad4c-6cf35948a772
+	fromColumn: Fact_Sales.CustomerKey
+	toColumn: Dim_Customer.CustomerKey
+
+relationship 4de268be-e55c-5d62-b2ec-7fd43b9217ae
+	fromColumn: Fact_Sales.TerritoryKey
+	toColumn: Dim_Territory.TerritoryKey
+
+relationship 75155186-db41-521e-a0f8-3ede3aa7e4cf
+	fromColumn: Fact_Returns.ReturnDate
+	toColumn: Dim_Date.Date
+
+relationship b1997a67-2c7a-56da-af21-fa5ba0b961d2
+	fromColumn: Fact_Returns.ProductKey
+	toColumn: Dim_Product.ProductKey
+
+relationship 07cddac9-5124-559f-8027-4ead3885c8d7
+	fromColumn: Fact_Returns.TerritoryKey
+	toColumn: Dim_Territory.TerritoryKey

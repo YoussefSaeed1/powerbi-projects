@@ -1,0 +1,54 @@
+table Dim_Territory
+	lineageTag: 8f30b9ad-9c93-5663-adb7-680f76fdaea2
+
+	column TerritoryKey
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		lineageTag: 1dc09e85-62fd-550b-b652-51250da5b9b5
+		summarizeBy: none
+		sourceColumn: TerritoryKey
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		lineageTag: 58dc8ba0-8162-5619-aa00-b0e08429ce7c
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column Country
+		dataType: string
+		lineageTag: f99ad325-0ea4-5a5c-b63a-ddaafe8b2d18
+		summarizeBy: none
+		sourceColumn: Country
+
+		annotation SummarizationSetBy = Automatic
+
+	column Continent
+		dataType: string
+		lineageTag: ca346a29-5a57-5957-b534-c06199d7de02
+		summarizeBy: none
+		sourceColumn: Continent
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Territory = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="Territories",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Selected = Table.SelectColumns(Promoted, {"TerritoryKey", "Region", "Country", "Continent"}),
+				    NonBlank = Table.SelectRows(Selected, each [TerritoryKey] <> null and [TerritoryKey] <> ""),
+				    Typed = Table.TransformColumnTypes(NonBlank, {{"TerritoryKey", Int64.Type}, {"Region", type text}, {"Country", type text}, {"Continent", type text}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
