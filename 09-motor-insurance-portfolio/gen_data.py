@@ -122,7 +122,8 @@ pol_out = P[["PolicyID", "CustomerID", "PrevPolicy", "Start", "End", "Product", 
              "DriverBirthYear", "SumInsured", "GWP", "Commission"]].rename(columns={"Start": "StartDate", "End": "EndDate", "PrevPolicy": "RenewalOf",
                                                                                   "Vehicle": "VehicleType", "GWP": "GrossPremium"})
 clm_out = C[["ClaimID", "PolicyID", "LossDate", "ReportDate", "ClaimType", "Status", "Paid", "Outstanding"]].rename(columns={"Outstanding": "Reserve"})
-out = "/home/claude/pbi/projects/insurance/data/Motor_Insurance_Sample.xlsx"
+import os
+out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Motor_Insurance_Sample.xlsx")
 with pd.ExcelWriter(out, engine="openpyxl") as w:
     pol_out.to_excel(w, sheet_name="Policies", index=False)
     clm_out.to_excel(w, sheet_name="Claims", index=False)
