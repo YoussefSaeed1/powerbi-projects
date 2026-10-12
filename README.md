@@ -18,4 +18,4 @@ Every project is saved as a **Power BI Project (PBIP)**: the semantic model (TMD
 
 ## Connect
 
-[Portfolio](https://youssefsaeed-portfolio.vercel.app/) · [LinkedIn](https://www.linkedin.com/in/youssef-saeed1/) · [Email](mailto:youssefsaeed206@gmail.com) · [Book a call](https://cal.com/youssefsaeed)
+[Portfolio](https://youssefsaeed-portfolio.vercel.app/) · [LinkedIn](https://www.linkedin.com/in/youssef-saeed1/)
