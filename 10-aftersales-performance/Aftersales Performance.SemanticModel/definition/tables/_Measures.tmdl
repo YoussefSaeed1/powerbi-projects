@@ -1,0 +1,1203 @@
+table _Measures
+	lineageTag: 42d556b5-569c-5cc9-8230-f60bf2ff5e76
+
+	measure 'Last Refresh' = "Data refreshed " & FORMAT ( MAX ( _Refresh[RefreshedAt] ), "dd mmm yyyy" )
+		displayFolder: Helpers
+		lineageTag: 73a18da6-cb2a-5c32-8b13-8dd6a797040d
+
+	measure 'Selected Year' = MAX ( Dim_Date[Year] )
+		formatString: 0
+		displayFolder: Helpers
+		lineageTag: 891d7d70-ddd7-5c18-a579-c9a9c55c9001
+
+	/// List price before discounts.
+	measure 'Gross Sales' = SUM ( Fact_Sales[Gross] )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: 97b4fde8-0e8a-5f62-8c2d-a11609288cd0
+
+	measure Discounts = SUM ( Fact_Sales[Discount] )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: c463fb56-898c-5d30-b8c7-f2e590335cee
+
+	/// Gross sales minus discounts.
+	measure 'Net Sales' = SUM ( Fact_Sales[NetSales] )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: 1a7e9de2-bac8-5155-a1c5-c89077c02271
+
+	/// Parts cost and technician cost of the work sold.
+	measure 'Cost of Sales' = SUM ( Fact_Sales[COGS] )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: 8fa036c6-3f75-5b2a-b6ad-928229af43e5
+
+	measure 'Gross Profit' = [Net Sales] - [Cost of Sales]
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: 64c3f03e-6963-59f6-be04-17840b565cc9
+
+	measure 'Gross Margin' = DIVIDE ( [Gross Profit], [Net Sales] )
+		formatString: 0.0%
+		displayFolder: Sales
+		lineageTag: 42932cf6-10da-5bbb-a1bf-48811d689125
+
+	/// Discounts as a share of gross sales.
+	measure 'Discount Rate' = DIVIDE ( [Discounts], [Gross Sales] )
+		formatString: 0.0%
+		displayFolder: Sales
+		lineageTag: 35e3ed1c-c528-5cde-92f1-169f44d544e9
+
+	measure Invoices = DISTINCTCOUNT ( Fact_Sales[InvoiceID] )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: d123ca9f-7957-5d38-bac0-a4bbeb6b8c51
+
+	measure 'Average Invoice' = DIVIDE ( [Net Sales], [Invoices] )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: d9f0e104-166f-5f19-bfdd-af79e18c07b5
+
+	/// Retail job cards: one workshop invoice is one visit.
+	measure 'Workshop Visits' = CALCULATE ( DISTINCTCOUNT ( Fact_Sales[InvoiceID] ), Fact_Sales[Channel] = "Workshop" )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: c7ea21ab-b3fc-5a9b-823e-5fc5fab2a311
+
+	measure 'Average Workshop Invoice' = DIVIDE ( CALCULATE ( [Net Sales], Fact_Sales[Channel] = "Workshop" ), [Workshop Visits] )
+		formatString: #,0
+		displayFolder: Sales
+		lineageTag: 630ca252-a41c-5919-a96a-bf55aa97b6f8
+
+	/// Technician hours billed on labour and body & paint lines.
+	measure 'Hours Sold' = SUM ( Fact_Sales[Hours] )
+		formatString: #,0
+		displayFolder: Workshop
+		lineageTag: 935f0a8d-cf0c-5d7d-8294-e1dc760851ee
+
+	/// Labour net sales per hour sold, after discounts.
+	measure 'Labour Sales per Hour' = DIVIDE ( CALCULATE ( [Net Sales], Dim_BusinessLine[Business Line] = "Labour" ), CALCULATE ( [Hours Sold], Dim_BusinessLine[Business Line] = "Labour" ) )
+		formatString: #,0
+		displayFolder: Workshop
+		lineageTag: e312da24-ba6d-5fca-840d-f5a9e6540d7d
+
+	/// Technicians × working days × 8 hours × 85%.
+	measure 'Available Hours' = SUM ( Fact_Capacity[AvailableHours] )
+		formatString: #,0
+		displayFolder: Workshop
+		lineageTag: 88794ba7-51ba-5480-8075-5c15d3820339
+
+	/// Hours sold ÷ hours available. Above 95% the workshop turns work away.
+	measure Utilisation = DIVIDE ( [Hours Sold], [Available Hours] )
+		formatString: 0%
+		displayFolder: Workshop
+		lineageTag: 95ffacd6-26d6-5b0e-a255-15aab2afba7e
+
+	measure 'Target Sales' = SUM ( Fact_BranchTarget[TargetSales] )
+		formatString: #,0
+		displayFolder: Targets
+		lineageTag: e79d09f7-dcb1-535f-82f3-e61c3276def7
+
+	measure 'Target Gross Profit' = SUM ( Fact_BranchTarget[TargetGP] )
+		formatString: #,0
+		displayFolder: Targets
+		lineageTag: d25bf10e-78c4-5c16-a788-6703ca211b9c
+
+	measure 'Sales vs Target' = DIVIDE ( [Net Sales], [Target Sales] )
+		formatString: 0%
+		displayFolder: Targets
+		lineageTag: 11907aaa-4444-542b-8df2-13872d48a039
+
+	measure 'Gross Profit vs Target' = DIVIDE ( [Gross Profit], [Target Gross Profit] )
+		formatString: 0%
+		displayFolder: Targets
+		lineageTag: ec027861-b9ab-56a3-aa8f-97f28624424f
+
+	measure 'Rep Target' = SUM ( Fact_RepTarget[TargetSales] )
+		formatString: #,0
+		displayFolder: Targets
+		lineageTag: 5bb4e31c-1807-5021-a3ad-42834beb48fb
+
+	/// Rep net sales ÷ rep target.
+	measure 'Rep Achievement' = DIVIDE ( [Net Sales], [Rep Target] )
+		formatString: 0%
+		displayFolder: Targets
+		lineageTag: 6aea0384-4382-55e9-aa67-07e328801715
+
+	measure Overheads = SUM ( Fact_Overhead[Actual] )
+		formatString: #,0
+		displayFolder: Finance
+		lineageTag: 450f869e-dd8f-56b2-be01-78f52b707647
+
+	measure 'Overhead Budget' = SUM ( Fact_Overhead[Budget] )
+		formatString: #,0
+		displayFolder: Finance
+		lineageTag: 89064d90-8f7d-55a5-845b-31a72650aec3
+
+	measure 'Overheads vs Budget' = DIVIDE ( [Overheads], [Overhead Budget] ) - 1
+		formatString: +0.0%;-0.0%
+		displayFolder: Finance
+		lineageTag: 2a0a2e8b-27a2-5d2d-af0e-2c6279f7f6ff
+
+	/// Gross profit minus branch overheads.
+	measure 'Operating Profit' = [Gross Profit] - [Overheads]
+		formatString: #,0
+		displayFolder: Finance
+		lineageTag: 0171d5b6-76dc-5eac-bc5a-f8fd8ed7ec00
+
+	measure 'Operating Margin' = DIVIDE ( [Operating Profit], [Net Sales] )
+		formatString: 0.0%
+		displayFolder: Finance
+		lineageTag: 6582ca9f-f7c1-59a5-869f-25253c511628
+
+	measure 'Gross Sales LY' = CALCULATE ( [Gross Sales], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Last Year
+		lineageTag: 04647e87-e3b0-5616-af1c-97c70536907f
+
+	measure 'Discounts LY' = CALCULATE ( [Discounts], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Last Year
+		lineageTag: ad448080-b231-54ad-bf1f-b994de61ff94
+
+	measure 'Net Sales LY' = CALCULATE ( [Net Sales], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Last Year
+		lineageTag: fb099283-e676-5926-b22a-1918c55e3c64
+
+	measure 'Cost of Sales LY' = CALCULATE ( [Cost of Sales], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Last Year
+		lineageTag: 8798c0b6-158f-51e2-a0a8-e55178b34723
+
+	measure 'Gross Profit LY' = CALCULATE ( [Gross Profit], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Last Year
+		lineageTag: 9bf010f4-31a5-5533-8065-bb1197957761
+
+	measure 'Gross Margin LY' = CALCULATE ( [Gross Margin], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: 0.0%
+		displayFolder: Last Year
+		lineageTag: e2d4fdd8-8c0e-5bc2-aa30-6c8435895acd
+
+	measure 'Discount Rate LY' = CALCULATE ( [Discount Rate], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: 0.0%
+		displayFolder: Last Year
+		lineageTag: 86fa6049-0e8a-59fc-9404-a1f3ca37bf2a
+
+	measure 'Workshop Visits LY' = CALCULATE ( [Workshop Visits], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Last Year
+		lineageTag: 86830dd1-7766-5b0d-9d5d-29c7f0d580a2
+
+	measure 'Average Workshop Invoice LY' = CALCULATE ( [Average Workshop Invoice], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Last Year
+		lineageTag: 780eb130-2757-517f-a90c-f92c5d91e126
+
+	measure 'Hours Sold LY' = CALCULATE ( [Hours Sold], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Last Year
+		lineageTag: bfb0757f-abc6-558f-bd8c-41b1c110b7b6
+
+	measure 'Operating Profit LY' = CALCULATE ( [Operating Profit], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Last Year
+		lineageTag: 667bc632-f40b-503a-ae28-a4c34c75acac
+
+	measure 'Operating Margin LY' = CALCULATE ( [Operating Margin], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: 0.0%
+		displayFolder: Last Year
+		lineageTag: 0e521e20-72e3-5395-9942-d1793d463db1
+
+	/// Cars the group sold that are still on the road.
+	measure 'Cars on Road' = SUM ( Fact_CarsOnRoad[CarsOnRoad] )
+		formatString: #,0
+		displayFolder: Network
+		lineageTag: 5eef41ba-337e-5741-8ed7-8116cdba3e23
+
+	/// Retail owners with at least one workshop visit in the period.
+	measure 'Owners Visited' = CALCULATE ( DISTINCTCOUNT ( Fact_Sales[CustomerID] ), Fact_Sales[Channel] = "Workshop", Dim_Customer[CustomerType] = "Retail" )
+		formatString: #,0
+		displayFolder: Network
+		lineageTag: 86ddbab8-3dca-529d-aa0f-9e0885612a7e
+
+	/// Owners who visited ÷ our cars on the road.
+	measure Penetration = DIVIDE ( [Owners Visited], [Cars on Road] )
+		formatString: 0.0%
+		displayFolder: Network
+		lineageTag: 5408af05-8d18-5f8e-8ffa-209bc110d594
+
+	measure 'Retail Customers' = CALCULATE ( DISTINCTCOUNT ( Fact_Sales[CustomerID] ), Dim_Customer[CustomerType] = "Retail" )
+		formatString: #,0
+		displayFolder: Customers
+		lineageTag: 3f9b3792-cd0d-5509-8b7c-bedd37161a19
+
+	measure 'Retail Customers LY' = CALCULATE ( [Retail Customers], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) )
+		formatString: #,0
+		displayFolder: Customers
+		lineageTag: 8ad76732-1dd2-5624-9c89-9aa122057be9
+
+	/// Retail customers who bought last year and again this year.
+	measure 'Retained Customers' =
+			VAR _ly = CALCULATETABLE ( VALUES ( Fact_Sales[CustomerID] ), SAMEPERIODLASTYEAR ( Dim_Date[Date] ), Dim_Customer[CustomerType] = "Retail" )
+			VAR _cy = CALCULATETABLE ( VALUES ( Fact_Sales[CustomerID] ), Dim_Customer[CustomerType] = "Retail" )
+			RETURN
+			    COUNTROWS ( INTERSECT ( _ly, _cy ) )
+		formatString: #,0
+		displayFolder: Customers
+		lineageTag: da1c230e-39d8-5d17-88c8-b0f2d0862980
+
+	measure 'Retention Rate' = DIVIDE ( [Retained Customers], [Retail Customers LY] )
+		formatString: 0.0%
+		displayFolder: Customers
+		lineageTag: 01b1a53b-d17a-534b-83c4-7ba364b6b637
+
+	/// Bought last year, not this year.
+	measure 'Lost Customers' = [Retail Customers LY] - [Retained Customers]
+		formatString: #,0
+		displayFolder: Customers
+		lineageTag: 6b7068ad-7906-5561-b61d-6993f8c4e558
+
+	/// Retail customers whose first purchase falls in the period.
+	measure 'New Customers' =
+			VAR _start = MIN ( Dim_Date[Date] )
+			RETURN
+			    COUNTROWS (
+			        FILTER (
+			            CALCULATETABLE ( VALUES ( Fact_Sales[CustomerID] ), Dim_Customer[CustomerType] = "Retail" ),
+			            CALCULATE ( MIN ( Fact_Sales[InvoiceDate] ), REMOVEFILTERS ( Dim_Date ) ) >= _start
+			        )
+			    )
+		formatString: #,0
+		displayFolder: Customers
+		lineageTag: 579d887a-280b-53a4-9870-1eee0319fe8d
+
+	measure 'Sales per Retail Customer' = DIVIDE ( CALCULATE ( [Net Sales], Dim_Customer[CustomerType] = "Retail" ), [Retail Customers] )
+		formatString: #,0
+		displayFolder: Customers
+		lineageTag: 267a2e75-2b89-52bb-a7f3-b7c398c0b85b
+
+	/// Retention of owners whose car is this many years old in the selected year.
+	measure 'Retention by Car Age' =
+			VAR _y = MAX ( Dim_Date[Year] )
+			VAR _a = SELECTEDVALUE ( Dim_CarAge[Car Age] )
+			RETURN
+			    CALCULATE ( [Retention Rate], FILTER ( ALL ( Dim_Customer[ModelYear] ), IF ( _a >= 8, Dim_Customer[ModelYear] <= _y - 8, Dim_Customer[ModelYear] = _y - _a ) ) )
+		formatString: 0%
+		displayFolder: Customers
+		lineageTag: b4fea719-0f5a-5971-8fe5-c87a580ed563
+
+	/// Retention of owners whose car is 1 or 2 years old.
+	measure 'Retention In Warranty' = VAR _y = MAX ( Dim_Date[Year] ) RETURN CALCULATE ( [Retention Rate], FILTER ( ALL ( Dim_Customer[ModelYear] ), Dim_Customer[ModelYear] >= _y - 2 && Dim_Customer[ModelYear] <= _y - 1 ) )
+		formatString: 0%
+		displayFolder: Customers
+		lineageTag: 6a9959c5-9d3b-5d6c-bd87-89e65d5dcbda
+
+	/// Retention of owners whose car is 4 years or older (warranty ended).
+	measure 'Retention After Warranty' = VAR _y = MAX ( Dim_Date[Year] ) RETURN CALCULATE ( [Retention Rate], FILTER ( ALL ( Dim_Customer[ModelYear] ), Dim_Customer[ModelYear] <= _y - 4 ) )
+		formatString: 0%
+		displayFolder: Customers
+		lineageTag: fc4a4240-84f9-56f1-b08e-2d7afb6c5d28
+
+	/// Owners of 3 to 5-year-old cars who bought last year and not this year.
+	measure 'Lapsed Owners 3-5' =
+			VAR _y = MAX ( Dim_Date[Year] )
+			VAR _ly = CALCULATETABLE ( VALUES ( Fact_Sales[CustomerID] ), SAMEPERIODLASTYEAR ( Dim_Date[Date] ), Dim_Customer[CustomerType] = "Retail", Dim_Customer[ModelYear] >= _y - 5, Dim_Customer[ModelYear] <= _y - 3 )
+			VAR _cy = CALCULATETABLE ( VALUES ( Fact_Sales[CustomerID] ), Dim_Customer[CustomerType] = "Retail" )
+			VAR _lost = EXCEPT ( _ly, _cy )
+			RETURN
+			    COUNTROWS ( _lost )
+		formatString: #,0
+		displayFolder: Customers
+		lineageTag: 1bd0cb09-2c44-5014-a22f-2f32af2975fe
+
+	/// What those owners spent with us last year.
+	measure 'Lapsed Owners 3-5 Spend' =
+			VAR _y = MAX ( Dim_Date[Year] )
+			VAR _ly = CALCULATETABLE ( VALUES ( Fact_Sales[CustomerID] ), SAMEPERIODLASTYEAR ( Dim_Date[Date] ), Dim_Customer[CustomerType] = "Retail", Dim_Customer[ModelYear] >= _y - 5, Dim_Customer[ModelYear] <= _y - 3 )
+			VAR _cy = CALCULATETABLE ( VALUES ( Fact_Sales[CustomerID] ), Dim_Customer[CustomerType] = "Retail" )
+			VAR _lost = EXCEPT ( _ly, _cy )
+			RETURN
+			    SUMX ( _lost, CALCULATE ( [Net Sales], SAMEPERIODLASTYEAR ( Dim_Date[Date] ) ) )
+		formatString: #,0
+		displayFolder: Customers
+		lineageTag: 19cd8925-5d65-5f76-94d8-1efe3f1ce13f
+
+	/// Last year's spend of a lapsed owner with a 3 to 5-year-old car; blank for everyone else.
+	measure 'Call List Spend' =
+			VAR _y = MAX ( Dim_Date[Year] )
+			VAR _my = SELECTEDVALUE ( Dim_Customer[ModelYear] )
+			RETURN
+			    IF (
+			        HASONEVALUE ( Dim_Customer[CustomerID] )
+			            && SELECTEDVALUE ( Dim_Customer[CustomerType] ) = "Retail"
+			            && _y - _my >= 3 && _y - _my <= 5
+			            && ISBLANK ( [Net Sales] ),
+			        [Net Sales LY]
+			    )
+		formatString: #,0
+		displayFolder: Customers
+		lineageTag: ae10d4d4-58ec-56b7-884f-0f576d1236e6
+
+	measure 'Call List Last Visit' = IF ( NOT ISBLANK ( [Call List Spend] ), CALCULATE ( MAX ( Fact_Sales[InvoiceDate] ), REMOVEFILTERS ( Dim_Date ) ) )
+		formatString: dd mmm yyyy
+		displayFolder: Customers
+		lineageTag: 0bcf92bc-76b7-5ea0-89bb-347266120278
+
+	/// Credit invoices issued and not yet paid at the end of the period.
+	measure Receivables =
+			VAR _d = MAX ( Dim_Date[Date] )
+			RETURN
+			    CALCULATE (
+			        SUM ( Fact_Invoice[NetSales] ),
+			        REMOVEFILTERS ( Dim_Date ),
+			        Fact_Invoice[CreditTerms] > 0,
+			        Fact_Invoice[InvoiceDate] <= _d,
+			        FILTER ( ALL ( Fact_Invoice[PaidDate] ), ISBLANK ( Fact_Invoice[PaidDate] ) || Fact_Invoice[PaidDate] > _d )
+			    )
+		formatString: #,0
+		displayFolder: Receivables
+		lineageTag: fcc74aaa-d68e-5fb8-96d9-2faeae36dc01
+
+	/// Receivables by days past the due date at the end of the period.
+	measure 'Receivables Not Due' =
+			VAR _d = MAX ( Dim_Date[Date] )
+			RETURN
+			    CALCULATE (
+			        SUM ( Fact_Invoice[NetSales] ),
+			        REMOVEFILTERS ( Dim_Date ),
+			        Fact_Invoice[CreditTerms] > 0,
+			        Fact_Invoice[InvoiceDate] <= _d,
+			        FILTER ( ALL ( Fact_Invoice[PaidDate] ), ISBLANK ( Fact_Invoice[PaidDate] ) || Fact_Invoice[PaidDate] > _d ),
+			        FILTER ( ALL ( Fact_Invoice[DueDate] ), _d - Fact_Invoice[DueDate] <= 0 )
+			    )
+		formatString: #,0
+		displayFolder: Receivables
+		lineageTag: 12df9055-bfc9-5a83-bcfb-8cf813752d83
+
+	/// Receivables by days past the due date at the end of the period.
+	measure 'Receivables 1-30 Days' =
+			VAR _d = MAX ( Dim_Date[Date] )
+			RETURN
+			    CALCULATE (
+			        SUM ( Fact_Invoice[NetSales] ),
+			        REMOVEFILTERS ( Dim_Date ),
+			        Fact_Invoice[CreditTerms] > 0,
+			        Fact_Invoice[InvoiceDate] <= _d,
+			        FILTER ( ALL ( Fact_Invoice[PaidDate] ), ISBLANK ( Fact_Invoice[PaidDate] ) || Fact_Invoice[PaidDate] > _d ),
+			        FILTER ( ALL ( Fact_Invoice[DueDate] ), _d - Fact_Invoice[DueDate] > 0 && _d - Fact_Invoice[DueDate] <= 30 )
+			    )
+		formatString: #,0
+		displayFolder: Receivables
+		lineageTag: 3833616f-c180-5a09-b724-7f154c0eb7dd
+
+	/// Receivables by days past the due date at the end of the period.
+	measure 'Receivables 31-60 Days' =
+			VAR _d = MAX ( Dim_Date[Date] )
+			RETURN
+			    CALCULATE (
+			        SUM ( Fact_Invoice[NetSales] ),
+			        REMOVEFILTERS ( Dim_Date ),
+			        Fact_Invoice[CreditTerms] > 0,
+			        Fact_Invoice[InvoiceDate] <= _d,
+			        FILTER ( ALL ( Fact_Invoice[PaidDate] ), ISBLANK ( Fact_Invoice[PaidDate] ) || Fact_Invoice[PaidDate] > _d ),
+			        FILTER ( ALL ( Fact_Invoice[DueDate] ), _d - Fact_Invoice[DueDate] > 30 && _d - Fact_Invoice[DueDate] <= 60 )
+			    )
+		formatString: #,0
+		displayFolder: Receivables
+		lineageTag: c731cb52-f758-58ce-90be-e5be566da7f7
+
+	/// Receivables by days past the due date at the end of the period.
+	measure 'Receivables 61-90 Days' =
+			VAR _d = MAX ( Dim_Date[Date] )
+			RETURN
+			    CALCULATE (
+			        SUM ( Fact_Invoice[NetSales] ),
+			        REMOVEFILTERS ( Dim_Date ),
+			        Fact_Invoice[CreditTerms] > 0,
+			        Fact_Invoice[InvoiceDate] <= _d,
+			        FILTER ( ALL ( Fact_Invoice[PaidDate] ), ISBLANK ( Fact_Invoice[PaidDate] ) || Fact_Invoice[PaidDate] > _d ),
+			        FILTER ( ALL ( Fact_Invoice[DueDate] ), _d - Fact_Invoice[DueDate] > 60 && _d - Fact_Invoice[DueDate] <= 90 )
+			    )
+		formatString: #,0
+		displayFolder: Receivables
+		lineageTag: dd7a24cd-4b6a-5faa-a97c-eb47a6662dd7
+
+	/// Receivables by days past the due date at the end of the period.
+	measure 'Receivables Over 90 Days' =
+			VAR _d = MAX ( Dim_Date[Date] )
+			RETURN
+			    CALCULATE (
+			        SUM ( Fact_Invoice[NetSales] ),
+			        REMOVEFILTERS ( Dim_Date ),
+			        Fact_Invoice[CreditTerms] > 0,
+			        Fact_Invoice[InvoiceDate] <= _d,
+			        FILTER ( ALL ( Fact_Invoice[PaidDate] ), ISBLANK ( Fact_Invoice[PaidDate] ) || Fact_Invoice[PaidDate] > _d ),
+			        FILTER ( ALL ( Fact_Invoice[DueDate] ), _d - Fact_Invoice[DueDate] > 90 )
+			    )
+		formatString: #,0
+		displayFolder: Receivables
+		lineageTag: 88947e32-72ba-5b0b-80bb-89b568303e4b
+
+	/// Receivables by days past the due date at the end of the period.
+	measure 'Receivables Overdue' =
+			VAR _d = MAX ( Dim_Date[Date] )
+			RETURN
+			    CALCULATE (
+			        SUM ( Fact_Invoice[NetSales] ),
+			        REMOVEFILTERS ( Dim_Date ),
+			        Fact_Invoice[CreditTerms] > 0,
+			        Fact_Invoice[InvoiceDate] <= _d,
+			        FILTER ( ALL ( Fact_Invoice[PaidDate] ), ISBLANK ( Fact_Invoice[PaidDate] ) || Fact_Invoice[PaidDate] > _d ),
+			        FILTER ( ALL ( Fact_Invoice[DueDate] ), _d - Fact_Invoice[DueDate] > 0 )
+			    )
+		formatString: #,0
+		displayFolder: Receivables
+		lineageTag: e40bb96b-7997-56be-95e7-022518f95011
+
+	measure 'Credit Sales' = CALCULATE ( SUM ( Fact_Invoice[NetSales] ), Fact_Invoice[CreditTerms] > 0 )
+		formatString: #,0
+		displayFolder: Receivables
+		lineageTag: 5ba6fa7f-19ca-514e-9422-a62a3dfc2e64
+
+	/// Receivables ÷ credit sales × days in the period.
+	measure 'Days Sales Outstanding' = DIVIDE ( [Receivables], [Credit Sales] ) * COUNTROWS ( Dim_Date )
+		formatString: 0
+		displayFolder: Receivables
+		lineageTag: 69cf91f9-bee5-5986-9422-0df2e471ac3a
+
+	measure 'Role Median Discount' = VAR _r = SELECTEDVALUE ( Dim_Rep[Role] ) RETURN MEDIANX ( FILTER ( ALL ( Dim_Rep ), Dim_Rep[Role] = _r && NOT ISBLANK ( [Net Sales] ) ), [Discount Rate] )
+		formatString: 0.0%
+		displayFolder: Reps
+		lineageTag: ebd198b9-195b-5d9b-b508-f8e050a7f34b
+
+	measure 'Role Median Margin' = VAR _r = SELECTEDVALUE ( Dim_Rep[Role] ) RETURN MEDIANX ( FILTER ( ALL ( Dim_Rep ), Dim_Rep[Role] = _r && NOT ISBLANK ( [Net Sales] ) ), [Gross Margin] )
+		formatString: 0.0%
+		displayFolder: Reps
+		lineageTag: f62578fe-314b-5b35-8ea3-3d2afdbae0b7
+
+	measure 'Role Median Achievement' = VAR _r = SELECTEDVALUE ( Dim_Rep[Role] ) RETURN MEDIANX ( FILTER ( ALL ( Dim_Rep ), Dim_Rep[Role] = _r && NOT ISBLANK ( [Net Sales] ) ), [Rep Achievement] )
+		formatString: 0%
+		displayFolder: Reps
+		lineageTag: 53990831-ea89-508b-a1c6-227dd0521f02
+
+	measure 'Rep Growth' = DIVIDE ( [Net Sales], [Net Sales LY] ) - 1
+		formatString: +0%;-0%
+		displayFolder: Reps
+		lineageTag: 97ab0c2c-8d3d-5ef0-9761-84ac3bb08d20
+
+	measure 'KPI Overview' =
+			VAR _v0 = "EGP " & FORMAT ( DIVIDE ( [Net Sales], 1000000 ), "#,0.0" ) & "M"
+			VAR _t0 = IF ( ISBLANK ( [Net Sales LY] ), "no prior year", IF ( [Net Sales] >= [Net Sales LY], "▲ ", "▼ " ) & FORMAT ( ABS ( DIVIDE ( [Net Sales], [Net Sales LY] ) - 1 ), "0.0%" ) & " vs " & ( MAX ( Dim_Date[Year] ) - 1 ) )
+			VAR _c0 = IF ( ISBLANK ( [Net Sales LY] ), "#6B7178", IF ( [Net Sales] >= [Net Sales LY], "#2B8A6E", "#E8590C" ) )
+			VAR _r0 = [Sales vs Target]
+			VAR _v1 = "EGP " & FORMAT ( DIVIDE ( [Gross Profit], 1000000 ), "#,0.0" ) & "M"
+			VAR _t1 = IF ( ISBLANK ( [Gross Profit LY] ), "no prior year", IF ( [Gross Profit] >= [Gross Profit LY], "▲ ", "▼ " ) & FORMAT ( ABS ( DIVIDE ( [Gross Profit], [Gross Profit LY] ) - 1 ), "0.0%" ) & " vs " & ( MAX ( Dim_Date[Year] ) - 1 ) )
+			VAR _c1 = IF ( ISBLANK ( [Gross Profit LY] ), "#6B7178", IF ( [Gross Profit] >= [Gross Profit LY], "#2B8A6E", "#E8590C" ) )
+			VAR _r1 = [Gross Profit vs Target]
+			VAR _v2 = FORMAT ( [Gross Margin], "0.0%" )
+			VAR _t2 = IF ( ISBLANK ( [Gross Margin LY] ), "no prior year", IF ( [Gross Margin] >= [Gross Margin LY], "▲ ", "▼ " ) & FORMAT ( ABS ( [Gross Margin] - [Gross Margin LY] ) * 100, "0.0" ) & " pts" & " vs " & ( MAX ( Dim_Date[Year] ) - 1 ) )
+			VAR _c2 = IF ( ISBLANK ( [Gross Margin LY] ), "#6B7178", IF ( [Gross Margin] >= [Gross Margin LY], "#2B8A6E", "#E8590C" ) )
+			VAR _v3 = FORMAT ( [Workshop Visits], "#,0" )
+			VAR _t3 = IF ( ISBLANK ( [Workshop Visits LY] ), "no prior year", IF ( [Workshop Visits] >= [Workshop Visits LY], "▲ ", "▼ " ) & FORMAT ( ABS ( DIVIDE ( [Workshop Visits], [Workshop Visits LY] ) - 1 ), "0.0%" ) & " vs " & ( MAX ( Dim_Date[Year] ) - 1 ) )
+			VAR _c3 = IF ( ISBLANK ( [Workshop Visits LY] ), "#6B7178", IF ( [Workshop Visits] >= [Workshop Visits LY], "#2B8A6E", "#E8590C" ) )
+			VAR _v4 = FORMAT ( [Discount Rate], "0.0%" )
+			VAR _t4 = IF ( ISBLANK ( [Discount Rate LY] ), "no prior year", IF ( [Discount Rate] >= [Discount Rate LY], "▲ ", "▼ " ) & FORMAT ( ABS ( [Discount Rate] - [Discount Rate LY] ) * 100, "0.0" ) & " pts" & " vs " & ( MAX ( Dim_Date[Year] ) - 1 ) )
+			VAR _c4 = IF ( ISBLANK ( [Discount Rate LY] ), "#6B7178", IF ( [Discount Rate] <= [Discount Rate LY], "#2B8A6E", "#E8590C" ) )
+			RETURN
+			    "<div style='display:flex;height:90px;font-family:Segoe UI,sans-serif;color:#1D2125;background:#FFFFFF;border-radius:4px;overflow:hidden'>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>NET SALES</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v0 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c0 & "'>" & _t0 & "</div>" & IF ( NOT ISBLANK ( _r0 ), "<div style='position:absolute;left:14px;right:74px;bottom:11px;height:4px;background:#EEECE8'><div style='height:4px;width:" & FORMAT ( MIN ( _r0, 1.15 ) / 1.15 * 100, "0.0" ) & "%;background:" & IF ( _r0 < 0.95, "#E8590C", "#2B8A6E" ) & "'></div><div style='position:absolute;left:87%;top:-3px;width:2px;height:10px;background:#1D2125'></div></div><div style='position:absolute;right:12px;bottom:6px;font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;color:#6B7178'>" & FORMAT ( _r0, "0%" ) & " of target</div>" ) & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>GROSS PROFIT</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v1 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c1 & "'>" & _t1 & "</div>" & IF ( NOT ISBLANK ( _r1 ), "<div style='position:absolute;left:14px;right:74px;bottom:11px;height:4px;background:#EEECE8'><div style='height:4px;width:" & FORMAT ( MIN ( _r1, 1.15 ) / 1.15 * 100, "0.0" ) & "%;background:" & IF ( _r1 < 0.95, "#E8590C", "#2B8A6E" ) & "'></div><div style='position:absolute;left:87%;top:-3px;width:2px;height:10px;background:#1D2125'></div></div><div style='position:absolute;right:12px;bottom:6px;font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;color:#6B7178'>" & FORMAT ( _r1, "0%" ) & " of target</div>" ) & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>GROSS MARGIN</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v2 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c2 & "'>" & _t2 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>WORKSHOP VISITS</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v3 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c3 & "'>" & _t3 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>DISCOUNT RATE</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v4 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c4 & "'>" & _t4 & "</div>" & "</div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: fb5b5750-5214-537f-8880-487e592f96f8
+
+	measure 'Lowest Region' = MAXX ( TOPN ( 1, FILTER ( VALUES ( Dim_Governorate[Region] ), [Cars on Road] > 0 ), [Penetration], ASC ), Dim_Governorate[Region] )
+		displayFolder: Network
+		lineageTag: 4b73ea2f-d458-5ec6-9911-ae52ff44d526
+
+	measure 'Lowest Region Penetration' = VAR _r = [Lowest Region] RETURN CALCULATE ( [Penetration], Dim_Governorate[Region] = _r )
+		formatString: 0.0%
+		displayFolder: Network
+		lineageTag: b574f929-c81f-542a-9b07-733f52af4889
+
+	measure 'Other Regions Penetration' = VAR _r = [Lowest Region] RETURN CALCULATE ( [Penetration], KEEPFILTERS ( Dim_Governorate[Region] <> _r ) )
+		formatString: 0.0%
+		displayFolder: Network
+		lineageTag: 6dbe75a3-096b-576c-947d-a5a30f1a64ea
+
+	/// Our cars in governorates with no service branch.
+	measure 'Cars Without Branch' = CALCULATE ( [Cars on Road], Dim_Governorate[Has Branch] = 0 )
+		formatString: #,0
+		displayFolder: Network
+		lineageTag: 1da3cbda-4249-5558-9858-659846c48e4a
+
+	measure 'Governorates Without Branch' = CONCATENATEX ( FILTER ( VALUES ( Dim_Governorate[Governorate] ), CALCULATE ( MAX ( Dim_Governorate[Has Branch] ) ) = 0 ), Dim_Governorate[Governorate], ", ", Dim_Governorate[Governorate], ASC )
+		displayFolder: Network
+		lineageTag: f737818b-17c3-5e4a-9da7-fd28e225ae44
+
+	measure 'KPI Geography' =
+			VAR _v0 = FORMAT ( [Cars on Road], "#,0" )
+			VAR _t0 = "sold by the group, still on the road"
+			VAR _c0 = "#6B7178"
+			VAR _v1 = FORMAT ( [Owners Visited], "#,0" )
+			VAR _t1 = "at least one workshop visit"
+			VAR _c1 = "#6B7178"
+			VAR _v2 = FORMAT ( [Penetration], "0.0%" )
+			VAR _t2 = "visitors / cars on the road"
+			VAR _c2 = "#6B7178"
+			VAR _v3 = FORMAT ( [Lowest Region Penetration], "0.0%" )
+			VAR _t3 = [Lowest Region] & ", " & FORMAT ( ( [Other Regions Penetration] - [Lowest Region Penetration] ) * 100, "0" ) & " pts below the rest"
+			VAR _c3 = "#E8590C"
+			VAR _v4 = IF ( [Cars Without Branch] > 0, FORMAT ( [Cars Without Branch], "#,0" ) & " cars", "none" )
+			VAR _t4 = IF ( [Cars Without Branch] > 0, [Governorates Without Branch], "every governorate has a branch" )
+			VAR _c4 = "#E8590C"
+			RETURN
+			    "<div style='display:flex;height:90px;font-family:Segoe UI,sans-serif;color:#1D2125;background:#FFFFFF;border-radius:4px;overflow:hidden'>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>OUR CARS ON THE ROAD</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v0 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c0 & "'>" & _t0 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>OWNERS WHO VISITED</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v1 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c1 & "'>" & _t1 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>SERVICE PENETRATION</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v2 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c2 & "'>" & _t2 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>LOWEST REGION</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v3 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c3 & "'>" & _t3 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>NO BRANCH NEARBY</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v4 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c4 & "'>" & _t4 & "</div>" & "</div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: a8324594-782c-5585-be78-345b5c6d41e0
+
+	measure 'Branches Losing Money' = COUNTROWS ( FILTER ( VALUES ( Dim_Branch[Branch] ), [Operating Profit] < 0 ) )
+		formatString: 0
+		displayFolder: Finance
+		lineageTag: d4a606c8-cbd3-5412-9a7c-6dd9df40ca56
+
+	measure 'Online Sales Share' = DIVIDE ( CALCULATE ( [Net Sales], Fact_Sales[Channel] = "Online" ), [Net Sales] )
+		formatString: 0.0%
+		displayFolder: Sales
+		lineageTag: e900366e-00e1-55aa-8aa4-71fed7073b2a
+
+	measure 'Online Growth' = DIVIDE ( CALCULATE ( [Net Sales], Fact_Sales[Channel] = "Online" ), CALCULATE ( [Net Sales LY], Fact_Sales[Channel] = "Online" ) ) - 1
+		formatString: +0%;-0%
+		displayFolder: Sales
+		lineageTag: fbf8f9ff-edcd-5c3a-b1d4-573e1fcf5e18
+
+	measure 'KPI Locations' =
+			VAR _v0 = FORMAT ( [Utilisation], "0%" )
+			VAR _t0 = "hours sold / hours available"
+			VAR _c0 = "#6B7178"
+			VAR _v1 = FORMAT ( [Hours Sold], "#,0" )
+			VAR _t1 = IF ( ISBLANK ( [Hours Sold LY] ), "no prior year", IF ( [Hours Sold] >= [Hours Sold LY], "▲ ", "▼ " ) & FORMAT ( ABS ( DIVIDE ( [Hours Sold], [Hours Sold LY] ) - 1 ), "0.0%" ) & " vs " & ( MAX ( Dim_Date[Year] ) - 1 ) )
+			VAR _c1 = IF ( ISBLANK ( [Hours Sold LY] ), "#6B7178", IF ( [Hours Sold] >= [Hours Sold LY], "#2B8A6E", "#E8590C" ) )
+			VAR _v2 = "EGP " & FORMAT ( [Labour Sales per Hour], "#,0" )
+			VAR _t2 = "after discounts"
+			VAR _c2 = "#6B7178"
+			VAR _v3 = ( 0 + [Branches Losing Money] ) & " of " & COUNTROWS ( VALUES ( Dim_Branch[Branch] ) )
+			VAR _t3 = "after branch overheads"
+			VAR _c3 = IF ( [Branches Losing Money] > 0, "#E8590C", "#2B8A6E" )
+			VAR _v4 = FORMAT ( [Online Sales Share], "0.0%" )
+			VAR _t4 = IF ( ISBLANK ( [Online Growth] ), "no prior year", IF ( [Online Growth] >= 0, "▲ ", "▼ " ) & FORMAT ( ABS ( [Online Growth] ), "0%" ) & " vs " & ( MAX ( Dim_Date[Year] ) - 1 ) )
+			VAR _c4 = IF ( [Online Growth] >= 0, "#2B8A6E", "#E8590C" )
+			RETURN
+			    "<div style='display:flex;height:90px;font-family:Segoe UI,sans-serif;color:#1D2125;background:#FFFFFF;border-radius:4px;overflow:hidden'>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>WORKSHOP UTILISATION</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v0 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c0 & "'>" & _t0 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>HOURS SOLD</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v1 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c1 & "'>" & _t1 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>LABOUR SALES PER HOUR</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v2 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c2 & "'>" & _t2 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>BRANCHES LOSING MONEY</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v3 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c3 & "'>" & _t3 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>ONLINE SHARE</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v4 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c4 & "'>" & _t4 & "</div>" & "</div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 2a7892c1-994d-5634-a164-f3682d0d6056
+
+	measure 'KPI Rep' =
+			VAR _v0 = "EGP " & FORMAT ( DIVIDE ( [Net Sales], 1000000 ), "#,0.0" ) & "M"
+			VAR _t0 = IF ( ISBLANK ( [Net Sales LY] ), "no prior year", IF ( [Net Sales] >= [Net Sales LY], "▲ ", "▼ " ) & FORMAT ( ABS ( DIVIDE ( [Net Sales], [Net Sales LY] ) - 1 ), "0.0%" ) & " vs " & ( MAX ( Dim_Date[Year] ) - 1 ) )
+			VAR _c0 = IF ( ISBLANK ( [Net Sales LY] ), "#6B7178", IF ( [Net Sales] >= [Net Sales LY], "#2B8A6E", "#E8590C" ) )
+			VAR _r0 = [Rep Achievement]
+			VAR _v1 = FORMAT ( [Discount Rate], "0.0%" )
+			VAR _t1 = "role median " & FORMAT ( [Role Median Discount], "0.0%" )
+			VAR _c1 = IF ( [Discount Rate] > [Role Median Discount] * 1.25, "#E8590C", "#6B7178" )
+			VAR _v2 = FORMAT ( [Gross Margin], "0.0%" )
+			VAR _t2 = "role median " & FORMAT ( [Role Median Margin], "0.0%" )
+			VAR _c2 = IF ( [Gross Margin] < [Role Median Margin] * 0.8, "#E8590C", "#6B7178" )
+			VAR _v3 = FORMAT ( [Invoices], "#,0" )
+			VAR _t3 = "average invoice EGP " & FORMAT ( [Average Invoice], "#,0" )
+			VAR _c3 = "#6B7178"
+			RETURN
+			    "<div style='display:flex;height:90px;font-family:Segoe UI,sans-serif;color:#1D2125;background:#FFFFFF;border-radius:4px;overflow:hidden'>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>NET SALES</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v0 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c0 & "'>" & _t0 & "</div>" & IF ( NOT ISBLANK ( _r0 ), "<div style='position:absolute;left:14px;right:74px;bottom:11px;height:4px;background:#EEECE8'><div style='height:4px;width:" & FORMAT ( MIN ( _r0, 1.15 ) / 1.15 * 100, "0.0" ) & "%;background:" & IF ( _r0 < 0.95, "#E8590C", "#2B8A6E" ) & "'></div><div style='position:absolute;left:87%;top:-3px;width:2px;height:10px;background:#1D2125'></div></div><div style='position:absolute;right:12px;bottom:6px;font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;color:#6B7178'>" & FORMAT ( _r0, "0%" ) & " of target</div>" ) & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>AVERAGE DISCOUNT</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v1 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c1 & "'>" & _t1 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>GROSS MARGIN</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v2 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c2 & "'>" & _t2 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>INVOICES</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v3 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c3 & "'>" & _t3 & "</div>" & "</div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 22d5cca6-7f86-52e3-af27-a6090499ef87
+
+	measure 'KPI Customers' =
+			VAR _v0 = FORMAT ( [Retail Customers], "#,0" )
+			VAR _t0 = "bought in the period"
+			VAR _c0 = "#6B7178"
+			VAR _v1 = FORMAT ( [Retention Rate], "0.0%" )
+			VAR _t1 = "of last year's customers came back"
+			VAR _c1 = "#6B7178"
+			VAR _v2 = FORMAT ( [Lost Customers], "#,0" )
+			VAR _t2 = "bought last year, not this year"
+			VAR _c2 = "#E8590C"
+			VAR _v3 = FORMAT ( [New Customers], "#,0" )
+			VAR _t3 = "first purchase in the period"
+			VAR _c3 = "#2B8A6E"
+			VAR _v4 = "EGP " & FORMAT ( [Sales per Retail Customer], "#,0" )
+			VAR _t4 = "retail customers"
+			VAR _c4 = "#6B7178"
+			RETURN
+			    "<div style='display:flex;height:90px;font-family:Segoe UI,sans-serif;color:#1D2125;background:#FFFFFF;border-radius:4px;overflow:hidden'>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>ACTIVE RETAIL CUSTOMERS</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v0 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c0 & "'>" & _t0 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>RETENTION</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v1 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c1 & "'>" & _t1 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>LOST THIS YEAR</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v2 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c2 & "'>" & _t2 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>NEW CUSTOMERS</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v3 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c3 & "'>" & _t3 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>SALES PER CUSTOMER</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v4 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c4 & "'>" & _t4 & "</div>" & "</div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: e43e7612-fdee-59b5-873d-3260276634ce
+
+	measure 'KPI Finance' =
+			VAR _v0 = "EGP " & FORMAT ( DIVIDE ( [Operating Profit], 1000000 ), "#,0.0" ) & "M"
+			VAR _t0 = IF ( ISBLANK ( [Operating Profit LY] ), "no prior year", IF ( [Operating Profit] >= [Operating Profit LY], "▲ ", "▼ " ) & FORMAT ( ABS ( DIVIDE ( [Operating Profit], [Operating Profit LY] ) - 1 ), "0.0%" ) & " vs " & ( MAX ( Dim_Date[Year] ) - 1 ) )
+			VAR _c0 = IF ( ISBLANK ( [Operating Profit LY] ), "#6B7178", IF ( [Operating Profit] >= [Operating Profit LY], "#2B8A6E", "#E8590C" ) )
+			VAR _v1 = FORMAT ( [Operating Margin], "0.0%" )
+			VAR _t1 = IF ( ISBLANK ( [Operating Margin LY] ), "no prior year", IF ( [Operating Margin] >= [Operating Margin LY], "▲ ", "▼ " ) & FORMAT ( ABS ( [Operating Margin] - [Operating Margin LY] ) * 100, "0.0" ) & " pts" & " vs " & ( MAX ( Dim_Date[Year] ) - 1 ) )
+			VAR _c1 = IF ( ISBLANK ( [Operating Margin LY] ), "#6B7178", IF ( [Operating Margin] >= [Operating Margin LY], "#2B8A6E", "#E8590C" ) )
+			VAR _v2 = "EGP " & FORMAT ( DIVIDE ( [Overheads], 1000000 ), "#,0.0" ) & "M"
+			VAR _t2 = FORMAT ( ABS ( [Overheads vs Budget] ), "0.0%" ) & IF ( [Overheads vs Budget] > 0, " over budget", " under budget" )
+			VAR _c2 = IF ( [Overheads vs Budget] > 0, "#E8590C", "#2B8A6E" )
+			VAR _v3 = "EGP " & FORMAT ( DIVIDE ( [Receivables], 1000000 ), "#,0.0" ) & "M"
+			VAR _t3 = FORMAT ( [Days Sales Outstanding], "0" ) & " days of credit sales"
+			VAR _c3 = "#6B7178"
+			VAR _v4 = "EGP " & FORMAT ( DIVIDE ( [Receivables Over 90 Days], 1000000 ), "#,0.0" ) & "M"
+			VAR _t4 = FORMAT ( DIVIDE ( [Receivables Over 90 Days], [Receivables] ), "0%" ) & " of receivables"
+			VAR _c4 = "#E8590C"
+			RETURN
+			    "<div style='display:flex;height:90px;font-family:Segoe UI,sans-serif;color:#1D2125;background:#FFFFFF;border-radius:4px;overflow:hidden'>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>OPERATING PROFIT</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v0 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c0 & "'>" & _t0 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>OPERATING MARGIN</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v1 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c1 & "'>" & _t1 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>OVERHEADS</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v2 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c2 & "'>" & _t2 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>RECEIVABLES</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v3 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c3 & "'>" & _t3 & "</div>" & "</div>"
+			    & "<div style='flex:1;min-width:0;position:relative;padding:11px 14px 0;border-left:1px solid #E4E1DB;'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:1.3px;color:#6B7178;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>OVER 90 DAYS LATE</div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:25px;font-weight:600;line-height:1.1;margin-top:4px;white-space:nowrap'>" & _v4 & "</div><div style='font-size:10.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:" & _c4 & "'>" & _t4 & "</div>" & "</div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 2bff272e-98c4-5dc8-85e8-287c0465f3c8
+
+	measure 'Best Margin Line' = MAXX ( TOPN ( 1, VALUES ( Dim_BusinessLine[Business Line] ), [Gross Margin], DESC ), Dim_BusinessLine[Business Line] )
+		displayFolder: Insights
+		lineageTag: 7bce1adb-8719-5134-97b6-c4a51fe9f2fc
+
+	measure 'Story Overview' =
+			VAR _g = DIVIDE ( [Net Sales], [Net Sales LY] ) - 1
+			VAR _v = DIVIDE ( [Workshop Visits], [Workshop Visits LY] ) - 1
+			VAR _t = DIVIDE ( [Average Workshop Invoice], [Average Workshop Invoice LY] ) - 1
+			VAR _line = [Best Margin Line]
+			VAR _ls = DIVIDE ( CALCULATE ( [Net Sales], Dim_BusinessLine[Business Line] = _line ), [Net Sales] )
+			VAR _lg = DIVIDE ( CALCULATE ( [Gross Profit], Dim_BusinessLine[Business Line] = _line ), [Gross Profit] )
+			VAR _ly = NOT ISBLANK ( [Net Sales LY] )
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;background:#1D2125;color:#C3C8CD;font-size:11px;line-height:1.48;height:100%;overflow:hidden'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:2px;color:#8E959C;margin-bottom:4px'>WHAT WE FOUND</div>"
+			    & IF ( _ly, "Net sales " & IF ( _g >= 0, "grew ", "fell " ) & "<b style='color:#FFFFFF;font-weight:600'>" & FORMAT ( ABS ( _g ), "0%" ) & "</b>" & " while workshop visits " & IF ( _v >= 0, "grew ", "fell " ) & "<b style='color:#FFFFFF;font-weight:600'>" & FORMAT ( ABS ( _v ), "0%" ) & "</b>" & ". The average workshop invoice " & IF ( _t >= 0, "rose ", "fell " ) & FORMAT ( ABS ( _t ), "0%" ) & ", so the growth came from prices, not more cars. ", "" )
+			    & _line & " is " & FORMAT ( _ls, "0%" ) & " of sales and " & "<b style='color:#FFFFFF;font-weight:600'>" & FORMAT ( _lg, "0%" ) & "</b>" & " of gross profit. Gross profit reached " & FORMAT ( [Gross Profit vs Target], "0%" ) & " of target."
+			    & "<div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:2px;color:#E8590C;margin:12px 0 4px'>RECOMMENDATION</div><div style='color:#FFFFFF'>"
+			    & "Win back workshop visits before pushing parts volume: every lost visit takes " & LOWER ( _line ) & ", the most profitable line, with it."
+			    & IF ( _ly && [Discount Rate] > [Discount Rate LY], " Bring the discount rate back to " & FORMAT ( [Discount Rate LY], "0.0%" ) & " from " & FORMAT ( [Discount Rate], "0.0%" ) & ".", "" )
+			    & "</div></div>"
+		displayFolder: Insights
+		lineageTag: 56c8b5d7-5eef-50e2-987d-4ba55ee02356
+
+	measure 'Story Geography' =
+			VAR _low = [Lowest Region]
+			VAR _lp = [Lowest Region Penetration]
+			VAR _rest = [Other Regions Penetration]
+			VAR _nb = [Cars Without Branch]
+			VAR _nbp = CALCULATE ( [Penetration], Dim_Governorate[Has Branch] = 0 )
+			VAR _top = MAXX ( TOPN ( 1, FILTER ( VALUES ( Dim_Governorate[Governorate] ), CALCULATE ( MAX ( Dim_Governorate[Has Branch] ) ) = 0 ), [Cars on Road], DESC ), Dim_Governorate[Governorate] )
+			VAR _br = CALCULATETABLE ( VALUES ( Dim_Branch[Branch] ), Dim_Branch[Region] = _low, Dim_Branch[Technicians] > 0 )
+			VAR _brn = MAXX ( _br, Dim_Branch[Branch] )
+			VAR _u = CALCULATE ( [Utilisation], Dim_Branch[Region] = _low, REMOVEFILTERS ( Dim_Governorate ), REMOVEFILTERS ( Dim_Brand ) )
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;background:#1D2125;color:#C3C8CD;font-size:11px;line-height:1.48;height:100%;overflow:hidden'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:2px;color:#8E959C;margin-bottom:4px'>WHAT WE FOUND</div>"
+			    & "Outside " & _low & " about " & "<b style='color:#FFFFFF;font-weight:600'>" & FORMAT ( _rest, "0%" ) & "</b>" & " of our cars on the road come to the workshop each year; in " & _low & " only " & "<b style='color:#FFFFFF;font-weight:600'>" & FORMAT ( _lp, "0%" ) & "</b>" & ". "
+			    & IF ( _nb > 0, [Governorates Without Branch] & " have " & FORMAT ( _nb, "#,0" ) & " of our cars and no branch, and " & FORMAT ( _nbp, "0%" ) & " of them visit. ", "" )
+			    & IF ( COUNTROWS ( _br ) = 1, _brn & ", the only branch in " & _low & ", sells " & FORMAT ( _u, "0%" ) & " of its technician hours.", "" )
+			    & "<div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:2px;color:#E8590C;margin:12px 0 4px'>RECOMMENDATION</div><div style='color:#FFFFFF'>"
+			    & IF ( _nb > 0, "Plan a service point in " & _top & IF ( COUNTROWS ( _br ) = 1 && _u > 0.95, " and add technicians in " & _brn & ", which is already full", "" ) & ". Owners far from a branch are the largest group we are not serving.",
+			        "Focus on " & _low & ": it has the lowest share of owners coming back." )
+			    & "</div></div>"
+		displayFolder: Insights
+		lineageTag: d3f65db8-c161-5e6d-9fbc-b8600b7863fd
+
+	measure 'Story Locations' =
+			VAR _b = ADDCOLUMNS ( FILTER ( VALUES ( Dim_Branch[Branch] ), CALCULATE ( MAX ( Dim_Branch[Technicians] ) ) > 0 ), "@u", [Utilisation], "@op", [Operating Profit] )
+			VAR _full = TOPN ( 1, _b, [@u], DESC )
+			VAR _idle = TOPN ( 1, _b, [@u], ASC )
+			VAR _fn = MAXX ( _full, Dim_Branch[Branch] )
+			VAR _fu = MAXX ( _full, [@u] )
+			VAR _in = MAXX ( _idle, Dim_Branch[Branch] )
+			VAR _iu = MAXX ( _idle, [@u] )
+			VAR _iop = MAXX ( _idle, [@op] )
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;background:#1D2125;color:#C3C8CD;font-size:11px;line-height:1.48;height:100%;overflow:hidden'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:2px;color:#8E959C;margin-bottom:4px'>WHAT WE FOUND</div>"
+			    & _fn & " sells " & "<b style='color:#FFFFFF;font-weight:600'>" & FORMAT ( _fu, "0%" ) & "</b>" & " of its technician hours" & IF ( _fu > 0.95, ": it is full and turning work away. ", ". " )
+			    & _in & " sells " & "<b style='color:#FFFFFF;font-weight:600'>" & FORMAT ( _iu, "0%" ) & "</b>" & IF ( _iop < 0, " and loses EGP " & FORMAT ( - _iop / 1000000, "0.0" ) & "M", "" ) & ". "
+			    & ( 0 + [Branches Losing Money] ) & " of " & COUNTROWS ( VALUES ( Dim_Branch[Branch] ) ) & " branches lose money after overheads."
+			    & IF ( NOT ISBLANK ( [Online Growth] ), " Online parts orders grew " & FORMAT ( [Online Growth], "0%" ) & " but are " & FORMAT ( [Online Sales Share], "0.0%" ) & " of sales.", "" )
+			    & "<div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:2px;color:#E8590C;margin:12px 0 4px'>RECOMMENDATION</div><div style='color:#FFFFFF'>"
+			    & IF ( _fu > 0.95, "Add technicians or a second shift in " & _fn & ". ", "" ) & "At " & _in & ", move technicians to busier branches or cut fixed costs before adding anything else."
+			    & "</div></div>"
+		displayFolder: Insights
+		lineageTag: e42cb715-1c4a-5832-a39a-fc4451c7f4db
+
+	measure 'Story Rep' =
+			VAR _rep = SELECTEDVALUE ( Dim_Rep[Rep] )
+			VAR _a = [Rep Achievement]
+			VAR _ma = [Role Median Achievement]
+			VAR _d = [Discount Rate]
+			VAR _md = [Role Median Discount]
+			VAR _m = [Gross Margin]
+			VAR _mm = [Role Median Margin]
+			VAR _role = LOWER ( SELECTEDVALUE ( Dim_Rep[Role] ) )
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;background:#1D2125;color:#C3C8CD;font-size:11px;line-height:1.48;height:100%;overflow:hidden'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:2px;color:#8E959C;margin-bottom:4px'>WHAT WE FOUND</div>"
+			    & IF ( ISBLANK ( _rep ), "Select one rep to see their 360 view.",
+			        _rep & " reached " & "<b style='color:#FFFFFF;font-weight:600'>" & FORMAT ( _a, "0%" ) & "</b>" & " of target (" & _role & " median " & FORMAT ( _ma, "0%" ) & ") with a " & "<b style='color:#FFFFFF;font-weight:600'>" & FORMAT ( _d, "0.0%" ) & "</b>" & " average discount against a " & FORMAT ( _md, "0.0%" ) & " median. Gross margin is " & FORMAT ( _m, "0.0%" ) & ", against " & FORMAT ( _mm, "0.0%" ) & " for the role." )
+			    & "<div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:2px;color:#E8590C;margin:12px 0 4px'>RECOMMENDATION</div><div style='color:#FFFFFF'>"
+			    & IF ( ISBLANK ( _rep ), "",
+			        IF ( _d > _md * 1.5, "Coach on pricing, not volume: hold discounts to the role median. At the median, the same sales would have earned about EGP " & FORMAT ( ( _d - _md ) * [Gross Sales] / 1000000, "0.0" ) & "M more.",
+			            IF ( _a < 0.9, "Coach on volume: " & _rep & " is " & FORMAT ( ( 1 - _a ) * 100, "0" ) & " pts below target with normal discounts.", "On track: no coaching needed on volume or discounts." ) ) )
+			    & "</div></div>"
+		displayFolder: Insights
+		lineageTag: 9de02d2a-cdb6-5810-9441-a18ad311c1e8
+
+	measure 'Story Customers' =
+			VAR _in = [Retention In Warranty]
+			VAR _out = [Retention After Warranty]
+			VAR _n = [Lapsed Owners 3-5]
+			VAR _v = [Lapsed Owners 3-5 Spend]
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;background:#1D2125;color:#C3C8CD;font-size:11px;line-height:1.48;height:100%;overflow:hidden'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:2px;color:#8E959C;margin-bottom:4px'>WHAT WE FOUND</div>"
+			    & "Owners keep coming while the car is under warranty (" & "<b style='color:#FFFFFF;font-weight:600'>" & FORMAT ( _in, "0%" ) & "</b>" & " come back the next year). After the 3-year warranty ends, only " & "<b style='color:#FFFFFF;font-weight:600'>" & FORMAT ( _out, "0%" ) & "</b>" & " do. "
+			    & FORMAT ( _n, "#,0" ) & " owners of 3 to 5-year-old cars did not come back this year; they spent EGP " & FORMAT ( _v / 1000000, "0.0" ) & "M with us last year."
+			    & "<div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:2px;color:#E8590C;margin:12px 0 4px'>RECOMMENDATION</div><div style='color:#FFFFFF'>"
+			    & "Call the list below first, highest spenders first, and offer a fixed-price service plan before the warranty ends, not after the owner has gone."
+			    & "</div></div>"
+		displayFolder: Insights
+		lineageTag: 362081b4-aebe-596b-a32d-b45f33e1b6b9
+
+	measure 'Story Finance' =
+			VAR _g = DIVIDE ( [Net Sales], [Net Sales LY] ) - 1
+			VAR _o = DIVIDE ( [Operating Profit], [Operating Profit LY] ) - 1
+			VAR _over = TOPN ( 2, FILTER ( ADDCOLUMNS ( VALUES ( Fact_Overhead[Category] ), "@d", [Overheads] - [Overhead Budget] ), [@d] > 0 ), [@d], DESC )
+			VAR _overTxt = CONCATENATEX ( _over, LOWER ( Fact_Overhead[Category] ), " and ", [@d], DESC )
+			VAR _late = TOPN ( 2, FILTER ( ADDCOLUMNS ( VALUES ( Dim_Customer[CustomerType] ), "@l", [Receivables Over 90 Days] ), [@l] > 0 ), [@l], DESC )
+			VAR _lateTxt = CONCATENATEX ( _late, LOWER ( Dim_Customer[CustomerType] ), " and ", [@l], DESC )
+			VAR _save = ( [Discount Rate] - [Discount Rate LY] ) * [Gross Sales]
+			VAR _ly = NOT ISBLANK ( [Net Sales LY] )
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;background:#1D2125;color:#C3C8CD;font-size:11px;line-height:1.48;height:100%;overflow:hidden'><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:2px;color:#8E959C;margin-bottom:4px'>WHAT WE FOUND</div>"
+			    & IF ( _ly, "Net sales " & IF ( _g >= 0, "rose ", "fell " ) & FORMAT ( ABS ( _g ), "0%" ) & " but operating profit " & IF ( _o >= 0, "rose ", "fell " ) & "<b style='color:#FFFFFF;font-weight:600'>" & FORMAT ( ABS ( _o ), "0%" ) & "</b>" & ", to EGP " & FORMAT ( [Operating Profit] / 1000000, "0.0" ) & "M. ", "" )
+			    & "Discounts took EGP " & FORMAT ( [Discounts] / 1000000, "0.0" ) & "M and overheads ran " & "<b style='color:#FFFFFF;font-weight:600'>" & FORMAT ( ABS ( [Overheads vs Budget] ), "0.0%" ) & "</b>" & IF ( [Overheads vs Budget] > 0, " over budget", " under budget" ) & IF ( NOT ISEMPTY ( _over ), ", mostly " & _overTxt, "" ) & ". "
+			    & "Customers owe EGP " & FORMAT ( [Receivables] / 1000000, "0.0" ) & "M" & IF ( NOT ISEMPTY ( _late ), "; " & _lateTxt & " hold most of the " & FORMAT ( [Receivables Over 90 Days] / 1000000, "0.0" ) & "M that is more than 90 days late.", "." )
+			    & "<div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:9.5px;font-weight:600;letter-spacing:2px;color:#E8590C;margin:12px 0 4px'>RECOMMENDATION</div><div style='color:#FFFFFF'>"
+			    & IF ( _ly && _save > 0, "Bring discounts back to last year's rate (worth about EGP " & FORMAT ( _save / 1000000, "0.0" ) & "M). ", "" )
+			    & IF ( NOT ISEMPTY ( _over ), "Hold " & _overTxt & " to budget. ", "" )
+			    & IF ( NOT ISEMPTY ( _late ), "Chase " & _lateTxt & " before extending more credit.", "" )
+			    & "</div></div>"
+		displayFolder: Insights
+		lineageTag: 6cc66e4d-be68-5208-801e-6dc87f025566
+
+	/// Each business line's share of net sales next to its share of gross profit; orange for the line that earns most above its weight.
+	measure 'Line Mix' =
+			VAR _ns = CALCULATE ( [Net Sales], REMOVEFILTERS ( Dim_BusinessLine ) )
+			VAR _gp = CALCULATE ( [Gross Profit], REMOVEFILTERS ( Dim_BusinessLine ) )
+			VAR _rows = ADDCOLUMNS ( VALUES ( Dim_BusinessLine[Business Line] ), "@s", DIVIDE ( [Net Sales], _ns ), "@g", DIVIDE ( [Gross Profit], _gp ) )
+			VAR _top = MAXX ( TOPN ( 1, _rows, [@g] - [@s], DESC ), Dim_BusinessLine[Business Line] )
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#1D2125;font-size:11.5px'>"
+			        & "<div style='display:flex;color:#6B7178;font-size:10px;margin:0 0 6px 112px'><span style='width:110px'>share of sales</span><span>share of gross profit</span></div>"
+			        & CONCATENATEX (
+			            _rows,
+			            VAR _hl = Dim_BusinessLine[Business Line] = _top
+			            RETURN
+			                "<div style='display:flex;align-items:center;height:41px'><div style='width:112px;font-weight:" & IF ( _hl, "600", "400" ) & "'>" & Dim_BusinessLine[Business Line] & "</div><div style='flex:1'>"
+			                    & "<div style='display:flex;align-items:center;height:11px'><div style='height:8px;width:" & FORMAT ( [@s] * 200, "0" ) & "px;background:#C7CBCF'></div><span style='font-size:9.5px;color:#6B7178;padding-left:4px'>" & FORMAT ( [@s], "0%" ) & "</span></div>"
+			                    & "<div style='display:flex;align-items:center;height:11px;margin-top:2px'><div style='height:8px;width:" & FORMAT ( MAX ( [@g], 0 ) * 200, "0" ) & "px;background:" & IF ( _hl, "#E8590C", "#3C4650" ) & "'></div><span style='font-size:9.5px;font-weight:700;padding-left:4px;color:" & IF ( _hl, "#E8590C", "#1D2125" ) & "'>" & FORMAT ( [@g], "0%" ) & "</span></div>"
+			                    & "</div></div>",
+			            "", [@s], DESC )
+			        & "<div style='display:flex;gap:16px;margin:6px 0 0 112px;font-size:9.5px;color:#6B7178'><span><i style='display:inline-block;width:10px;height:6px;background:#C7CBCF;margin-right:4px'></i>share of sales</span><span><i style='display:inline-block;width:10px;height:6px;background:#3C4650;margin-right:4px'></i>share of gross profit</span></div></div>"
+		displayFolder: KPI Cards
+		lineageTag: 4a0dd149-66fb-5508-901d-826a1e7a665a
+
+	/// Last year's gross profit, plus the change in gross sales, minus extra discounts and extra cost of sales, gives this year's.
+	measure 'Gross Profit Bridge' =
+			VAR _max = MAX ( MAX ( [Gross Profit LY], [Gross Profit] ), [Gross Profit LY] + [Gross Sales] - [Gross Sales LY] ) * 1.12
+			VAR _t0 = [Gross Profit LY]
+			VAR _b0 = 0
+			VAR _t1 = [Gross Profit LY] + MAX ( [Gross Sales] - [Gross Sales LY], 0 )
+			VAR _b1 = [Gross Profit LY] + MIN ( [Gross Sales] - [Gross Sales LY], 0 )
+			VAR _t2 = [Gross Profit LY] + [Gross Sales] - [Gross Sales LY]
+			VAR _b2 = [Gross Profit LY] + [Gross Sales] - [Gross Sales LY] - ( [Discounts] - [Discounts LY] )
+			VAR _t3 = [Gross Profit LY] + [Gross Sales] - [Gross Sales LY] - ( [Discounts] - [Discounts LY] )
+			VAR _b3 = [Gross Profit]
+			VAR _t4 = [Gross Profit]
+			VAR _b4 = 0
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#1D2125;display:flex;justify-content:space-between;padding:22px 20px 0'>"
+			    & "<div style='width:120px;position:relative;height:150px;flex:none'><div style='position:absolute;left:0;width:120px;top:" & FORMAT ( ( 1 - _t0 / _max ) * 150, "0" ) & "px;height:" & FORMAT ( MAX ( ( _t0 - _b0 ) / _max * 150, 1.5 ), "0.0" ) & "px;background:#3C4650'></div><div style='position:absolute;left:-10px;right:-10px;text-align:center;top:" & FORMAT ( ( 1 - _t0 / _max ) * 150 - 17, "0" ) & "px;font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:12px;font-weight:600'>" & FORMAT ( DIVIDE ( [Gross Profit LY], 1000000 ), "#,0.0" ) & "M" & "</div><div style='position:absolute;left:-14px;right:-14px;text-align:center;top:156px;font-size:10px;color:#6B7178;line-height:1.2'>" & "Gross profit " & ( MAX ( Dim_Date[Year] ) - 1 ) & "</div></div>"
+			    & "<div style='width:120px;position:relative;height:150px;flex:none'><div style='position:absolute;left:0;width:120px;top:" & FORMAT ( ( 1 - _t1 / _max ) * 150, "0" ) & "px;height:" & FORMAT ( MAX ( ( _t1 - _b1 ) / _max * 150, 1.5 ), "0.0" ) & "px;background:#2B8A6E'></div><div style='position:absolute;left:-10px;right:-10px;text-align:center;top:" & FORMAT ( ( 1 - _t1 / _max ) * 150 - 17, "0" ) & "px;font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:12px;font-weight:600'>" & IF ( [Gross Sales] >= [Gross Sales LY], "+", "" ) & FORMAT ( DIVIDE ( [Gross Sales] - [Gross Sales LY], 1000000 ), "#,0.0" ) & "M" & "</div><div style='position:absolute;left:-14px;right:-14px;text-align:center;top:156px;font-size:10px;color:#6B7178;line-height:1.2'>" & "Higher gross sales" & "</div></div>"
+			    & "<div style='width:120px;position:relative;height:150px;flex:none'><div style='position:absolute;left:0;width:120px;top:" & FORMAT ( ( 1 - _t2 / _max ) * 150, "0" ) & "px;height:" & FORMAT ( MAX ( ( _t2 - _b2 ) / _max * 150, 1.5 ), "0.0" ) & "px;background:#E8590C'></div><div style='position:absolute;left:-10px;right:-10px;text-align:center;top:" & FORMAT ( ( 1 - _t2 / _max ) * 150 - 17, "0" ) & "px;font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:12px;font-weight:600'>" & FORMAT ( DIVIDE ( - ( [Discounts] - [Discounts LY] ), 1000000 ), "#,0.0" ) & "M" & "</div><div style='position:absolute;left:-14px;right:-14px;text-align:center;top:156px;font-size:10px;color:#6B7178;line-height:1.2'>" & "More discounts" & "</div></div>"
+			    & "<div style='width:120px;position:relative;height:150px;flex:none'><div style='position:absolute;left:0;width:120px;top:" & FORMAT ( ( 1 - _t3 / _max ) * 150, "0" ) & "px;height:" & FORMAT ( MAX ( ( _t3 - _b3 ) / _max * 150, 1.5 ), "0.0" ) & "px;background:#E8590C'></div><div style='position:absolute;left:-10px;right:-10px;text-align:center;top:" & FORMAT ( ( 1 - _t3 / _max ) * 150 - 17, "0" ) & "px;font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:12px;font-weight:600'>" & FORMAT ( DIVIDE ( - ( [Cost of Sales] - [Cost of Sales LY] ), 1000000 ), "#,0.0" ) & "M" & "</div><div style='position:absolute;left:-14px;right:-14px;text-align:center;top:156px;font-size:10px;color:#6B7178;line-height:1.2'>" & "Higher cost of sales" & "</div></div>"
+			    & "<div style='width:120px;position:relative;height:150px;flex:none'><div style='position:absolute;left:0;width:120px;top:" & FORMAT ( ( 1 - _t4 / _max ) * 150, "0" ) & "px;height:" & FORMAT ( MAX ( ( _t4 - _b4 ) / _max * 150, 1.5 ), "0.0" ) & "px;background:#3C4650'></div><div style='position:absolute;left:-10px;right:-10px;text-align:center;top:" & FORMAT ( ( 1 - _t4 / _max ) * 150 - 17, "0" ) & "px;font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:12px;font-weight:600'>" & FORMAT ( DIVIDE ( [Gross Profit], 1000000 ), "#,0.0" ) & "M" & "</div><div style='position:absolute;left:-14px;right:-14px;text-align:center;top:156px;font-size:10px;color:#6B7178;line-height:1.2'>" & "Gross profit " & MAX ( Dim_Date[Year] ) & "</div></div>"
+			    & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 85e37450-30d8-5043-bedd-0fe06d6e51e0
+
+	/// Monthly net sales as an index, first-year monthly average = 100. Ignores the year slicer.
+	measure 'Sales Index' =
+			VAR _m = SELECTEDVALUE ( Dim_Month[Month Start] )
+			VAR _first = CALCULATE ( MIN ( Dim_Date[Year] ), REMOVEFILTERS ( Dim_Date ) )
+			VAR _base = CALCULATE ( [Net Sales], REMOVEFILTERS ( Dim_Date ), Dim_Date[Year] = _first ) / 12
+			RETURN
+			    DIVIDE ( CALCULATE ( [Net Sales], REMOVEFILTERS ( Dim_Date ), Dim_Date[Month Start] = _m ), _base ) * 100
+		formatString: 0
+		displayFolder: Sales
+		lineageTag: 46daf93a-b3c4-599a-951f-4e9b392e8dbd
+
+	/// Monthly workshop visits as an index, first-year monthly average = 100. Ignores the year slicer.
+	measure 'Visits Index' =
+			VAR _m = SELECTEDVALUE ( Dim_Month[Month Start] )
+			VAR _first = CALCULATE ( MIN ( Dim_Date[Year] ), REMOVEFILTERS ( Dim_Date ) )
+			VAR _base = CALCULATE ( [Workshop Visits], REMOVEFILTERS ( Dim_Date ), Dim_Date[Year] = _first ) / 12
+			RETURN
+			    DIVIDE ( CALCULATE ( [Workshop Visits], REMOVEFILTERS ( Dim_Date ), Dim_Date[Month Start] = _m ), _base ) * 100
+		formatString: 0
+		displayFolder: Sales
+		lineageTag: a8f9a2df-e9e8-5d68-a2f4-f6cb6c2d0580
+
+	/// Map of Egypt: one circle per governorate sized by our cars on the road, coloured by penetration (orange = low); squares are service branches.
+	measure 'Map Bubbles' =
+			VAR _maxc = MAXX ( ALL ( Dim_Governorate[Governorate] ), [Cars on Road] )
+			VAR _rows = ADDCOLUMNS ( VALUES ( Dim_Governorate[Governorate] ), "@c", [Cars on Road], "@p", [Penetration], "@x", ( 10 + ( CALCULATE ( MAX ( Dim_Governorate[Lon] ) ) - 24.6 ) * 34.127 ), "@y", ( 10 + ( 31.9 - CALCULATE ( MAX ( Dim_Governorate[Lat] ) ) ) * 38.2222 ), "@hb", CALCULATE ( MAX ( Dim_Governorate[Has Branch] ) ) )
+			VAR _br = ADDCOLUMNS ( FILTER ( ALL ( Dim_Branch[Branch] ), CALCULATE ( MAX ( Dim_Branch[Technicians] ) ) > 0 ), "@x", ( 10 + ( CALCULATE ( MAX ( Dim_Branch[Lon] ) ) - 24.6 ) * 34.127 ), "@y", ( 10 + ( 31.9 - CALCULATE ( MAX ( Dim_Branch[Lat] ) ) ) * 38.2222 ) )
+			RETURN
+			    "<div style='position:relative;width:440px;height:510px;overflow:hidden;font-family:Segoe UI,sans-serif'>"
+			        & CONCATENATEX (
+			            _rows,
+			            VAR _r = 4 + 20 * SQRT ( DIVIDE ( [@c], _maxc ) )
+			            VAR _t = MAX ( 0, MIN ( 1, ( [@p] - 0.10 ) / 0.23 ) )
+			            VAR _rgb = "rgb(" & ROUND ( 232 + ( 60 - 232 ) * _t, 0 ) & "," & ROUND ( 89 + ( 70 - 89 ) * _t, 0 ) & "," & ROUND ( 12 + ( 80 - 12 ) * _t, 0 ) & ")"
+			            RETURN
+			                "<div style='position:absolute;left:" & FORMAT ( [@x] - _r, "0" ) & "px;top:" & FORMAT ( [@y] - _r, "0" ) & "px;width:" & FORMAT ( 2 * _r, "0" ) & "px;height:" & FORMAT ( 2 * _r, "0" ) & "px;border-radius:50%;background:" & _rgb & ";opacity:.85;border:1px solid #FFFFFF;box-sizing:border-box'></div>"
+			                    & IF ( [@hb] = 0 || [@p] < 0.25 || [@c] = _maxc,
+			                        "<div style='position:absolute;left:" & FORMAT ( [@x] + _r + 4, "0" ) & "px;top:" & FORMAT ( [@y] - 8, "0" ) & "px;font-size:10.5px;font-weight:600;color:#1D2125;white-space:nowrap'>" & Dim_Governorate[Governorate] & " " & FORMAT ( [@p], "0%" ) & "</div>", "" ),
+			            "", [@c], DESC )
+			        & CONCATENATEX ( _br, "<div style='position:absolute;left:" & FORMAT ( [@x] - 3, "0" ) & "px;top:" & FORMAT ( [@y] - 3, "0" ) & "px;width:6px;height:6px;background:#FFFFFF;border:1.5px solid #1D2125'></div>", "" )
+			        & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 3d9b863b-f039-56fc-a315-652ff42871cf
+
+	/// Cars on the road, penetration, sales, growth and service branches by region of the customer.
+	measure 'Region Table' =
+			VAR _rows = ADDCOLUMNS ( VALUES ( Dim_Governorate[Region] ), "@c", [Cars on Road], "@p", [Penetration], "@s", [Net Sales], "@g", DIVIDE ( [Net Sales], [Net Sales LY] ) - 1 )
+			VAR _low = MINX ( _rows, [@p] )
+			VAR _gr = "display:grid;grid-template-columns:104px 50px 1fr 56px 46px 56px;align-items:center;column-gap:6px"
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#1D2125;font-size:11.5px'>"
+			        & "<div style='" & _gr & ";color:#6B7178;font-size:10px;font-weight:600;padding-bottom:5px;border-bottom:1px solid #E4E1DB'><span>Region</span><span style='text-align:right'>Cars</span><span>Penetration</span><span style='text-align:right'>Sales</span><span style='text-align:right'>Growth</span><span style='text-align:right'>Branches</span></div>"
+			        & CONCATENATEX (
+			            _rows,
+			            VAR _r = Dim_Governorate[Region]
+			            VAR _hl = [@p] = _low
+			            VAR _nb = CALCULATE ( COUNTROWS ( Dim_Branch ), Dim_Branch[Region] = _r, Dim_Branch[Technicians] > 0, REMOVEFILTERS ( Dim_Branch ) )
+			            RETURN
+			                "<div style='" & _gr & ";height:31px;border-bottom:1px solid #E4E1DB'><span style='font-weight:" & IF ( _hl, "600", "400" ) & "'>" & _r & "</span><span style='text-align:right'>" & FORMAT ( [@c], "#,0" ) & "</span>"
+			                    & "<span style='display:flex;align-items:center'><i style='display:inline-block;height:10px;width:" & FORMAT ( [@p] * 220, "0" ) & "px;background:" & IF ( _hl, "#E8590C", "#3C4650" ) & "'></i><b style='padding-left:5px;font-size:10.5px;color:" & IF ( _hl, "#E8590C", "#1D2125" ) & "'>" & FORMAT ( [@p], "0%" ) & "</b></span>"
+			                    & "<span style='text-align:right'>" & FORMAT ( [@s] / 1000000, "0.0" ) & "M</span><span style='text-align:right'>" & FORMAT ( [@g], "+0%;-0%" ) & "</span><span style='text-align:right'>" & ( 0 + _nb ) & "</span></div>",
+			            "", [@c], DESC )
+			        & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 2d1cf9cc-a334-5028-8cda-4d7ed119260d
+
+	/// Penetration by governorate, lowest first; orange where there is no service branch.
+	measure 'Governorate Bars' =
+			VAR _rows = ADDCOLUMNS ( FILTER ( VALUES ( Dim_Governorate[Governorate] ), [Cars on Road] > 0 ), "@p", [Penetration], "@hb", CALCULATE ( MAX ( Dim_Governorate[Has Branch] ) ) )
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#1D2125;font-size:10.5px'>"
+			        & CONCATENATEX (
+			            _rows,
+			            VAR _no = [@hb] = 0
+			            RETURN
+			                "<div style='display:flex;align-items:center;height:24px'><div style='width:100px;text-align:right;padding-right:8px;font-weight:" & IF ( _no, "600", "400" ) & "'>" & Dim_Governorate[Governorate] & "</div>"
+			                    & "<div style='height:12px;width:" & FORMAT ( [@p] * 700, "0" ) & "px;background:" & IF ( _no, "#E8590C", "#C7CBCF" ) & "'></div>"
+			                    & "<div style='padding-left:6px;color:" & IF ( _no, "#E8590C", "#6B7178" ) & ";font-weight:" & IF ( _no, "600", "400" ) & "'>" & FORMAT ( [@p], "0%" ) & IF ( _no, "  no branch", "" ) & "</div></div>",
+			            "", [@p], ASC )
+			        & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 47c3cf62-b5da-59de-85a2-acaa07c5f84f
+
+	/// Service branches: utilisation (x) against operating margin after overheads (y), circle size = net sales. Orange: full, or idle and losing money.
+	measure 'Branch Scatter' =
+			VAR _rows = ADDCOLUMNS ( FILTER ( VALUES ( Dim_Branch[Branch] ), CALCULATE ( MAX ( Dim_Branch[Technicians] ) ) > 0 ), "@u", [Utilisation], "@m", [Operating Margin], "@s", [Net Sales] )
+			VAR _maxs = MAXX ( _rows, [@s] )
+			VAR _W = 540
+			VAR _H = 206
+			VAR _Z = 8 + 0.16 / 0.40 * ( _H - 12 )
+			RETURN
+			    "<div style='position:relative;width:" & _W & "px;height:" & _H + 26 & "px;font-family:Segoe UI,sans-serif;color:#1D2125'>"
+			        & "<div style='position:absolute;left:" & FORMAT ( 34 + 0.5 / 0.7 * ( _W - 44 ), "0" ) & "px;top:0;width:" & FORMAT ( 0.2 / 0.7 * ( _W - 44 ), "0" ) & "px;height:" & _H & "px;background:#FCEFE6'></div>"
+			        & "<div style='position:absolute;left:34px;top:" & FORMAT ( _Z, "0" ) & "px;width:" & FORMAT ( 0.2 / 0.7 * ( _W - 44 ), "0" ) & "px;height:" & FORMAT ( _H - _Z, "0" ) & "px;background:#FCEFE6'></div>"
+			        & "<div style='position:absolute;left:34px;right:10px;top:" & FORMAT ( _Z, "0" ) & "px;border-top:1px solid #C7CBCF'></div>"
+			        & "<div style='position:absolute;right:14px;top:6px;font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:10px;font-weight:700;color:#E8590C'>FULL: ADD CAPACITY</div>"
+			        & "<div style='position:absolute;left:40px;top:" & _H - 16 & "px;font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:10px;font-weight:700;color:#E8590C'>IDLE AND LOSING MONEY</div>"
+			        & "<div style='position:absolute;left:0;top:2px;font-size:9px;color:#6B7178'>+16%</div><div style='position:absolute;left:8px;top:" & FORMAT ( _Z - 6, "0" ) & "px;font-size:9px;color:#6B7178'>0%</div><div style='position:absolute;left:0;top:" & _H - 8 & "px;font-size:9px;color:#6B7178'>-24%</div>"
+			        & "<div style='position:absolute;top:212px;left:20px;width:28px;text-align:center;font-size:9px;color:#6B7178'>40%</div><div style='position:absolute;top:212px;left:162px;width:28px;text-align:center;font-size:9px;color:#6B7178'>60%</div><div style='position:absolute;top:212px;left:303px;width:28px;text-align:center;font-size:9px;color:#6B7178'>80%</div><div style='position:absolute;top:212px;left:445px;width:28px;text-align:center;font-size:9px;color:#6B7178'>100%</div>"
+			        & CONCATENATEX (
+			            _rows,
+			            VAR _r = 5 + 13 * SQRT ( DIVIDE ( [@s], _maxs ) )
+			            VAR _cx = 34 + ( MIN ( MAX ( [@u], 0.4 ), 1.1 ) - 0.4 ) / 0.7 * ( _W - 44 )
+			            VAR _cy = 8 + ( 0.16 - MIN ( MAX ( [@m], -0.24 ), 0.16 ) ) / 0.40 * ( _H - 12 )
+			            VAR _hl = [@u] > 0.95 || ( [@u] < 0.6 && [@m] < 0 )
+			            RETURN
+			                "<div style='position:absolute;left:" & FORMAT ( _cx - _r, "0" ) & "px;top:" & FORMAT ( _cy - _r, "0" ) & "px;width:" & FORMAT ( 2 * _r, "0" ) & "px;height:" & FORMAT ( 2 * _r, "0" ) & "px;border-radius:50%;border:1px solid #FFFFFF;box-sizing:border-box;background:" & IF ( _hl, "#E8590C", "#3C4650" ) & ";opacity:" & IF ( _hl, ".92", ".55" ) & "'></div>"
+			                    & "<div style='position:absolute;left:" & FORMAT ( _cx - 60, "0" ) & "px;width:120px;text-align:center;top:" & FORMAT ( _cy - _r - 14, "0" ) & "px;font-size:9.5px;white-space:nowrap;color:" & IF ( _hl, "#1D2125", "#6B7178" ) & ";font-weight:" & IF ( _hl, "600", "400" ) & "'>" & Dim_Branch[Branch] & "</div>",
+			            "", [@s], DESC )
+			        & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 9379967f-5620-5f74-81ae-d3cc952bfa8f
+
+	/// Net sales, growth and gross margin by channel; the fastest-growing channel in orange.
+	measure 'Channel Table' =
+			VAR _rows = ADDCOLUMNS ( VALUES ( Fact_Sales[Channel] ), "@s", [Net Sales], "@g", DIVIDE ( [Net Sales], [Net Sales LY] ) - 1, "@m", [Gross Margin] )
+			VAR _max = MAXX ( _rows, [@s] )
+			VAR _fast = MAXX ( TOPN ( 1, _rows, [@g], DESC ), Fact_Sales[Channel] )
+			VAR _gr = "display:grid;grid-template-columns:96px 1fr 50px 44px;align-items:center;column-gap:6px"
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#1D2125;font-size:11.5px'>"
+			        & "<div style='" & _gr & ";color:#6B7178;font-size:10px;font-weight:600;padding-bottom:4px'><span>Channel</span><span>Net sales</span><span style='text-align:right'>Growth</span><span style='text-align:right'>Margin</span></div>"
+			        & CONCATENATEX (
+			            _rows,
+			            VAR _hl = Fact_Sales[Channel] = _fast
+			            RETURN
+			                "<div style='" & _gr & ";height:37px;border-top:1px solid #E4E1DB'><span style='font-weight:" & IF ( _hl, "600", "400" ) & "'>" & Fact_Sales[Channel] & "</span>"
+			                    & "<span style='display:flex;align-items:center'><i style='display:inline-block;height:12px;width:" & FORMAT ( MAX ( [@s] / _max * 80, 1.5 ), "0.0" ) & "px;background:#3C4650'></i><span style='padding-left:5px;font-size:10px'>" & FORMAT ( [@s] / 1000000, "0.0" ) & "M</span></span>"
+			                    & "<span style='text-align:right;font-weight:" & IF ( _hl, "700", "400" ) & ";color:" & IF ( _hl, "#E8590C", "#1D2125" ) & "'>" & IF ( ISBLANK ( [@g] ), "–", FORMAT ( [@g], "+0%;-0%" ) ) & "</span><span style='text-align:right'>" & FORMAT ( [@m], "0%" ) & "</span></div>",
+			            "", [@s], DESC )
+			        & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 226c013b-d616-520f-9dab-8b9f6e873853
+
+	/// Every branch: sales, target, margin, workshop utilisation and operating profit after overheads.
+	measure 'Branch Scorecard' =
+			VAR _rows = ADDCOLUMNS ( VALUES ( Dim_Branch[Branch] ), "@s", [Net Sales], "@t", [Sales vs Target], "@gm", [Gross Margin], "@u", [Utilisation], "@op", [Operating Profit], "@om", [Operating Margin], "@g", DIVIDE ( [Net Sales], [Net Sales LY] ) - 1, "@tech", CALCULATE ( MAX ( Dim_Branch[Technicians] ) ), "@reg", CALCULATE ( MAX ( Dim_Branch[Region] ) ) )
+			VAR _gr = "display:grid;grid-template-columns:118px 104px 70px 66px 78px 1fr 92px 74px 58px;align-items:center;column-gap:10px"
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#1D2125;font-size:10.5px'>"
+			        & "<div style='" & _gr & ";color:#6B7178;font-size:9.5px;font-weight:600;padding-bottom:3px;border-bottom:1px solid #E4E1DB'><span>Branch</span><span>Region</span><span style='text-align:right'>Net sales</span><span style='text-align:right'>vs target</span><span style='text-align:right'>Gross margin</span><span>Utilisation</span><span style='text-align:right'>Op. profit</span><span style='text-align:right'>Op. margin</span><span style='text-align:right'>Growth</span></div>"
+			        & CONCATENATEX (
+			            _rows,
+			            VAR _bad = [@op] < 0
+			            VAR _ubad = [@u] > 0.95 || [@u] < 0.55
+			            RETURN
+			                "<div style='" & _gr & ";height:15.5px;border-bottom:1px solid #F1EFEB'><b style='font-weight:600'>" & Dim_Branch[Branch] & "</b><span style='color:#6B7178'>" & [@reg] & "</span><span style='text-align:right'>" & FORMAT ( [@s] / 1000000, "0.0" ) & "M</span>"
+			                    & "<span style='text-align:right;color:" & IF ( [@t] < 0.85, "#E8590C", "#1D2125" ) & "'>" & FORMAT ( [@t], "0%" ) & "</span><span style='text-align:right'>" & FORMAT ( [@gm], "0.0%" ) & "</span>"
+			                    & IF ( [@tech] > 0, "<span style='display:flex;align-items:center'><i style='display:inline-block;height:8px;width:" & FORMAT ( MIN ( [@u], 1.1 ) * 120, "0" ) & "px;background:" & IF ( _ubad, "#E8590C", "#C7CBCF" ) & "'></i><span style='padding-left:5px'>" & FORMAT ( [@u], "0%" ) & "</span></span>", "<span style='color:#6B7178'>parts outlet</span>" )
+			                    & "<span style='text-align:right;color:" & IF ( _bad, "#E8590C", "#1D2125" ) & ";font-weight:" & IF ( _bad, "600", "400" ) & "'>" & FORMAT ( [@op] / 1000000, "0.00" ) & "M</span><span style='text-align:right;color:" & IF ( _bad, "#E8590C", "#1D2125" ) & "'>" & FORMAT ( [@om], "0.0%" ) & "</span><span style='text-align:right'>" & FORMAT ( [@g], "+0%;-0%" ) & "</span></div>",
+			            "", [@s], DESC )
+			        & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 52caa854-4b5e-5d83-ae42-faf931a6bd07
+
+	/// Name, role, home branch and start year of the selected rep.
+	measure 'Rep Card' =
+			VAR _n = SELECTEDVALUE ( Dim_Rep[Rep] )
+			VAR _sp = SEARCH ( " ", _n, 1, 0 )
+			VAR _ini = LEFT ( _n, 1 ) & IF ( _sp > 0, MID ( _n, _sp + 1, 1 ), "" )
+			RETURN
+			    IF ( ISBLANK ( _n ),
+			        "<div style='height:90px;background:#1D2125;border-radius:4px;color:#AEB4BA;font-family:Segoe UI,sans-serif;font-size:12px;display:flex;align-items:center;padding:0 16px'>Select one rep</div>",
+			        "<div style='height:90px;background:#1D2125;border-radius:4px;display:flex;align-items:center;gap:12px;padding:0 16px;font-family:Segoe UI,sans-serif'>"
+			            & "<div style='width:46px;height:46px;flex:none;border-radius:50%;background:#E8590C;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:17px;font-weight:700'>" & _ini & "</div>"
+			            & "<div><div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:18px;font-weight:600;color:#FFFFFF'>" & _n & "</div><div style='font-size:10.5px;color:#AEB4BA;margin-top:2px'>" & SELECTEDVALUE ( Dim_Rep[Role] ) & " · " & SELECTEDVALUE ( Dim_Rep[Home Branch] ) & " · since " & SELECTEDVALUE ( Dim_Rep[HireYear] ) & "</div></div></div>" )
+		displayFolder: KPI Cards
+		lineageTag: dc37c71f-1eed-50d6-a3c9-302124d352b5
+
+	/// Every rep: target achievement against average discount. Dark = same role as the selected rep, orange = the selected rep.
+	measure 'Rep Scatter' =
+			VAR _sel = SELECTEDVALUE ( Dim_Rep[RepID] )
+			VAR _role = SELECTEDVALUE ( Dim_Rep[Role] )
+			VAR _rows = FILTER ( ADDCOLUMNS ( ALL ( Dim_Rep ), "@a", [Rep Achievement], "@d", [Discount Rate] ), NOT ISBLANK ( [@a] ) )
+			VAR _W = 520
+			VAR _H = 270
+			RETURN
+			    "<div style='position:relative;width:" & _W & "px;height:" & _H + 22 & "px;font-family:Segoe UI,sans-serif;color:#1D2125'>"
+			        & "<div style='position:absolute;left:36px;right:10px;top:" & FORMAT ( _H - ( 1 - 0.65 ) / 0.6 * _H, "0" ) & "px;border-top:1px dashed #C7CBCF'></div><div style='position:absolute;right:10px;top:" & FORMAT ( _H - ( 1 - 0.65 ) / 0.6 * _H - 14, "0" ) & "px;font-size:9px;color:#6B7178'>target</div>"
+			        & "<div style='position:absolute;left:0;width:30px;text-align:right;top:242px;font-size:9px;color:#6B7178'>70%</div><div style='position:absolute;left:0;width:30px;text-align:right;top:106px;font-size:9px;color:#6B7178'>100%</div><div style='position:absolute;left:0;width:30px;text-align:right;top:16px;font-size:9px;color:#6B7178'>120%</div><div style='position:absolute;top:276px;left:22px;width:28px;text-align:center;font-size:9px;color:#6B7178'>0%</div><div style='position:absolute;top:276px;left:191px;width:28px;text-align:center;font-size:9px;color:#6B7178'>10%</div><div style='position:absolute;top:276px;left:361px;width:28px;text-align:center;font-size:9px;color:#6B7178'>20%</div>"
+			        & "<div style='position:absolute;right:10px;top:" & _H - 16 & "px;font-size:9.5px;color:#6B7178'>discount given →</div>"
+			        & CONCATENATEX (
+			            FILTER ( _rows, Dim_Rep[RepID] <> _sel ),
+			            VAR _cx = 36 + MIN ( [@d], 0.28 ) / 0.28 * ( _W - 46 )
+			            VAR _cy = _H - ( MIN ( MAX ( [@a], 0.65 ), 1.25 ) - 0.65 ) / 0.6 * _H
+			            RETURN
+			                "<div style='position:absolute;left:" & FORMAT ( _cx - 5, "0" ) & "px;top:" & FORMAT ( _cy - 5, "0" ) & "px;width:10px;height:10px;border-radius:50%;background:" & IF ( Dim_Rep[Role] = _role, "#3C4650", "#C7CBCF" ) & ";opacity:.8'></div>",
+			            "" )
+			        & CONCATENATEX (
+			            FILTER ( _rows, Dim_Rep[RepID] = _sel ),
+			            VAR _cx = 36 + MIN ( [@d], 0.28 ) / 0.28 * ( _W - 46 )
+			            VAR _cy = _H - ( MIN ( MAX ( [@a], 0.65 ), 1.25 ) - 0.65 ) / 0.6 * _H
+			            RETURN
+			                "<div style='position:absolute;left:" & FORMAT ( _cx - 8, "0" ) & "px;top:" & FORMAT ( _cy - 8, "0" ) & "px;width:16px;height:16px;border-radius:50%;background:#E8590C;border:2px solid #FFFFFF;box-sizing:border-box'></div>"
+			                    & "<div style='position:absolute;left:" & FORMAT ( _cx - 170, "0" ) & "px;width:158px;text-align:right;top:" & FORMAT ( _cy - 22, "0" ) & "px;font-size:10.5px;font-weight:700;color:#E8590C'>" & Dim_Rep[Rep] & "</div>",
+			            "" )
+			        & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: a346e821-9ea4-522d-977f-50e5198b6362
+
+	/// The selected rep (orange) against every rep in the same role (grey dots) and the role median (black line), on four measures.
+	measure 'Rep Strips' =
+			VAR _sel = SELECTEDVALUE ( Dim_Rep[RepID] )
+			VAR _role = SELECTEDVALUE ( Dim_Rep[Role] )
+			VAR _n = SELECTEDVALUE ( Dim_Rep[Rep] )
+			VAR _peers = FILTER ( ADDCOLUMNS ( FILTER ( ALL ( Dim_Rep ), Dim_Rep[Role] = _role ), "@s0", [Rep Achievement], "@s1", [Discount Rate], "@s2", [Gross Margin], "@s3", [Rep Growth] ), NOT ISBLANK ( [@s0] ) )
+			VAR _v0 = [Rep Achievement]
+			VAR _m0 = MEDIANX ( _peers, [@s0] )
+			VAR _v1 = [Discount Rate]
+			VAR _m1 = MEDIANX ( _peers, [@s1] )
+			VAR _v2 = [Gross Margin]
+			VAR _m2 = MEDIANX ( _peers, [@s2] )
+			VAR _v3 = [Rep Growth]
+			VAR _m3 = MEDIANX ( _peers, [@s3] )
+			RETURN
+			    IF ( ISBLANK ( _sel ), "<div style='font-family:Segoe UI,sans-serif;color:#6B7178;font-size:12px'>Select one rep</div>",
+			        "<div style='font-family:Segoe UI,sans-serif;color:#1D2125;padding-top:4px'>" & "<div style='position:relative;height:72px'><div style='position:absolute;left:8px;top:0;font-size:11px;font-weight:600'>Target achievement</div><div style='position:absolute;right:16px;top:0;font-size:11px;font-weight:700;color:#E8590C'>" & _n & " " & FORMAT ( _v0, "0%" ) & "</div><div style='position:absolute;left:8px;width:358px;top:24px;height:10px;border-radius:5px;background:#E4E1DB'></div>" & CONCATENATEX ( FILTER ( _peers, Dim_Rep[RepID] <> _sel ), "<div style='position:absolute;left:" & FORMAT ( ( 8 + ( MIN ( MAX ( [@s0], 0.6 ), 1.3 ) - 0.6 ) / 0.7000000000000001 * 350 ) - 4, "0" ) & "px;top:25px;width:8px;height:8px;border-radius:50%;background:#3C4650;opacity:.45'></div>", "" ) & "<div style='position:absolute;left:" & FORMAT ( ( 8 + ( MIN ( MAX ( _m0, 0.6 ), 1.3 ) - 0.6 ) / 0.7000000000000001 * 350 ) - 1, "0" ) & "px;top:20px;width:2px;height:18px;background:#1D2125'></div><div style='position:absolute;left:" & FORMAT ( ( 8 + ( MIN ( MAX ( _m0, 0.6 ), 1.3 ) - 0.6 ) / 0.7000000000000001 * 350 ) - 50, "0" ) & "px;width:100px;text-align:center;top:40px;font-size:9px;color:#6B7178'>median " & FORMAT ( _m0, "0%" ) & "</div><div style='position:absolute;left:" & FORMAT ( ( 8 + ( MIN ( MAX ( _v0, 0.6 ), 1.3 ) - 0.6 ) / 0.7000000000000001 * 350 ) - 7, "0" ) & "px;top:22px;width:14px;height:14px;border-radius:50%;background:#E8590C;border:2px solid #FFFFFF;box-sizing:border-box'></div></div>" & "<div style='position:relative;height:72px'><div style='position:absolute;left:8px;top:0;font-size:11px;font-weight:600'>Average discount</div><div style='position:absolute;right:16px;top:0;font-size:11px;font-weight:700;color:#E8590C'>" & _n & " " & FORMAT ( _v1, "0%" ) & "</div><div style='position:absolute;left:8px;width:358px;top:24px;height:10px;border-radius:5px;background:#E4E1DB'></div>" & CONCATENATEX ( FILTER ( _peers, Dim_Rep[RepID] <> _sel ), "<div style='position:absolute;left:" & FORMAT ( ( 8 + ( MIN ( MAX ( [@s1], 0 ), 0.28 ) - 0 ) / 0.28 * 350 ) - 4, "0" ) & "px;top:25px;width:8px;height:8px;border-radius:50%;background:#3C4650;opacity:.45'></div>", "" ) & "<div style='position:absolute;left:" & FORMAT ( ( 8 + ( MIN ( MAX ( _m1, 0 ), 0.28 ) - 0 ) / 0.28 * 350 ) - 1, "0" ) & "px;top:20px;width:2px;height:18px;background:#1D2125'></div><div style='position:absolute;left:" & FORMAT ( ( 8 + ( MIN ( MAX ( _m1, 0 ), 0.28 ) - 0 ) / 0.28 * 350 ) - 50, "0" ) & "px;width:100px;text-align:center;top:40px;font-size:9px;color:#6B7178'>median " & FORMAT ( _m1, "0%" ) & "</div><div style='position:absolute;left:" & FORMAT ( ( 8 + ( MIN ( MAX ( _v1, 0 ), 0.28 ) - 0 ) / 0.28 * 350 ) - 7, "0" ) & "px;top:22px;width:14px;height:14px;border-radius:50%;background:#E8590C;border:2px solid #FFFFFF;box-sizing:border-box'></div></div>" & "<div style='position:relative;height:72px'><div style='position:absolute;left:8px;top:0;font-size:11px;font-weight:600'>Gross margin</div><div style='position:absolute;right:16px;top:0;font-size:11px;font-weight:700;color:#E8590C'>" & _n & " " & FORMAT ( _v2, "0%" ) & "</div><div style='position:absolute;left:8px;width:358px;top:24px;height:10px;border-radius:5px;background:#E4E1DB'></div>" & CONCATENATEX ( FILTER ( _peers, Dim_Rep[RepID] <> _sel ), "<div style='position:absolute;left:" & FORMAT ( ( 8 + ( MIN ( MAX ( [@s2], 0 ), 0.36 ) - 0 ) / 0.36 * 350 ) - 4, "0" ) & "px;top:25px;width:8px;height:8px;border-radius:50%;background:#3C4650;opacity:.45'></div>", "" ) & "<div style='position:absolute;left:" & FORMAT ( ( 8 + ( MIN ( MAX ( _m2, 0 ), 0.36 ) - 0 ) / 0.36 * 350 ) - 1, "0" ) & "px;top:20px;width:2px;height:18px;background:#1D2125'></div><div style='position:absolute;left:" & FORMAT ( ( 8 + ( MIN ( MAX ( _m2, 0 ), 0.36 ) - 0 ) / 0.36 * 350 ) - 50, "0" ) & "px;width:100px;text-align:center;top:40px;font-size:9px;color:#6B7178'>median " & FORMAT ( _m2, "0%" ) & "</div><div style='position:absolute;left:" & FORMAT ( ( 8 + ( MIN ( MAX ( _v2, 0 ), 0.36 ) - 0 ) / 0.36 * 350 ) - 7, "0" ) & "px;top:22px;width:14px;height:14px;border-radius:50%;background:#E8590C;border:2px solid #FFFFFF;box-sizing:border-box'></div></div>" & "<div style='position:relative;height:72px'><div style='position:absolute;left:8px;top:0;font-size:11px;font-weight:600'>Sales growth</div><div style='position:absolute;right:16px;top:0;font-size:11px;font-weight:700;color:#E8590C'>" & _n & " " & FORMAT ( _v3, "+0%;-0%" ) & "</div><div style='position:absolute;left:8px;width:358px;top:24px;height:10px;border-radius:5px;background:#E4E1DB'></div>" & CONCATENATEX ( FILTER ( _peers, Dim_Rep[RepID] <> _sel ), "<div style='position:absolute;left:" & FORMAT ( ( 8 + ( MIN ( MAX ( [@s3], -0.2 ), 0.8 ) - -0.2 ) / 1.0 * 350 ) - 4, "0" ) & "px;top:25px;width:8px;height:8px;border-radius:50%;background:#3C4650;opacity:.45'></div>", "" ) & "<div style='position:absolute;left:" & FORMAT ( ( 8 + ( MIN ( MAX ( _m3, -0.2 ), 0.8 ) - -0.2 ) / 1.0 * 350 ) - 1, "0" ) & "px;top:20px;width:2px;height:18px;background:#1D2125'></div><div style='position:absolute;left:" & FORMAT ( ( 8 + ( MIN ( MAX ( _m3, -0.2 ), 0.8 ) - -0.2 ) / 1.0 * 350 ) - 50, "0" ) & "px;width:100px;text-align:center;top:40px;font-size:9px;color:#6B7178'>median " & FORMAT ( _m3, "+0%;-0%" ) & "</div><div style='position:absolute;left:" & FORMAT ( ( 8 + ( MIN ( MAX ( _v3, -0.2 ), 0.8 ) - -0.2 ) / 1.0 * 350 ) - 7, "0" ) & "px;top:22px;width:14px;height:14px;border-radius:50%;background:#E8590C;border:2px solid #FFFFFF;box-sizing:border-box'></div></div>" & "</div>" )
+		displayFolder: KPI Cards
+		lineageTag: 5fe334d1-72ae-5f07-b749-711d2f20da4e
+
+	/// Share of last year's retail customers who came back this year, by age of their car; orange after the 3-year warranty.
+	measure 'Retention Bars' =
+			VAR _rows = ADDCOLUMNS ( VALUES ( Dim_CarAge[Car Age] ), "@r", [Retention by Car Age], "@l", CALCULATE ( MAX ( Dim_CarAge[Car Age Label] ) ) )
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#1D2125;display:flex;align-items:flex-end;height:228px;padding:0 10px 0 20px;position:relative'>"
+			        & CONCATENATEX (
+			            _rows,
+			            VAR _after = Dim_CarAge[Car Age] >= 4
+			            RETURN
+			                "<div style='width:50px;margin-right:14px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:228px'>"
+			                    & "<div style='font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:11.5px;font-weight:600;color:" & IF ( _after, "#E8590C", "#1D2125" ) & "'>" & FORMAT ( [@r], "0%" ) & "</div>"
+			                    & "<div style='width:50px;margin-top:3px;height:" & FORMAT ( [@r] * 180, "0" ) & "px;background:" & IF ( _after, "#E8590C", "#3C4650" ) & "'></div>"
+			                    & "<div style='font-size:10px;color:#6B7178;margin-top:6px'>" & [@l] & "</div></div>"
+			                   ,
+			            "", Dim_CarAge[Car Age], ASC )
+			        & "<div style='position:absolute;left:" & FORMAT ( 20 + 3 * 64 - 7, "0" ) & "px;top:4px;height:204px;border-left:1.5px dashed #1D2125'></div><div style='position:absolute;left:" & FORMAT ( 20 + 3 * 64 - 1, "0" ) & "px;top:2px;font-size:10px;font-weight:600'>warranty ends (3 years)</div>"
+			        & "</div><div style='font-family:Segoe UI,sans-serif;font-size:9.5px;color:#6B7178;padding:4px 0 0 20px'>Age of the car in years</div>"
+		displayFolder: KPI Cards
+		lineageTag: e9be860d-100f-5612-af71-50f717ef0ca1
+
+	/// Net sales, growth and margin by customer type; margins under 20% in orange.
+	measure 'Customer Types' =
+			VAR _rows = ADDCOLUMNS ( VALUES ( Dim_Customer[CustomerType] ), "@s", [Net Sales], "@g", DIVIDE ( [Net Sales], [Net Sales LY] ) - 1, "@m", [Gross Margin], "@n", CALCULATE ( DISTINCTCOUNT ( Fact_Sales[CustomerID] ) ) )
+			VAR _tot = SUMX ( _rows, [@s] )
+			VAR _gr = "display:grid;grid-template-columns:1fr 70px 50px 46px;column-gap:6px"
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#1D2125;font-size:12px'>"
+			        & "<div style='" & _gr & ";color:#6B7178;font-size:10px;font-weight:600;padding-bottom:4px'><span>Customer type</span><span style='text-align:right'>Net sales</span><span style='text-align:right'>Growth</span><span style='text-align:right'>Margin</span></div>"
+			        & CONCATENATEX (
+			            FILTER ( _rows, NOT ISBLANK ( [@s] ) ),
+			            "<div style='" & _gr & ";border-top:1px solid #E4E1DB;padding:6px 0 5px'><div><b style='font-weight:600'>" & Dim_Customer[CustomerType] & "</b><div style='font-size:9.5px;color:#6B7178'>" & FORMAT ( [@n], "#,0" ) & " customers, " & FORMAT ( DIVIDE ( [@s], _tot ), "0%" ) & " of sales</div></div>"
+			                & "<span style='text-align:right'>" & FORMAT ( [@s] / 1000000, "0.0" ) & "M</span><span style='text-align:right'>" & IF ( ISBLANK ( [@g] ), "–", FORMAT ( [@g], "+0%;-0%" ) ) & "</span><span style='text-align:right;font-weight:" & IF ( [@m] < 0.2, "700", "400" ) & ";color:" & IF ( [@m] < 0.2, "#E8590C", "#1D2125" ) & "'>" & FORMAT ( [@m], "0%" ) & "</span></div>",
+			            "", [@s], DESC )
+			        & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: e886236b-1f55-5e9a-82bf-dd0ce2e37cf0
+
+	/// Gross sales, minus discounts and cost of sales, gives gross profit; minus each overhead category gives operating profit. EGP.
+	measure 'Profit Bridge' =
+			VAR _cats = ADDCOLUMNS ( VALUES ( Fact_Overhead[Category] ), "@o", [Overheads] )
+			VAR _gs = [Gross Sales]
+			VAR _gp = [Gross Profit]
+			VAR _max = _gs * 1.06
+			VAR _H = 168
+			VAR _col = "width:66px;position:relative;height:" & _H & "px;flex:none"
+			VAR _bar = "position:absolute;left:0;width:66px"
+			VAR _val = "position:absolute;left:-12px;right:-12px;text-align:center;font-family:Bahnschrift,DIN,Segoe UI,sans-serif;font-size:11px;font-weight:600"
+			VAR _lab = "position:absolute;left:-14px;right:-14px;text-align:center;top:" & _H + 6 & "px;font-size:10px;color:#6B7178"
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#1D2125;display:flex;justify-content:space-between;padding:20px 22px 0'>"
+			        & "<div style='" & _col & "'><div style='" & _bar & ";top:" & FORMAT ( ( 1 - _gs / _max ) * _H, "0" ) & "px;height:" & FORMAT ( _gs / _max * _H, "0" ) & "px;background:#3C4650'></div><div style='" & _val & ";top:" & FORMAT ( ( 1 - _gs / _max ) * _H - 16, "0" ) & "px'>" & FORMAT ( _gs / 1000000, "0" ) & "M</div><div style='" & _lab & "'>Gross sales</div></div>"
+			        & "<div style='" & _col & "'><div style='" & _bar & ";top:" & FORMAT ( ( 1 - _gs / _max ) * _H, "0" ) & "px;height:" & FORMAT ( MAX ( [Discounts] / _max * _H, 1.5 ), "0.0" ) & "px;background:#E8590C'></div><div style='" & _val & ";top:" & FORMAT ( ( 1 - _gs / _max ) * _H - 16, "0" ) & "px'>" & FORMAT ( [Discounts] / 1000000, "0.0" ) & "M</div><div style='" & _lab & "'>Discounts</div></div>"
+			        & "<div style='" & _col & "'><div style='" & _bar & ";top:" & FORMAT ( ( 1 - ( _gs - [Discounts] ) / _max ) * _H, "0" ) & "px;height:" & FORMAT ( [Cost of Sales] / _max * _H, "0" ) & "px;background:#E8590C'></div><div style='" & _val & ";top:" & FORMAT ( ( 1 - ( _gs - [Discounts] ) / _max ) * _H - 16, "0" ) & "px'>" & FORMAT ( [Cost of Sales] / 1000000, "0" ) & "M</div><div style='" & _lab & "'>Cost of sales</div></div>"
+			        & "<div style='" & _col & "'><div style='" & _bar & ";top:" & FORMAT ( ( 1 - _gp / _max ) * _H, "0" ) & "px;height:" & FORMAT ( _gp / _max * _H, "0" ) & "px;background:#3C4650'></div><div style='" & _val & ";top:" & FORMAT ( ( 1 - _gp / _max ) * _H - 16, "0" ) & "px'>" & FORMAT ( _gp / 1000000, "0" ) & "M</div><div style='" & _lab & "'>Gross profit</div></div>"
+			        & CONCATENATEX (
+			            _cats,
+			            VAR _me = [@o]
+			            VAR _above = SUMX ( FILTER ( _cats, [@o] > _me ), [@o] )
+			            VAR _top = _gp - _above
+			            RETURN
+			                "<div style='" & _col & "'><div style='" & _bar & ";top:" & FORMAT ( ( 1 - _top / _max ) * _H, "0" ) & "px;height:" & FORMAT ( MAX ( [@o] / _max * _H, 1.5 ), "0.0" ) & "px;background:#D99A6C'></div><div style='" & _val & ";top:" & FORMAT ( ( 1 - _top / _max ) * _H - 16, "0" ) & "px'>" & FORMAT ( [@o] / 1000000, "0.0" ) & "M</div><div style='" & _lab & "'>" & Fact_Overhead[Category] & "</div></div>",
+			            "", [@o], DESC )
+			        & "<div style='" & _col & "'><div style='" & _bar & ";top:" & FORMAT ( ( 1 - MAX ( [Operating Profit], 0 ) / _max ) * _H, "0" ) & "px;height:" & FORMAT ( MAX ( ABS ( [Operating Profit] ) / _max * _H, 1.5 ), "0.0" ) & "px;background:#1D2125'></div><div style='" & _val & ";top:" & FORMAT ( ( 1 - MAX ( [Operating Profit], 0 ) / _max ) * _H - 16, "0" ) & "px'>" & FORMAT ( [Operating Profit] / 1000000, "0.0" ) & "M</div><div style='" & _lab & "'>Operating profit</div></div>"
+			        & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: 01f8e5ff-695d-5a1a-ae4d-b200d2981245
+
+	/// Overheads by category: bar = actual, black line = budget; orange more than 5% over budget.
+	measure 'Overhead Bullets' =
+			VAR _rows = ADDCOLUMNS ( VALUES ( Fact_Overhead[Category] ), "@a", [Overheads], "@b", [Overhead Budget] )
+			VAR _max = MAXX ( _rows, MAX ( [@a], [@b] ) ) * 1.1
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#1D2125'>"
+			        & CONCATENATEX (
+			            _rows,
+			            VAR _v = DIVIDE ( [@a], [@b] ) - 1
+			            VAR _hl = _v > 0.05
+			            RETURN
+			                "<div style='display:flex;align-items:center;height:42px'><div style='width:100px'><div style='font-size:11.5px;font-weight:600'>" & Fact_Overhead[Category] & "</div><div style='font-size:9.5px;color:#6B7178'>budget " & FORMAT ( [@b] / 1000000, "0.0" ) & "M</div></div>"
+			                    & "<div style='position:relative;width:240px;height:22px'><div style='position:absolute;left:0;top:3px;height:16px;width:" & FORMAT ( [@a] / _max * 240, "0" ) & "px;background:" & IF ( _hl, "#E8590C", "#C7CBCF" ) & "'></div><div style='position:absolute;top:0;width:2px;height:22px;background:#1D2125;left:" & FORMAT ( [@b] / _max * 240, "0" ) & "px'></div></div>"
+			                    & "<div style='padding-left:4px;font-size:10.5px;font-weight:600;color:" & IF ( _hl, "#E8590C", "#6B7178" ) & "'>" & FORMAT ( _v, "+0.0%;-0.0%" ) & "</div></div>",
+			            "", [@a], DESC )
+			        & "</div>"
+		displayFolder: KPI Cards
+		lineageTag: b8ff8134-9c57-558d-8d52-b53a7099069d
+
+	/// Open receivables at the end of the period by customer type and days past due.
+	measure 'Receivables Aging' =
+			VAR _rows = FILTER ( ADDCOLUMNS ( VALUES ( Dim_Customer[CustomerType] ), "@t", [Receivables], "@b0", [Receivables Not Due], "@b1", [Receivables 1-30 Days], "@b2", [Receivables 31-60 Days], "@b3", [Receivables 61-90 Days], "@b4", [Receivables Over 90 Days] ), [@t] > 0 )
+			VAR _max = MAXX ( _rows, [@t] )
+			RETURN
+			    "<div style='font-family:Segoe UI,sans-serif;color:#1D2125'>"
+			        & CONCATENATEX (
+			            _rows,
+			            "<div style='display:flex;align-items:center;height:40px'><div style='width:90px;font-size:11.5px;font-weight:600'>" & Dim_Customer[CustomerType] & "</div><div style='display:flex;height:18px'>"
+			                & "<div style='height:18px;background:#C7CBCF;width:" & FORMAT ( [@b0] / _max * 290, "0.0" ) & "px'></div>" & "<div style='height:18px;background:#A9AFB5;width:" & FORMAT ( [@b1] / _max * 290, "0.0" ) & "px'></div>" & "<div style='height:18px;background:#F2B48C;width:" & FORMAT ( [@b2] / _max * 290, "0.0" ) & "px'></div>" & "<div style='height:18px;background:#EE8A4F;width:" & FORMAT ( [@b3] / _max * 290, "0.0" ) & "px'></div>" & "<div style='height:18px;background:#E8590C;width:" & FORMAT ( [@b4] / _max * 290, "0.0" ) & "px'></div>"
+			                & "</div><div style='padding-left:6px;font-size:10.5px;font-weight:600'>" & FORMAT ( [@t] / 1000000, "0.0" ) & "M</div></div>",
+			            "", [@t], DESC )
+			        & "<div style='display:flex;gap:12px;margin:16px 0 0 90px;font-size:9.5px;color:#6B7178'>" & "<span><i style='display:inline-block;width:10px;height:10px;background:#C7CBCF;margin-right:4px;vertical-align:-1px'></i>Not due</span>" & "<span><i style='display:inline-block;width:10px;height:10px;background:#A9AFB5;margin-right:4px;vertical-align:-1px'></i>1–30</span>" & "<span><i style='display:inline-block;width:10px;height:10px;background:#F2B48C;margin-right:4px;vertical-align:-1px'></i>31–60</span>" & "<span><i style='display:inline-block;width:10px;height:10px;background:#EE8A4F;margin-right:4px;vertical-align:-1px'></i>61–90</span>" & "<span><i style='display:inline-block;width:10px;height:10px;background:#E8590C;margin-right:4px;vertical-align:-1px'></i>90+</span>" & "</div>"
+			        & "<div style='margin:6px 0 0 90px;font-size:9.5px;color:#6B7178'>days past the due date</div></div>"
+		displayFolder: KPI Cards
+		lineageTag: cc68d5b8-adf8-5d32-967e-5c87eb29aaa9
+
+	column Placeholder
+		dataType: string
+		isHidden
+		lineageTag: 4afa2b86-4f53-507f-a3db-176ce7729ba3
+		summarizeBy: none
+		sourceColumn: Placeholder
+
+		annotation SummarizationSetBy = Automatic
+
+	partition _Measures = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Placeholder = text], {})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

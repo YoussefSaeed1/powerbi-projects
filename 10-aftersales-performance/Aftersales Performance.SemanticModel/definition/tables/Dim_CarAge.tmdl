@@ -1,0 +1,32 @@
+/// Age of the car in years, used for retention by car age (8 = 8 years or older).
+table Dim_CarAge
+	lineageTag: 3aee6aac-7267-5272-b8f6-f8bdaecf958d
+	isHidden
+
+	column 'Car Age'
+		dataType: int64
+		lineageTag: 8434159d-d3d9-5393-a9dd-2e8ec6d3dd1e
+		summarizeBy: none
+		sourceColumn: Car Age
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Car Age Label'
+		dataType: string
+		lineageTag: 71a10934-827a-5246-baa5-662f3b03b5e2
+		summarizeBy: none
+		sourceColumn: Car Age Label
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_CarAge = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Car Age" = Int64.Type, #"Car Age Label" = text], {{1, "1"}, {2, "2"}, {3, "3"}, {4, "4"}, {5, "5"}, {6, "6"}, {7, "7"}, {8, "8+"}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

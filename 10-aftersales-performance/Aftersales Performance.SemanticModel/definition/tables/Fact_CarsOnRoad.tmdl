@@ -1,0 +1,46 @@
+/// Cars the group has sold that are still on the road, by governorate and brand.
+table Fact_CarsOnRoad
+	lineageTag: 5b7c9801-b034-54b2-9760-44d73359d8bb
+
+	column Governorate
+		dataType: string
+		isHidden
+		lineageTag: 8375a301-92b0-560c-9c10-257a56d6d166
+		summarizeBy: none
+		sourceColumn: Governorate
+
+		annotation SummarizationSetBy = Automatic
+
+	column VehicleBrand
+		dataType: string
+		isHidden
+		lineageTag: c14b7ed3-456e-56d5-a92e-48c5c3ff9d4b
+		summarizeBy: none
+		sourceColumn: VehicleBrand
+
+		annotation SummarizationSetBy = Automatic
+
+	column CarsOnRoad
+		dataType: int64
+		isHidden
+		formatString: #,0
+		lineageTag: a32fb6f2-24cd-5d38-9f71-49ae88a4552a
+		summarizeBy: none
+		sourceColumn: CarsOnRoad
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_CarsOnRoad = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="CarsOnRoad",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"Governorate", type text}, {"VehicleBrand", type text}, {"CarsOnRoad", Int64.Type}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

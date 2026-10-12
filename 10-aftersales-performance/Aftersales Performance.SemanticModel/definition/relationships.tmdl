@@ -1,0 +1,83 @@
+relationship ac947067-70b2-5b80-8765-1f5c5972f5ac
+	fromColumn: Fact_Sales.InvoiceDate
+	toColumn: Dim_Date.Date
+
+relationship 765ae7eb-f7f4-5ba0-984b-26eb5e3a9713
+	fromColumn: Fact_Sales.BranchID
+	toColumn: Dim_Branch.BranchID
+
+relationship e45dfbd8-5b96-59c4-be45-d12c09153213
+	fromColumn: Fact_Sales.CustomerID
+	toColumn: Dim_Customer.CustomerID
+
+relationship 62d9f186-8d7f-5106-b365-68d293126090
+	fromColumn: Fact_Sales.RepID
+	toColumn: Dim_Rep.RepID
+
+relationship 366b18f7-e0ee-5901-8a93-1efbb358db60
+	fromColumn: Fact_Sales.BusinessLine
+	toColumn: Dim_BusinessLine.'Business Line'
+
+relationship ab4d0de0-5660-5837-ac53-fdc2a90d6458
+	fromColumn: Fact_Sales.VehicleBrand
+	toColumn: Dim_Brand.Brand
+
+relationship 3b996016-5870-540c-9237-eaae65db80f7
+	fromColumn: Fact_Invoice.InvoiceDate
+	toColumn: Dim_Date.Date
+
+relationship 780b3904-aa82-51eb-9833-d76ae8e55b37
+	fromColumn: Fact_Invoice.BranchID
+	toColumn: Dim_Branch.BranchID
+
+relationship 1f55b114-9ed3-5d57-8a52-a3b70a5eeafd
+	fromColumn: Fact_Invoice.CustomerID
+	toColumn: Dim_Customer.CustomerID
+
+relationship c961c138-aaef-51d2-9630-b5ac01a51c5d
+	fromColumn: Dim_Customer.Governorate
+	toColumn: Dim_Governorate.Governorate
+
+relationship 3493301d-f989-5d00-91a8-37d9018f78c6
+	fromColumn: Fact_BranchTarget.Month
+	toColumn: Dim_Date.Date
+
+relationship 8159c8ef-253b-5dc3-97e9-bb3a7e167037
+	fromColumn: Fact_BranchTarget.BranchID
+	toColumn: Dim_Branch.BranchID
+
+relationship bfb656cb-4498-58ed-8a7e-b9f6e894128f
+	fromColumn: Fact_BranchTarget.BusinessLine
+	toColumn: Dim_BusinessLine.'Business Line'
+
+relationship f7514eca-c678-5f0b-961c-0cbd667e061f
+	fromColumn: Fact_RepTarget.Month
+	toColumn: Dim_Date.Date
+
+relationship 322b503b-b794-5954-b014-d37a1e23f890
+	fromColumn: Fact_RepTarget.RepID
+	toColumn: Dim_Rep.RepID
+
+relationship 1d33cae7-8614-56e2-9b22-cbce2490885a
+	fromColumn: Fact_Overhead.Month
+	toColumn: Dim_Date.Date
+
+relationship 7f8f75fd-b4e9-59e0-b142-8bacf15899fe
+	fromColumn: Fact_Overhead.BranchID
+	toColumn: Dim_Branch.BranchID
+
+relationship 90908820-8c20-5916-bdfd-167c93a5f609
+	fromColumn: Fact_Capacity.Month
+	toColumn: Dim_Date.Date
+
+relationship f8d85e2d-66d3-5d5c-b2a4-569e6a14d40c
+	fromColumn: Fact_Capacity.BranchID
+	toColumn: Dim_Branch.BranchID
+
+relationship 70ea7397-223b-558f-91d3-d062f3746db9
+	fromColumn: Fact_CarsOnRoad.Governorate
+	toColumn: Dim_Governorate.Governorate
+
+relationship 2b9c24af-61f5-5e45-b2cd-89d1e080adf8
+	fromColumn: Fact_CarsOnRoad.VehicleBrand
+	toColumn: Dim_Brand.Brand

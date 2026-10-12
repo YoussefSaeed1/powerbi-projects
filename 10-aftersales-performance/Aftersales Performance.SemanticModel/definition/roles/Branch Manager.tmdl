@@ -1,0 +1,7 @@
+/// Each branch manager sees only their branch's sales, targets, overheads and receivables.
+role 'Branch Manager'
+	modelPermission: read
+
+	tablePermission Dim_Branch = Dim_Branch[BranchManagerEmail] = USERPRINCIPALNAME ()
+
+	annotation PBI_Id = 1424f7d2728f5f73b255bcbb294fea08

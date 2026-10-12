@@ -1,0 +1,73 @@
+{
+  "name": "Aftersales Performance",
+  "dataColors": [
+    "#3C4650",
+    "#E8590C",
+    "#C7CBCF",
+    "#2B8A6E",
+    "#D99A6C",
+    "#6B7178",
+    "#8A96A3",
+    "#B9A88F"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#1D2125",
+  "tableAccent": "#3C4650",
+  "textClasses": {
+    "label": {
+      "fontSize": 9,
+      "color": "#1D2125"
+    },
+    "callout": {
+      "fontSize": 26,
+      "color": "#1D2125"
+    },
+    "title": {
+      "fontFace": "'Segoe UI Semibold', wf_segoe-ui_semibold, helvetica, arial, sans-serif",
+      "fontSize": 11,
+      "color": "#1D2125"
+    },
+    "header": {
+      "color": "#1D2125"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "show": false
+          }
+        ],
+        "border": [
+          {
+            "show": false
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": false
+          }
+        ],
+        "visualHeader": [
+          {
+            "show": false
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#E9E7E2"
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

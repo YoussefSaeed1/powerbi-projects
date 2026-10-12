@@ -1,0 +1,120 @@
+/// Branches with location, type and workshop size. BranchManagerEmail drives row-level security.
+table Dim_Branch
+	lineageTag: 0593c7d3-7fad-5746-b868-ab7ea82be441
+
+	column BranchID
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		lineageTag: e6b33303-e341-598b-9ded-8f03b59f3c4f
+		summarizeBy: none
+		sourceColumn: BranchID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Branch
+		dataType: string
+		lineageTag: 6efbaa64-9810-5414-8799-9fa144363e7c
+		summarizeBy: none
+		sourceColumn: Branch
+
+		annotation SummarizationSetBy = Automatic
+
+	column City
+		dataType: string
+		isHidden
+		lineageTag: 5b02efb4-c123-5c29-91da-75497bff8305
+		summarizeBy: none
+		sourceColumn: City
+
+		annotation SummarizationSetBy = Automatic
+
+	column Governorate
+		dataType: string
+		isHidden
+		lineageTag: 93c08f97-1989-5cdd-91a4-904eb074828a
+		summarizeBy: none
+		sourceColumn: Governorate
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		lineageTag: d7f32c88-905b-55e6-b874-f2615340e000
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column Lat
+		dataType: double
+		isHidden
+		lineageTag: 9bdfbcb5-ae77-5d43-b473-e575b0230aaa
+		summarizeBy: none
+		sourceColumn: Lat
+
+		annotation SummarizationSetBy = Automatic
+
+	column Lon
+		dataType: double
+		isHidden
+		lineageTag: f6ca7207-1325-5d28-9bb9-6645828ccfb7
+		summarizeBy: none
+		sourceColumn: Lon
+
+		annotation SummarizationSetBy = Automatic
+
+	column BranchType
+		dataType: string
+		lineageTag: c7c0999a-8cc7-57a9-ba5b-6903137c45ce
+		summarizeBy: none
+		sourceColumn: BranchType
+
+		annotation SummarizationSetBy = Automatic
+
+	column Bays
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 7ac18855-07f8-5311-bc35-e603a4b6c750
+		summarizeBy: none
+		sourceColumn: Bays
+
+		annotation SummarizationSetBy = Automatic
+
+	column Technicians
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 63592032-03bd-5a87-8938-ef1ad31cd5ab
+		summarizeBy: none
+		sourceColumn: Technicians
+
+		annotation SummarizationSetBy = Automatic
+
+	column BranchManagerEmail
+		dataType: string
+		isHidden
+		lineageTag: 637ac25c-7ccb-59fb-ab17-9657e44be2bc
+		summarizeBy: none
+		sourceColumn: BranchManagerEmail
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Branch = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="Branches",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Selected = Table.SelectColumns(Promoted, {"BranchID", "Branch", "City", "Governorate", "Region", "Lat", "Lon", "BranchType", "Bays", "Technicians", "BranchManagerEmail"}),
+				    NonBlank = Table.SelectRows(Selected, each [BranchID] <> null and [BranchID] <> ""),
+				    Typed = Table.TransformColumnTypes(NonBlank, {{"BranchID", Int64.Type}, {"Branch", type text}, {"City", type text}, {"Governorate", type text}, {"Region", type text}, {"Lat", type number}, {"Lon", type number}, {"BranchType", type text}, {"Bays", Int64.Type}, {"Technicians", Int64.Type}, {"BranchManagerEmail", type text}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

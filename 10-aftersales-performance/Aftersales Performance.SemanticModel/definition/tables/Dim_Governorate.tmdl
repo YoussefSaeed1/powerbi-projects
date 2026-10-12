@@ -1,0 +1,67 @@
+/// Governorates where our customers live, with map position, whether a service branch is there and the nearest one.
+table Dim_Governorate
+	lineageTag: f4aa6138-a8bc-55b5-91f9-5ebd03af910d
+
+	column Governorate
+		dataType: string
+		isKey
+		lineageTag: afe42172-6e56-5eae-a7d0-bfc1b6b938d5
+		summarizeBy: none
+		sourceColumn: Governorate
+
+		annotation SummarizationSetBy = Automatic
+
+	column Region
+		dataType: string
+		lineageTag: 073309bd-15c0-5c39-ad44-5d097d047575
+		summarizeBy: none
+		sourceColumn: Region
+
+		annotation SummarizationSetBy = Automatic
+
+	column Lat
+		dataType: double
+		isHidden
+		lineageTag: cb01c555-69ff-5919-b589-48946465b7d1
+		summarizeBy: none
+		sourceColumn: Lat
+
+		annotation SummarizationSetBy = Automatic
+
+	column Lon
+		dataType: double
+		isHidden
+		lineageTag: 59ca3efb-f8f3-5540-ad7b-faa9783652e6
+		summarizeBy: none
+		sourceColumn: Lon
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Has Branch'
+		dataType: int64
+		isHidden
+		lineageTag: e0925238-901f-5f91-87db-23dfe5859c0c
+		summarizeBy: none
+		sourceColumn: Has Branch
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Nearest Branch'
+		dataType: string
+		lineageTag: d54f2b98-1023-5772-b631-bd927298dc5f
+		summarizeBy: none
+		sourceColumn: Nearest Branch
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Governorate = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [#"Governorate" = text, #"Region" = text, #"Lat" = number, #"Lon" = number, #"Has Branch" = Int64.Type, #"Nearest Branch" = text], {{"Cairo", "Greater Cairo", 30.05, 31.3, 1, "Nasr City"}, {"Giza", "Greater Cairo", 29.99, 31.05, 1, "6th of October"}, {"Alexandria", "Alexandria", 31.15, 29.92, 1, "Smouha"}, {"Gharbia", "Delta", 30.8, 31.0, 1, "Tanta"}, {"Dakahlia", "Delta", 31.05, 31.4, 1, "Mansoura"}, {"Sharqia", "Delta", 30.6, 31.55, 1, "Zagazig"}, {"Ismailia", "Canal", 30.6, 32.25, 1, "Ismailia"}, {"Port Said", "Canal", 31.25, 32.28, 1, "Ismailia"}, {"Assiut", "Upper Egypt", 27.18, 31.18, 1, "Assiut"}, {"Sohag", "Upper Egypt", 26.55, 31.7, 0, "Assiut"}, {"Minya", "Upper Egypt", 28.1, 30.75, 0, "Assiut"}, {"Qena", "Upper Egypt", 26.15, 32.72, 0, "Assiut"}})
+				in
+				    Source
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

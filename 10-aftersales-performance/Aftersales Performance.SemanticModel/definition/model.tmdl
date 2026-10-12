@@ -1,0 +1,35 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-US
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 0
+
+annotation PBI_QueryOrder = ["DataFilePath","Invoices_Raw","Lines_Raw","_Measures","Fact_Sales","Fact_Invoice","Dim_Customer","Dim_Branch","Dim_Rep","Dim_Governorate","Dim_BusinessLine","Dim_Brand","Dim_CarAge","Fact_BranchTarget","Fact_RepTarget","Fact_Overhead","Fact_Capacity","Fact_CarsOnRoad","Dim_Date","Dim_Month","_Refresh"]
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table _Measures
+ref table Fact_Sales
+ref table Fact_Invoice
+ref table Dim_Customer
+ref table Dim_Branch
+ref table Dim_Rep
+ref table Dim_Governorate
+ref table Dim_BusinessLine
+ref table Dim_Brand
+ref table Dim_CarAge
+ref table Fact_BranchTarget
+ref table Fact_RepTarget
+ref table Fact_Overhead
+ref table Fact_Capacity
+ref table Fact_CarsOnRoad
+ref table Dim_Date
+ref table Dim_Month
+ref table _Refresh
+
+ref cultureInfo en-US

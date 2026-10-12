@@ -1,0 +1,50 @@
+/// Monthly sales target for each rep.
+table Fact_RepTarget
+	lineageTag: 78b38b52-53d9-5273-a09c-95e2ae8cfe6b
+
+	column Month
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: 585a5a2a-cefe-5098-a135-3872288e7b40
+		summarizeBy: none
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column RepID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: c3af0a55-e967-5ddd-bfae-b3e9a99a7288
+		summarizeBy: none
+		sourceColumn: RepID
+
+		annotation SummarizationSetBy = Automatic
+
+	column TargetSales
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: c3c6714c-7c72-5eb4-9528-d3e389b24de3
+		summarizeBy: none
+		sourceColumn: TargetSales
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_RepTarget = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="RepTargets",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"Month", type date}, {"RepID", Int64.Type}, {"TargetSales", type number}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

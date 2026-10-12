@@ -1,0 +1,104 @@
+/// One row per invoice with its net total, credit terms, due date and payment date. Used for receivables.
+table Fact_Invoice
+	lineageTag: eea84120-2e78-5195-9b66-f67022abc4cd
+
+	column InvoiceID
+		dataType: string
+		isHidden
+		isKey
+		lineageTag: 8b4d1f66-ea4f-56fd-bfe9-8ff050189154
+		summarizeBy: none
+		sourceColumn: InvoiceID
+
+		annotation SummarizationSetBy = Automatic
+
+	column InvoiceDate
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: 51830726-36bf-51d3-a93c-02a9b5a2321e
+		summarizeBy: none
+		sourceColumn: InvoiceDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column BranchID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: a72408a4-5b37-5df4-91fd-95c5a3cc53b8
+		summarizeBy: none
+		sourceColumn: BranchID
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomerID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: bca7dba8-149a-5e3a-a897-bf83957c3d05
+		summarizeBy: none
+		sourceColumn: CustomerID
+
+		annotation SummarizationSetBy = Automatic
+
+	column CreditTerms
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: e98349b9-d48b-5aa6-8ea9-cfffbf7f17ec
+		summarizeBy: none
+		sourceColumn: CreditTerms
+
+		annotation SummarizationSetBy = Automatic
+
+	column DueDate
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: 1365832c-9e19-570a-a72b-0fd32f61b59c
+		summarizeBy: none
+		sourceColumn: DueDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column PaidDate
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: d2e54842-6d05-513b-9dcd-d9bb4cdd3ef0
+		summarizeBy: none
+		sourceColumn: PaidDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column NetSales
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: 3ac4a6cd-edf7-55ae-a1e3-3b6e91ab5350
+		summarizeBy: none
+		sourceColumn: NetSales
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Invoice = m
+		mode: import
+		source =
+				let
+				    Totals = Table.Group(Lines_Raw, {"InvoiceID"}, {{"NetSales", each List.Sum([NetSales]), type number}}),
+				    Joined = Table.NestedJoin(Invoices_Raw, {"InvoiceID"}, Totals, {"InvoiceID"}, "T", JoinKind.LeftOuter),
+				    Expanded = Table.ExpandTableColumn(Joined, "T", {"NetSales"}),
+				    Kept = Table.SelectColumns(Expanded, {"InvoiceID", "InvoiceDate", "BranchID", "CustomerID", "CreditTerms", "DueDate", "PaidDate", "NetSales"})
+				in
+				    Kept
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

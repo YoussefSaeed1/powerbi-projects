@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "Aftersales Performance"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "5e1b1185-e3fe-5f65-bd91-35c783709468"
+  }
+}

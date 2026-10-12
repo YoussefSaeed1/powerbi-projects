@@ -1,0 +1,156 @@
+/// One row per invoice line, with the invoice header fields (date, branch, customer, rep, channel, car brand) joined on.
+table Fact_Sales
+	lineageTag: f7686f96-0bd3-507f-be3c-56e28d308ffa
+
+	column LineID
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		lineageTag: 4d08acbc-4992-572d-858e-9a09a02ed00f
+		summarizeBy: none
+		sourceColumn: LineID
+
+		annotation SummarizationSetBy = Automatic
+
+	column InvoiceID
+		dataType: string
+		isHidden
+		lineageTag: f5bad457-0d32-5aee-b520-ae7133151b62
+		summarizeBy: none
+		sourceColumn: InvoiceID
+
+		annotation SummarizationSetBy = Automatic
+
+	column InvoiceDate
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: 86d4e51e-0981-5a15-b295-689469b4cd05
+		summarizeBy: none
+		sourceColumn: InvoiceDate
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column BranchID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 69d1c79f-6576-51fa-9a76-7c083d6aaad9
+		summarizeBy: none
+		sourceColumn: BranchID
+
+		annotation SummarizationSetBy = Automatic
+
+	column CustomerID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 7abb6d1d-0f5e-588f-b53c-1f2f33e19aff
+		summarizeBy: none
+		sourceColumn: CustomerID
+
+		annotation SummarizationSetBy = Automatic
+
+	column RepID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 53c7bf5b-2e9e-5d86-be0e-552743737d02
+		summarizeBy: none
+		sourceColumn: RepID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Channel
+		dataType: string
+		lineageTag: c2ecccda-39bc-5e47-b25a-82b0e3b2e24e
+		summarizeBy: none
+		sourceColumn: Channel
+
+		annotation SummarizationSetBy = Automatic
+
+	column VehicleBrand
+		dataType: string
+		isHidden
+		lineageTag: e0db6d58-4004-5a13-b710-08d9f647b6df
+		summarizeBy: none
+		sourceColumn: VehicleBrand
+
+		annotation SummarizationSetBy = Automatic
+
+	column BusinessLine
+		dataType: string
+		isHidden
+		lineageTag: fc73cb7a-e622-5814-a89c-529279a0cde2
+		summarizeBy: none
+		sourceColumn: BusinessLine
+
+		annotation SummarizationSetBy = Automatic
+
+	column Hours
+		dataType: double
+		isHidden
+		formatString: #,0.0
+		lineageTag: 88cf7447-683a-5448-82ed-69fd3fb779f0
+		summarizeBy: none
+		sourceColumn: Hours
+
+		annotation SummarizationSetBy = Automatic
+
+	column Gross
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: 7f034d78-3175-5c1e-844b-77ddf09d8268
+		summarizeBy: none
+		sourceColumn: Gross
+
+		annotation SummarizationSetBy = Automatic
+
+	column Discount
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: d010dddf-66b0-5576-bcae-7edccdb09797
+		summarizeBy: none
+		sourceColumn: Discount
+
+		annotation SummarizationSetBy = Automatic
+
+	column NetSales
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: 507c1411-bf3e-5624-8ccf-56c093edee61
+		summarizeBy: none
+		sourceColumn: NetSales
+
+		annotation SummarizationSetBy = Automatic
+
+	column COGS
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: 973e6997-e372-57e2-a9ae-a4eeedf73a4b
+		summarizeBy: none
+		sourceColumn: COGS
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Sales = m
+		mode: import
+		source =
+				let
+				    Header = Table.SelectColumns(Invoices_Raw, {"InvoiceID", "InvoiceDate", "BranchID", "CustomerID", "RepID", "Channel", "VehicleBrand"}),
+				    Joined = Table.NestedJoin(Lines_Raw, {"InvoiceID"}, Header, {"InvoiceID"}, "H", JoinKind.Inner),
+				    Expanded = Table.ExpandTableColumn(Joined, "H", {"InvoiceDate", "BranchID", "CustomerID", "RepID", "Channel", "VehicleBrand"}),
+				    Kept = Table.SelectColumns(Expanded, {"LineID", "InvoiceID", "InvoiceDate", "BranchID", "CustomerID", "RepID", "Channel", "VehicleBrand", "BusinessLine", "Hours", "Gross", "Discount", "NetSales", "COGS"})
+				in
+				    Kept
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

@@ -1,0 +1,69 @@
+/// Monthly sales and gross profit targets by branch and business line.
+table Fact_BranchTarget
+	lineageTag: ecb4ac0e-1f14-5252-915d-576c13dca186
+
+	column Month
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: 5348c721-7f3c-5fa7-b6b3-6e2fe76f8b00
+		summarizeBy: none
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column BranchID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 971f2aaf-1249-51f1-b601-ed0cd5cb4ddc
+		summarizeBy: none
+		sourceColumn: BranchID
+
+		annotation SummarizationSetBy = Automatic
+
+	column BusinessLine
+		dataType: string
+		isHidden
+		lineageTag: 25e83ae5-2137-5873-9700-8733d8fb6309
+		summarizeBy: none
+		sourceColumn: BusinessLine
+
+		annotation SummarizationSetBy = Automatic
+
+	column TargetSales
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: aeafbc0d-44f4-5ac2-b533-cb7a0f6c1227
+		summarizeBy: none
+		sourceColumn: TargetSales
+
+		annotation SummarizationSetBy = Automatic
+
+	column TargetGP
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: e7a6823c-8b87-543d-9ce2-4c9f03074f6a
+		summarizeBy: none
+		sourceColumn: TargetGP
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_BranchTarget = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="BranchTargets",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"Month", type date}, {"BranchID", Int64.Type}, {"BusinessLine", type text}, {"TargetSales", type number}, {"TargetGP", type number}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

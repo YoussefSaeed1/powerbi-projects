@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "SemanticModel",
+    "displayName": "Aftersales Performance"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "51b7a90c-5d1f-5eb4-9ff6-2f45e4025cb9"
+  }
+}

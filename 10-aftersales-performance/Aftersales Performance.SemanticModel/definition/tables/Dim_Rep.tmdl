@@ -1,0 +1,77 @@
+/// Service advisors, parts sales staff and key-account reps, with their home branch.
+table Dim_Rep
+	lineageTag: ca2d5171-b3ec-5185-90ab-ed4e4af92638
+
+	column RepID
+		dataType: int64
+		isHidden
+		isKey
+		formatString: 0
+		lineageTag: a8fc6d90-3270-5c31-8059-cdce3150232e
+		summarizeBy: none
+		sourceColumn: RepID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Rep
+		dataType: string
+		lineageTag: 99e2b8de-8eed-5517-9362-a41534b90f2b
+		summarizeBy: none
+		sourceColumn: Rep
+
+		annotation SummarizationSetBy = Automatic
+
+	column Role
+		dataType: string
+		lineageTag: 0c2b5069-1c67-5ea4-b68c-9bb5b852b6c9
+		summarizeBy: none
+		sourceColumn: Role
+
+		annotation SummarizationSetBy = Automatic
+
+	column BranchID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 8a8d818e-2f52-527e-b6cb-d901a03b0f57
+		summarizeBy: none
+		sourceColumn: BranchID
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Home Branch'
+		dataType: string
+		lineageTag: 439d6769-31a8-5e3e-982c-fe76cf453f72
+		summarizeBy: none
+		sourceColumn: Home Branch
+
+		annotation SummarizationSetBy = Automatic
+
+	column HireYear
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: c3b6028c-180b-5c05-8468-a540f87dea0f
+		summarizeBy: none
+		sourceColumn: HireYear
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Dim_Rep = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="Reps",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"RepID", Int64.Type}, {"Rep", type text}, {"Role", type text}, {"BranchID", Int64.Type}, {"HireDate", type date}}),
+				    Year = Table.AddColumn(Typed, "HireYear", each Date.Year([HireDate]), Int64.Type),
+				    Branch = Table.NestedJoin(Year, {"BranchID"}, Dim_Branch, {"BranchID"}, "B", JoinKind.LeftOuter),
+				    Expanded = Table.ExpandTableColumn(Branch, "B", {"Branch"}, {"Home Branch"}),
+				    Kept = Table.SelectColumns(Expanded, {"RepID", "Rep", "Role", "BranchID", "Home Branch", "HireYear"})
+				in
+				    Kept
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

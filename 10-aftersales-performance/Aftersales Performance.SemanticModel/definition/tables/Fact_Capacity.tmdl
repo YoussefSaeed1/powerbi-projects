@@ -1,0 +1,50 @@
+/// Technician hours available each month in branches with a workshop.
+table Fact_Capacity
+	lineageTag: 5df49b1c-1670-5fbc-98a4-7c1f58415759
+
+	column Month
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: f10583d6-8dd7-598c-a305-b7b7096db51e
+		summarizeBy: none
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column BranchID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 2be5b343-1f06-5663-8fe6-45b8fa864e2a
+		summarizeBy: none
+		sourceColumn: BranchID
+
+		annotation SummarizationSetBy = Automatic
+
+	column AvailableHours
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: 22eeddd2-3d5a-5c1c-8011-65e89a762acd
+		summarizeBy: none
+		sourceColumn: AvailableHours
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Capacity = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="Capacity",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"Month", type date}, {"BranchID", Int64.Type}, {"AvailableHours", type number}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

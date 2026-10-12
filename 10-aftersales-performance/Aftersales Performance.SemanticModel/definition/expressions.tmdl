@@ -1,0 +1,38 @@
+/// Full path of the data file. Change it here once if you move the folder.
+expression DataFilePath = "C:\Users\RTX\Desktop\Portfolio Dashboards\Aftersales Performance\Aftersales_Sample.xlsx" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+	lineageTag: 05c252ad-1743-5942-aba5-3714b6586ea7
+
+	annotation PBI_ResultType = Text
+
+	annotation PBI_NavigationStepName = Navigation
+
+/// Invoice headers as they are in the workbook (not loaded).
+expression Invoices_Raw =
+		let
+		    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+		    Sheet = Source{[Item="Invoices",Kind="Sheet"]}[Data],
+		    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+		    Typed = Table.TransformColumnTypes(Promoted, {{"InvoiceID", type text}, {"InvoiceDate", type date}, {"BranchID", Int64.Type}, {"CustomerID", Int64.Type}, {"RepID", Int64.Type}, {"Channel", type text}, {"VehicleBrand", type text}, {"CreditTerms", Int64.Type}, {"DueDate", type date}, {"PaidDate", type date}})
+		in
+		    Typed
+	lineageTag: 87e95141-2f99-572e-a0e7-4e6e6860b08c
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+/// Invoice lines as they are in the workbook (not loaded).
+expression Lines_Raw =
+		let
+		    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+		    Sheet = Source{[Item="InvoiceLines",Kind="Sheet"]}[Data],
+		    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+		    Typed = Table.TransformColumnTypes(Promoted, {{"LineID", Int64.Type}, {"InvoiceID", type text}, {"BusinessLine", type text}, {"Hours", type number}, {"Gross", type number}, {"Discount", type number}, {"NetSales", type number}, {"COGS", type number}})
+		in
+		    Typed
+	lineageTag: 43d29360-73bd-5673-87c7-f8d98eff139d
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

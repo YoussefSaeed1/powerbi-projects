@@ -1,0 +1,68 @@
+/// Monthly branch overheads, actual and budget, by category.
+table Fact_Overhead
+	lineageTag: cc2c926b-1bac-5aad-9c73-6a7537bf3ea5
+
+	column Month
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: f70ca707-d3a2-56ec-bbfe-644b9920d0b6
+		summarizeBy: none
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column BranchID
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 4b6043a6-a0d0-548a-8788-c0722e42206a
+		summarizeBy: none
+		sourceColumn: BranchID
+
+		annotation SummarizationSetBy = Automatic
+
+	column Category
+		dataType: string
+		lineageTag: 64278e13-81fd-50c2-ab6d-39c84dda4af6
+		summarizeBy: none
+		sourceColumn: Category
+
+		annotation SummarizationSetBy = Automatic
+
+	column Budget
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: 6bfadb92-1a9a-52a5-8d60-5c1d75e82594
+		summarizeBy: none
+		sourceColumn: Budget
+
+		annotation SummarizationSetBy = Automatic
+
+	column Actual
+		dataType: double
+		isHidden
+		formatString: #,0
+		lineageTag: af96261f-1269-5343-b7e3-2392d7f7de4d
+		summarizeBy: none
+		sourceColumn: Actual
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Fact_Overhead = m
+		mode: import
+		source =
+				let
+				    Source = Excel.Workbook(File.Contents(DataFilePath), null, true),
+				    Sheet = Source{[Item="Overhead",Kind="Sheet"]}[Data],
+				    Promoted = Table.PromoteHeaders(Sheet, [PromoteAllScalars=true]),
+				    Typed = Table.TransformColumnTypes(Promoted, {{"Month", type date}, {"BranchID", Int64.Type}, {"Category", type text}, {"Budget", type number}, {"Actual", type number}})
+				in
+				    Typed
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

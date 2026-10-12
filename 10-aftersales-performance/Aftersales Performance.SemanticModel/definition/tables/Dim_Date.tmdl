@@ -1,0 +1,75 @@
+/// Calendar for the years in the data. Marked as the date table.
+table Dim_Date
+	lineageTag: da5e6e08-db90-5fb5-8840-cd0486b77e85
+	dataCategory: Time
+
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: yyyy-mm-dd
+		lineageTag: 40f904f0-5ea9-5f02-a0cb-8aea56a47734
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: b1aae1fe-26c6-5dbc-9e51-460907c6643c
+		summarizeBy: none
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column MonthNo
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: eeced796-b7cd-518a-bcdc-bbd555f69ea3
+		summarizeBy: none
+		sourceColumn: MonthNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: string
+		lineageTag: c5d37030-2658-5fb1-b612-c3c221ad1a60
+		summarizeBy: none
+		sourceColumn: Month
+		sortByColumn: MonthNo
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month Start'
+		dataType: dateTime
+		formatString: mmm yyyy
+		lineageTag: 51458911-68c0-582d-b724-e5d65cf3bc9c
+		summarizeBy: none
+		sourceColumn: Month Start
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	partition Dim_Date = m
+		mode: import
+		source =
+				let
+				    StartDate = Date.StartOfYear(List.Min(Fact_Sales[InvoiceDate])),
+				    EndDate = Date.EndOfYear(List.Max(Fact_Sales[InvoiceDate])),
+				    Dates = List.Dates(StartDate, Duration.Days(EndDate - StartDate) + 1, #duration(1, 0, 0, 0)),
+				    Base = Table.FromList(Dates, Splitter.SplitByNothing(), {"Date"}),
+				    Typed = Table.TransformColumnTypes(Base, {{"Date", type date}}),
+				    AddYear = Table.AddColumn(Typed, "Year", each Date.Year([Date]), Int64.Type),
+				    AddMonthNo = Table.AddColumn(AddYear, "MonthNo", each Date.Month([Date]), Int64.Type),
+				    AddMonth = Table.AddColumn(AddMonthNo, "Month", each Date.ToText([Date], [Format="MMM", Culture="en-US"]), type text),
+				    AddStart = Table.AddColumn(AddMonth, "Month Start", each Date.StartOfMonth([Date]), type date)
+				in
+				    AddStart
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation

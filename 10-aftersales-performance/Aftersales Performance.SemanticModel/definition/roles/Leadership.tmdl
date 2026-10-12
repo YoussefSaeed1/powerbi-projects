@@ -1,0 +1,5 @@
+/// Full read access.
+role Leadership
+	modelPermission: read
+
+	annotation PBI_Id = 5510093eae5f5c2b82a281fb9f9ea201
