@@ -2,7 +2,7 @@
 
 > **Decision:** Which branches, reps and customers should aftersales act on first to grow gross profit?
 
-`Automotive` · Dec 2024 · `Power BI` · `Power Query` · `DAX` · `RLS`
+`Automotive` · Dec 2025 · `Power BI` · `Power Query` · `DAX` · `RLS`
 
 ![Aftersales Performance](images/aftersales.jpg)
 
